@@ -12,7 +12,7 @@ public class Main {
         Route home = new Route("/"){
             @Override
             public Component<?> loadContent() {
-                return new Layout().text("Currently at "+ path);
+                return new Layout().text("Hello World!");
             }
         };
 
