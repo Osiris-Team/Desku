@@ -1,6 +1,8 @@
 package com.osiris.desku;
 
 import com.osiris.desku.swing.NativeWindow;
+import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.Layout;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
@@ -14,8 +16,8 @@ public class HelloWorldApp {
         // Create routes
         Route home = new Route("/"){
             @Override
-            public Node loadContent() {
-                return new TextNode("Hello World!");
+            public Component<?> loadContent() {
+                return new Layout().text("Currently at "+ path);
             }
         };
 

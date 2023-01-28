@@ -13,8 +13,10 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +37,7 @@ public class App {
      * C:\Users\UserName\AppData\Local\Temp\AppName
      */
     public static final File tempDir = new File(System.getProperty("java.io.tmpdir") + "/" + name);
+    public static final File styles = new File(tempDir + "/global-styles.css");
     /**
      * Can be used to store user-specific data. <br>
      * Example on Windows: <br>
@@ -43,7 +46,6 @@ public class App {
     public static final File userDir = new File(System.getProperty("user.home") + "/" + name);
     public static CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
     public static CopyOnWriteArrayList<NativeWindow> windows = new CopyOnWriteArrayList<>();
-    public static int port;
 
     static {
         try {
@@ -56,6 +58,9 @@ public class App {
             AL.info("workingDir = " + workingDir);
             AL.info("tempDir = " + tempDir);
             AL.info("userDir = " + userDir);
+            styles.getParentFile().mkdirs();
+            if (styles.exists()) styles.delete();
+            styles.createNewFile();
 
             // (0) Initialize CEF using the maven loader
             CefAppBuilder builder = new CefAppBuilder();
@@ -70,37 +75,12 @@ public class App {
                     if (state == CefApp.CefAppState.TERMINATED) System.exit(0);
                 }
             });
-            // (1) The entry point to JCEF is always the class CefApp. There is only one
-            //     instance per application and therefore you have to call the method
-            //     "getInstance()" instead of a CTOR.
-            //
-            //     CefApp is responsible for the global CEF context. It loads all
-            //     required native libraries, initializes CEF accordingly, starts a
-            //     background task to handle CEF's message loop and takes care of
-            //     shutting down CEF after disposing it.
-            //
-            //     WHEN WORKING WITH MAVEN: Use the builder.build() method to
-            //     build the CefApp on first run and fetch the instance on all consecutive
-            //     runs. This method is thread-safe and will always return a valid app
-            //     instance.
+            // (1) The entry point to JCEF is always the class CefApp.
             cef = builder.build();
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 CefApp.getInstance().dispose();
             }));
-            // (2) JCEF can handle one to many browser instances simultaneous. These
-            //     browser instances are logically grouped together by an instance of
-            //     the class CefClient. In your application you can create one to many
-            //     instances of CefClient with one to many CefBrowser instances per
-            //     client. To get an instance of CefClient you have to use the method
-            //     "createClient()" of your CefApp instance. Calling an CTOR of
-            //     CefClient is not supported.
-            //
-            //     CefClient is a connector to all possible events which come from the
-            //     CefBrowser instances. Those events could be simple things like the
-            //     change of the browser title or more complex ones like context menu
-            //     events. By assigning handlers to CefClient you can control the
-            //     behavior of the browser. See tests.detailed.MainFrame for an example
-            //     of how to use these handlers.
+            // (2) JCEF can handle one to many browser instances simultaneous.
             cefClient = cef.createClient();
             // (3) Create a simple message router to receive messages from CEF.
             CefMessageRouter msgRouter = CefMessageRouter.create();
@@ -143,5 +123,15 @@ public class App {
     public static InputStream getResource(String path) {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
         return App.class.getResourceAsStream(fullPath);
+    }
+
+    public static void appendToGlobalStyles(String s) {
+        synchronized (styles) {
+            try {
+                Files.write(styles.toPath(), s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

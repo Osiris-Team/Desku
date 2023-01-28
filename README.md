@@ -34,3 +34,5 @@ public class HelloWorldApp {
 - Runs on Windows/Linux/Mac by installing platform-specific dependencies at first launch.
 - Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
 - Localhost-free and server-less.
+- Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
+implementation, thus making simple/complex layout creation faster and easier than ever.

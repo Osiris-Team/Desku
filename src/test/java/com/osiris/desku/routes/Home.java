@@ -1,9 +1,9 @@
 package com.osiris.desku.routes;
 
 import com.osiris.desku.Route;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
+import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.Layout;
+import com.osiris.desku.ui.Text;
 
 public class Home extends Route {
     public Home() {
@@ -11,10 +11,10 @@ public class Home extends Route {
     }
 
     @Override
-    public Node loadContent() {
-        Element l = new Element("div");
-        l.attr("style", "width: 100%; height: 100%; background: red;");
-        l.appendChild(new TextNode("Currently at "+ path));
-        return l;
+    public Component<?> loadContent() {
+        Layout ly = new Layout();
+        ly.textM("Text M");
+        ly.add(new Text("Text XL").selfEnd());
+        return ly;
     }
 }

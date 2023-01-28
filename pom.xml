@@ -6,7 +6,7 @@
 
     <groupId>com.osiris.desku</groupId>
     <artifactId>desku</artifactId>
-    <version>0.1</version>
+    <version>LATEST</version>
     <packaging>jar</packaging>
 
     <name>Desku</name>
