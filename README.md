@@ -4,8 +4,8 @@ Java Framework for developing Desktop Applications with Java, HTML and CSS.
 
 ```java
 import com.osiris.desku.swing.NativeWindow;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
+import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.Layout;
 
 import java.io.IOException;
 
@@ -17,8 +17,8 @@ public class HelloWorldApp {
         // Create routes
         Route home = new Route("/"){
             @Override
-            public Node loadContent() {
-                return new TextNode("Hello World!");
+            public Component<?> loadContent() {
+                return new Layout().text("Currently at "+ path);
             }
         };
 

@@ -3,8 +3,6 @@ package com.osiris.desku;
 import com.osiris.desku.swing.NativeWindow;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.Layout;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
 
 import java.io.IOException;
 
