@@ -3,13 +3,7 @@ Java Framework for developing Desktop Applications with Java, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
 
 ```java
-import com.osiris.desku.swing.NativeWindow;
-import com.osiris.desku.ui.Component;
-import com.osiris.desku.ui.Layout;
-
-import java.io.IOException;
-
-public class HelloWorldApp {
+public class Main {
     public static void main(String[] args) throws IOException {
         // Setup app details
         App.name = "My-App";
