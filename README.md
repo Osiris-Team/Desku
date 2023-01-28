@@ -28,3 +28,8 @@ public class HelloWorldApp {
 }
 ```
 ![img.png](img.png)
+
+### Features
+- Latest Chromium HTML/CSS renderer via [JCEF](https://github.com/jcefmaven/jcefbuild).
+- Runs on Windows/Linux/Mac by installing platform-specific dependencies at first launch.
+- Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
