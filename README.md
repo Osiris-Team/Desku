@@ -9,12 +9,9 @@ public class Main {
         App.name = "My-App";
 
         // Create routes
-        Route home = new Route("/"){
-            @Override
-            public Component<?> loadContent() {
-                return new Layout().text("Hello World!");
-            }
-        };
+        Route home = new MRoute("/", () -> { // You can also create a new class and extend Route
+            return new Layout().text("Hello World!"); 
+        });
 
         // Create windows
         new NativeWindow(home);

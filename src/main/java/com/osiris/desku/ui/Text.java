@@ -2,7 +2,7 @@ package com.osiris.desku.ui;
 
 public class Text extends Component<Text> {
     public Text(String s) {
-        init(this, "p");
+        init(this, "txt");
         element.appendText(s);
     }
 
