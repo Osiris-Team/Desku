@@ -37,6 +37,8 @@ public class DevToolsDialog extends JFrame {
                 dispose();
             }
         });
+
+        setVisible(true);
     }
 
     @Override

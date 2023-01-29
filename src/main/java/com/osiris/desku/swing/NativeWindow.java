@@ -5,14 +5,23 @@ import com.osiris.desku.Route;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
+import org.cef.callback.CefURLRequestClient;
+import org.cef.handler.CefLoadHandler;
+import org.cef.handler.CefLoadHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
+import org.cef.handler.CefPrintHandlerAdapter;
+import org.cef.network.CefRequest;
+import org.cef.network.CefResponse;
+import org.cef.network.CefURLRequest;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -94,6 +103,17 @@ public class NativeWindow extends JFrame {
                     dispose();
                 }
             });
+
+            AtomicBoolean isLoaded = new AtomicBoolean(false);
+            App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
+                @Override
+                public void onLoadEnd(CefBrowser b, CefFrame frame, int httpStatusCode) {
+                    if(b == browser){
+                        isLoaded.set(true);
+                    }
+                }
+            });
+            while (!isLoaded.get()) Thread.yield();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -207,12 +227,16 @@ public class NativeWindow extends JFrame {
         String jsTriggerCallback = addCallback("", (message) -> {
             code.run();
         });
-        String jsNow = "var comp = document.querySelectorAll('[javaId=\"" + comp.id + "\"]')[0];\n" +
+        String jsNow = "var comp = document.querySelectorAll('[java-id=\"" + comp.id + "\"]')[0];\n" +
                 "comp.addEventListener(\"click\", () => {\n" +
                 "" + jsTriggerCallback + // JS code that triggers Java function gets executed on a click event for this component
                 "});\n";
 
         browser.executeJavaScript(jsNow, "internal", 0);
         return this;
+    }
+
+    public DevToolsDialog openDevTools(){
+        return new DevToolsDialog("DevTools", browser);
     }
 }

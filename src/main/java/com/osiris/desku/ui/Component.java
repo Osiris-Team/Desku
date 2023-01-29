@@ -17,10 +17,10 @@ public class Component<T> {
     public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
     /**
-     * Equals the attribute "javaId" inside HTML and thus useful for finding this object via JavaScript. <br>
-     * Example: The code below will return the object with the javaId = 5.
+     * Equals the attribute "java-id" inside HTML and thus useful for finding this object via JavaScript. <br>
+     * Example: The code below will return the object with the java-id = 5.
      * <pre>
-     *     var element = document.querySelectorAll('[javaId="5"]')[0];
+     *     var element = document.querySelectorAll('[java-id="5"]')[0];
      * </pre>
      */
     public final int id = idCounter.getAndIncrement();
@@ -38,7 +38,7 @@ public class Component<T> {
     public void init(T target, String tag) {
         this.target = target;
         this.element = new Element(tag);
-        element.attr("javaId", "" + id);
+        element.attr("java-id", "" + id);
     }
 
     /**
@@ -49,7 +49,7 @@ public class Component<T> {
     public void init(T target, Tag tag, String baseUri, Attributes attributes) {
         this.target = target;
         this.element = new Element(tag, baseUri, attributes);
-        element.attr("javaId", "" + id);
+        element.attr("java-id", "" + id);
     }
 
     /**
@@ -60,7 +60,7 @@ public class Component<T> {
     public void init(T target, Tag tag, String baseUri) {
         this.target = target;
         this.element = new Element(tag, baseUri);
-        element.attr("javaId", "" + id);
+        element.attr("java-id", "" + id);
     }
 
     public T add(Collection<Component<?>> comp) {

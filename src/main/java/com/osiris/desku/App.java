@@ -61,6 +61,7 @@ public class App {
             AL.info("workingDir = " + workingDir);
             AL.info("tempDir = " + tempDir);
             AL.info("userDir = " + userDir);
+            // Create styles file
             styles.getParentFile().mkdirs();
             if (styles.exists()) styles.delete();
             styles.createNewFile();

@@ -12,6 +12,7 @@ class AppTest {
     void main() throws IOException, InterruptedException {
         // Setup details
         App.name = "My-App";
+        // before loading the page
 
         // Create routes
         Route home = new Home();
@@ -19,6 +20,7 @@ class AppTest {
 
         // Create windows
         NativeWindow winHome = new NativeWindow(home);
+        winHome.openDevTools();
         //new NativeWindow(about).plusX(20).plusY(20);
 
 
