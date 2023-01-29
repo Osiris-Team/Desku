@@ -3,6 +3,9 @@ package com.osiris.desku.swing;
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.callback.CefQueryCallback;
+import org.cef.handler.CefMessageRouterHandlerAdapter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,6 +13,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  *
@@ -20,6 +24,13 @@ public class NativeWindow extends JFrame {
 
     public NativeWindow(Route route) throws IOException {
         this("file:///" + route.writeToTempFile().getAbsolutePath());
+
+        // Attach listeners
+        route.content.forEachChildRecursive(child -> {
+            for (Runnable code : child.onClick) {
+                onClick(child, code);
+            }
+        });
     }
 
     public NativeWindow(String startURL) {
@@ -151,6 +162,51 @@ public class NativeWindow extends JFrame {
 
     public NativeWindow plusY(int y) {
         this.setLocation(getX(), getY() + y);
+        return this;
+    }
+
+    /**
+     * Wraps around your provided jsCode and adds a few things so that executing the returned JS code
+     * via {@link #browser} results in onJSFunctionExecuted being executed.
+     *
+     * @param jsCode               modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
+     *                             Your JS code could look like this: <br>
+     *                             <pre>
+     *                                               message = 'first second third';
+     *                                           </pre>
+     * @param onJSFunctionExecuted contains the message variable from the JS code.
+     */
+    public String addCallback(String jsCode, Consumer<String> onJSFunctionExecuted) {
+        // 1. execute js code
+        // 2. execute callback in java with params from js code
+        // 3. return success to js code and execute it
+        String id = "" + App.cefMessageRouterRequestId.getAndIncrement();
+        App.cefMessageRouter.addHandler(new CefMessageRouterHandlerAdapter() {
+            @Override
+            public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
+                if (request.startsWith(id)) {
+                    onJSFunctionExecuted.accept(request.substring(request.indexOf(" ") + 1));
+                    //callback.success("my_response");
+                    return true;
+                }
+                return false;  // Not handled.
+            }
+        }, false);
+        return "var message = \"\";\n" + // Separated by space
+                "" + jsCode +
+                "window.cefQuery({request: '" + id + " ' + message,\n" +
+                "                 persistent: false,\n" +
+                "                 onSuccess: function(response) {},\n" + // for example: print(response);
+                "                 onFailure: function(error_code, error_message) {} });\n";
+    }
+
+    public NativeWindow onClick(com.osiris.desku.ui.Component<?> comp, Runnable code) {
+        String js0 = "var comp = document.querySelectorAll('[javaId=\"" + comp.id + "\"]')[0];\n" +
+                "comp.addEventListener(\"click\", () => {});\n";
+        String js1 = addCallback("", (message) -> {
+            code.run();
+        });
+        browser.executeJavaScript(js0 + js1, "internal", 0);
         return this;
     }
 }

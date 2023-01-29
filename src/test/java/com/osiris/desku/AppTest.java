@@ -18,8 +18,9 @@ class AppTest {
         Route about = new About();
 
         // Create windows
-        new NativeWindow(home);
+        NativeWindow winHome = new NativeWindow(home);
         //new NativeWindow(about).plusX(20).plusY(20);
+
 
         // Exit main thread once all windows closed
         // Note that this is only required in this test

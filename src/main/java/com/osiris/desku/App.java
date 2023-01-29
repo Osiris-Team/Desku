@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +31,8 @@ public class App {
     public static final File workingDir = new File(System.getProperty("user.dir"));
     public static final CefApp cef;
     public static final CefClient cefClient;
+    public static final CefMessageRouter cefMessageRouter;
+    public static final AtomicInteger cefMessageRouterRequestId = new AtomicInteger();
     public static String name = "My Todo";
     /**
      * Should get cleared by the operating system on reboots. <br>
@@ -83,8 +86,11 @@ public class App {
             // (2) JCEF can handle one to many browser instances simultaneous.
             cefClient = cef.createClient();
             // (3) Create a simple message router to receive messages from CEF.
-            CefMessageRouter msgRouter = CefMessageRouter.create();
-            cefClient.addMessageRouter(msgRouter);
+            CefMessageRouter.CefMessageRouterConfig config = new CefMessageRouter.CefMessageRouterConfig();
+            config.jsQueryFunction = "cefQuery";
+            config.jsCancelFunction = "cefQueryCancel";
+            cefMessageRouter = CefMessageRouter.create(config);
+            cefClient.addMessageRouter(cefMessageRouter);
 
             AL.info("Started application successfully!");
         } catch (Exception e) {

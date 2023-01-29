@@ -9,12 +9,26 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class Component<T> {
+    private static final AtomicInteger idCounter = new AtomicInteger();
     public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
+    /**
+     * Useful to find this object in JavaScript. <br>
+     * Example: The code below will return the object with the javaId = 5.
+     * <pre>
+     *     var element = document.querySelectorAll('[javaId="5"]')[0];
+     * </pre>
+     */
+    public final int id = idCounter.getAndIncrement();
     public T target;
     public Element element;
+
+    // Listeners
+    public CopyOnWriteArrayList<Runnable> onClick = new CopyOnWriteArrayList<>();
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -24,6 +38,7 @@ public class Component<T> {
     public void init(T target, String tag) {
         this.target = target;
         this.element = new Element(tag);
+        element.attr("javaId", "" + id);
     }
 
     /**
@@ -34,6 +49,7 @@ public class Component<T> {
     public void init(T target, Tag tag, String baseUri, Attributes attributes) {
         this.target = target;
         this.element = new Element(tag, baseUri, attributes);
+        element.attr("javaId", "" + id);
     }
 
     /**
@@ -44,6 +60,7 @@ public class Component<T> {
     public void init(T target, Tag tag, String baseUri) {
         this.target = target;
         this.element = new Element(tag, baseUri);
+        element.attr("javaId", "" + id);
     }
 
     public T add(Collection<Component<?>> comp) {
@@ -109,6 +126,19 @@ public class Component<T> {
         }
 
         return target;
+    }
+
+    public void forEachChildRecursive(Consumer<Component<?>> code) {
+        for (Component<?> child : this.children) {
+            forEachChildRecursive(child, code);
+        }
+    }
+
+    public void forEachChildRecursive(Component<?> comp, Consumer<Component<?>> code) {
+        code.accept(comp);
+        for (Component<?> child : comp.children) {
+            forEachChildRecursive(child, code);
+        }
     }
 
     public T sizeFull() {
