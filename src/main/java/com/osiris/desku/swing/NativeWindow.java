@@ -5,20 +5,13 @@ import com.osiris.desku.Route;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
-import org.cef.callback.CefURLRequestClient;
-import org.cef.handler.CefLoadHandler;
 import org.cef.handler.CefLoadHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.cef.handler.CefPrintHandlerAdapter;
-import org.cef.network.CefRequest;
-import org.cef.network.CefResponse;
-import org.cef.network.CefURLRequest;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -108,7 +101,7 @@ public class NativeWindow extends JFrame {
             App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
                 @Override
                 public void onLoadEnd(CefBrowser b, CefFrame frame, int httpStatusCode) {
-                    if(b == browser){
+                    if (b == browser) {
                         isLoaded.set(true);
                     }
                 }
@@ -195,8 +188,8 @@ public class NativeWindow extends JFrame {
      * @param jsCode               modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
      *                             Your JS code could look like this: <br>
      *                             <pre>
-     *                                               message = 'first second third';
-     *                                           </pre>
+     *                                                                           message = 'first second third';
+     *                                                                       </pre>
      * @param onJSFunctionExecuted contains the message variable from the JS code.
      */
     public String addCallback(String jsCode, Consumer<String> onJSFunctionExecuted) {
@@ -236,7 +229,7 @@ public class NativeWindow extends JFrame {
         return this;
     }
 
-    public DevToolsDialog openDevTools(){
+    public DevToolsDialog openDevTools() {
         return new DevToolsDialog("DevTools", browser);
     }
 }

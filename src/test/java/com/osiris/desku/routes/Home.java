@@ -13,12 +13,16 @@ public class Home extends Route {
     @Override
     public Component<?> loadContent() {
         Layout ly = new Layout();
-        ly.textM("Text M").onClick(() -> {
+        ly.add(new Text("Text M").onClick(() -> {
             System.out.println("Clicked text M!");
-        });
+        }));
         ly.add(new Text("Text XL").onClick(() -> {
             System.out.println("Clicked text XL!");
         }).selfEnd());
+        ly.vertical()
+                .textS("Small")
+                .textM("Medium")
+                .horizontal().textL("Large").textXL("XLarge");
         return ly;
     }
 }

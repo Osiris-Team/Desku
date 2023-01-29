@@ -8,7 +8,7 @@ import java.util.function.Supplier;
  * MRoute (MutableRoute) uses a public, modifiable function that gets executed at {@link #loadContent()},
  * which makes it possible to use lambdas.
  */
-public class MRoute extends Route{
+public class MRoute extends Route {
     public Supplier<Component<?>> onLoad;
 
     public MRoute(String path, Supplier<Component<?>> onLoad) {

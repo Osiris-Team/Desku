@@ -28,7 +28,7 @@ public class Component<T> {
     public Element element;
 
     // Listeners
-    private CopyOnWriteArrayList<Runnable> onClick = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Runnable> onClick = new CopyOnWriteArrayList<>();
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -314,7 +314,7 @@ public class Component<T> {
     /**
      * Aligns items top to bottom.
      */
-    public T childVertical(){
+    public T childVertical() {
         style.put("flex-direction", "column");
         return target;
     }
@@ -322,7 +322,7 @@ public class Component<T> {
     /**
      * (Default) Aligns items left to right in ltr; right to left in rtl.
      */
-    public T childHorizontal(){
+    public T childHorizontal() {
         style.put("flex-direction", "row");
         return target;
     }
@@ -429,7 +429,7 @@ public class Component<T> {
     // Listeners
     //
 
-    public T onClick(Runnable code){
+    public T onClick(Runnable code) {
         onClick.add(code);
         return target;
     }
