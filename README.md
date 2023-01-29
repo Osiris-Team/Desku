@@ -30,3 +30,13 @@ public class Main {
 - Localhost-free and server-less.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 implementation, thus making simple/complex layout creation faster and easier than ever.
+
+### Extensions
+A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
+It can be a single component or a complete suite of multiple components, either
+way its pretty easy to create a Desku-Extension:
+1. Add the Desku dependency.
+2. Extend the Component class and start coding.
+3. Publish your repo on GitHub with the #desku-extension tag.
+4. Create a release and use JitPack or Maven to host the assets.
+
