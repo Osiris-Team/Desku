@@ -1,8 +1,6 @@
 package com.osiris.desku.ui;
 
 public class Layout extends Component<Layout> {
-    public VerticalLayout vl = new VerticalLayout();
-    public HorizontalLayout hl = new HorizontalLayout();
     private String nextWidth, nextHeight;
 
     public Layout() {
@@ -19,12 +17,8 @@ public class Layout extends Component<Layout> {
 
     public Layout(boolean isHorizontal, Component<?>... children) {
         init(this, "ly");
-        vl.sizeFull();
-        hl.sizeFull();
-        super.add(vl, hl);
         if (children != null) {
-            vl.add(children);
-            hl.add(children);
+            add(children);
         }
         align(isHorizontal);
     }
@@ -42,26 +36,22 @@ public class Layout extends Component<Layout> {
 
     public Layout align(boolean horizontal) {
         if (horizontal) {
-            super.add(hl);
-            super.remove(vl);
+            childHorizontal();
         } else {
-            super.add(vl);
-            super.remove(hl);
+            childVertical();
         }
         return this;
     }
 
     /**
      * Same as {@link Component#add(Component[])},
-     * but componets will be added to {@link #hl} and {@link #vl}. <br>
-     * Also note that the first components' width/height will be
+     * but the first components' width/height will be
      * set if {@link #widthNext(String)} or {@link #heightNext(String)} was called before.
      */
     @Override
     public Layout add(Component<?>... components) {
         for (Component<?> c : components) {
-            vl.add(c);
-            hl.add(c);
+            super.add(c);
             setCompSize(c);
         }
         return this;
@@ -80,24 +70,6 @@ public class Layout extends Component<Layout> {
      */
     public Layout heightNext(String s) {
         nextHeight = (s);
-        return this;
-    }
-
-    public Layout padding(boolean b) {
-        vl.padding(b);
-        hl.padding(b);
-        return this;
-    }
-
-    public Layout margin(boolean b) {
-        vl.margin(b);
-        hl.margin(b);
-        return this;
-    }
-
-    public Layout spacing(boolean b) {
-        vl.spacing(b);
-        hl.spacing(b);
         return this;
     }
 

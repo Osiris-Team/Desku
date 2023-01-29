@@ -17,7 +17,7 @@ public class Component<T> {
     public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
     /**
-     * Useful to find this object in JavaScript. <br>
+     * Equals the attribute "javaId" inside HTML and thus useful for finding this object via JavaScript. <br>
      * Example: The code below will return the object with the javaId = 5.
      * <pre>
      *     var element = document.querySelectorAll('[javaId="5"]')[0];
@@ -28,7 +28,7 @@ public class Component<T> {
     public Element element;
 
     // Listeners
-    public CopyOnWriteArrayList<Runnable> onClick = new CopyOnWriteArrayList<>();
+    private CopyOnWriteArrayList<Runnable> onClick = new CopyOnWriteArrayList<>();
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -312,6 +312,22 @@ public class Component<T> {
     }
 
     /**
+     * Aligns items top to bottom.
+     */
+    public T childVertical(){
+        style.put("flex-direction", "column");
+        return target;
+    }
+
+    /**
+     * (Default) Aligns items left to right in ltr; right to left in rtl.
+     */
+    public T childHorizontal(){
+        style.put("flex-direction", "row");
+        return target;
+    }
+
+    /**
      * justify-content <br>
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
@@ -407,5 +423,18 @@ public class Component<T> {
     public T childGapX(String s) {
         style.put("column-gap", s);
         return target;
+    }
+
+    //
+    // Listeners
+    //
+
+    public T onClick(Runnable code){
+        onClick.add(code);
+        return target;
+    }
+
+    public CopyOnWriteArrayList<Runnable> getOnClick() {
+        return onClick;
     }
 }

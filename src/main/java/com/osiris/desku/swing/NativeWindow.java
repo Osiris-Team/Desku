@@ -25,12 +25,15 @@ public class NativeWindow extends JFrame {
     public NativeWindow(Route route) throws IOException {
         this("file:///" + route.writeToTempFile().getAbsolutePath());
 
-        // Attach listeners
-        route.content.forEachChildRecursive(child -> {
-            for (Runnable code : child.onClick) {
+        Consumer<com.osiris.desku.ui.Component<?>> consumer = child -> {
+            for (Runnable code : child.getOnClick()) {
                 onClick(child, code);
             }
-        });
+        };
+
+        // Attach listeners
+        consumer.accept(route.content);
+        route.content.forEachChildRecursive(consumer);
     }
 
     public NativeWindow(String startURL) {
@@ -201,12 +204,15 @@ public class NativeWindow extends JFrame {
     }
 
     public NativeWindow onClick(com.osiris.desku.ui.Component<?> comp, Runnable code) {
-        String js0 = "var comp = document.querySelectorAll('[javaId=\"" + comp.id + "\"]')[0];\n" +
-                "comp.addEventListener(\"click\", () => {});\n";
-        String js1 = addCallback("", (message) -> {
+        String jsTriggerCallback = addCallback("", (message) -> {
             code.run();
         });
-        browser.executeJavaScript(js0 + js1, "internal", 0);
+        String jsNow = "var comp = document.querySelectorAll('[javaId=\"" + comp.id + "\"]')[0];\n" +
+                "comp.addEventListener(\"click\", () => {\n" +
+                "" + jsTriggerCallback + // JS code that triggers Java function gets executed on a click event for this component
+                "});\n";
+
+        browser.executeJavaScript(jsNow, "internal", 0);
         return this;
     }
 }

@@ -36,7 +36,7 @@ A list of all available extensions can be found [here](https://github.com/topics
 It can be a single component or a complete suite of multiple components, either
 way its pretty easy to create a Desku-Extension:
 1. Add the Desku dependency.
-2. Extend the Component class and start coding.
-3. Publish your repo on GitHub with the #desku-extension tag.
+2. Extend the Component class and start coding (example component [here](https://github.com/Osiris-Team/Desku/blob/main/src/test/java/com/osiris/desku/HelloWorldApp.java)).
+3. Publish your repo on GitHub with the #desku-extension tag/topic.
 4. Create a release and use JitPack or Maven to host the assets.
 

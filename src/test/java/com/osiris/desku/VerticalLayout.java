@@ -1,11 +1,15 @@
-package com.osiris.desku.ui;
+package com.osiris.desku;
 
-import com.osiris.desku.App;
+import com.osiris.desku.ui.Component;
 
+/**
+ * Example for a custom component.
+ */
 public class VerticalLayout extends Component<VerticalLayout> {
-    static {
+
+    static { // Executed only once
         App.appendToGlobalStyles("" +
-                "vl{" +
+                "vl{" + // Style affects all components with the tag "vl"
                 "display: flex;" +
                 "flex-direction: column;" +
                 "}");
@@ -13,5 +17,6 @@ public class VerticalLayout extends Component<VerticalLayout> {
 
     public VerticalLayout() {
         init(this, "vl");
+        // Make sure to call init before anything else!
     }
 }
