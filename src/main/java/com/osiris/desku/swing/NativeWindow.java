@@ -2,6 +2,7 @@ package com.osiris.desku.swing;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
+import com.osiris.desku.UI;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
@@ -21,21 +22,25 @@ import java.util.function.Consumer;
  *
  */
 public class NativeWindow extends JFrame {
-    public final CefBrowser browser;
-    public final Component browserUI;
+    public CefBrowser browser;
+    public Component browserUI;
 
     public NativeWindow(Route route) throws IOException {
-        this("file:///" + route.writeToTempFile().getAbsolutePath());
+        this(route.createUI());
+    }
+
+    public NativeWindow(UI ui) throws IOException {
+        this("file:///" + ui.snapshotToTempFile().getAbsolutePath());
 
         Consumer<com.osiris.desku.ui.Component<?>> consumer = child -> {
-            for (Runnable code : child.getOnClick()) {
+            for (Runnable code : child.getClickListeners()) {
                 onClick(child, code);
             }
         };
 
         // Attach listeners
-        consumer.accept(route.content);
-        route.content.forEachChildRecursive(consumer);
+        consumer.accept(ui.content);
+        ui.content.forEachChildRecursive(consumer);
     }
 
     public NativeWindow(String startURL) {
@@ -182,17 +187,17 @@ public class NativeWindow extends JFrame {
     }
 
     /**
-     * Wraps around your provided jsCode and adds a few things so that executing the returned JS code
-     * via {@link #browser} results in onJSFunctionExecuted being executed.
+     * Returns new JS (JavaScript) code, that when executed in {@link #browser}
+     * results in onJSFunctionExecuted being executed. <br>
+     * It wraps around your jsCode and adds callback related stuff, as well as error handling.
      *
      * @param jsCode               modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
      *                             Your JS code could look like this: <br>
-     *                             <pre>
-     *                                                                           message = 'first second third';
-     *                                                                       </pre>
-     * @param onJSFunctionExecuted contains the message variable from the JS code.
+     *                             message = 'first second third etc...';
+     * @param onJSFunctionExecuted executed when the provided jsCode executes successfully. String contains the message variable that can be set in your jsCode.
+     * @param onJsFunctionFailed   executed when the provided jsCode threw an exception. String contains details about the exception/error.
      */
-    public String addCallback(String jsCode, Consumer<String> onJSFunctionExecuted) {
+    public String addCallback(String jsCode, Consumer<String> onJSFunctionExecuted, Consumer<String> onJsFunctionFailed) {
         // 1. execute js code
         // 2. execute callback in java with params from js code
         // 3. return success to js code and execute it
@@ -201,16 +206,21 @@ public class NativeWindow extends JFrame {
             @Override
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
                 if (request.startsWith(id)) {
-                    onJSFunctionExecuted.accept(request.substring(request.indexOf(" ") + 1));
+                    int iFirstSpace = request.indexOf(" ");
+                    if (request.charAt(iFirstSpace - 1) == '!') // message looks like this: "3! Error details..." 3 is the id and can be any number
+                        onJsFunctionFailed.accept(request.substring(iFirstSpace + 1));
+                    else // message looks like this: "3 first second etc..." 3 is the id and can be any number
+                        onJSFunctionExecuted.accept(request.substring(iFirstSpace + 1));
                     //callback.success("my_response");
                     return true;
                 }
                 return false;  // Not handled.
             }
         }, false);
-        return "var message = \"\";\n" + // Separated by space
-                "" + jsCode +
-                "window.cefQuery({request: '" + id + " ' + message,\n" +
+        return "var message = '';\n" + // Separated by space
+                "var error = null;\n" +
+                "try{" + jsCode + "} catch (e) { error = e; }\n" +
+                "window.cefQuery({request: '" + id + "'+(error == null ? (' '+message) : ('! '+error)),\n" +
                 "                 persistent: false,\n" +
                 "                 onSuccess: function(response) {},\n" + // for example: print(response);
                 "                 onFailure: function(error_code, error_message) {} });\n";
@@ -219,6 +229,8 @@ public class NativeWindow extends JFrame {
     public NativeWindow onClick(com.osiris.desku.ui.Component<?> comp, Runnable code) {
         String jsTriggerCallback = addCallback("", (message) -> {
             code.run();
+        }, (error) -> {
+            throw new RuntimeException(error);
         });
         String jsNow = "var comp = document.querySelectorAll('[java-id=\"" + comp.id + "\"]')[0];\n" +
                 "comp.addEventListener(\"click\", () => {\n" +

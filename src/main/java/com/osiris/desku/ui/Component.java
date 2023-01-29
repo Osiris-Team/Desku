@@ -14,8 +14,6 @@ import java.util.function.Consumer;
 
 public class Component<T> {
     private static final AtomicInteger idCounter = new AtomicInteger();
-    public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
-    public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
     /**
      * Equals the attribute "java-id" inside HTML and thus useful for finding this object via JavaScript. <br>
      * Example: The code below will return the object with the java-id = 5.
@@ -24,11 +22,11 @@ public class Component<T> {
      * </pre>
      */
     public final int id = idCounter.getAndIncrement();
+    public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
+    public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Runnable> clickListeners = new CopyOnWriteArrayList<>();
     public T target;
     public Element element;
-
-    // Listeners
-    private final CopyOnWriteArrayList<Runnable> onClick = new CopyOnWriteArrayList<>();
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -104,7 +102,7 @@ public class Component<T> {
     /**
      * Performs {@link #update()} for this and all child components recursively. <br>
      * Note that you don't have to call this function, since it already gets called before showing the window,
-     * in {@link Route#load()}.
+     * in {@link Route#toDocument()}.
      */
     public T updateAll() {
         // Update this style
@@ -430,11 +428,11 @@ public class Component<T> {
     //
 
     public T onClick(Runnable code) {
-        onClick.add(code);
+        clickListeners.add(code);
         return target;
     }
 
-    public CopyOnWriteArrayList<Runnable> getOnClick() {
-        return onClick;
+    public CopyOnWriteArrayList<Runnable> getClickListeners() {
+        return clickListeners;
     }
 }
