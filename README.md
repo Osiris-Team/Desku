@@ -37,3 +37,7 @@ way its pretty easy to create a Desku-Extension:
 3. Publish your repo on GitHub with the #desku-extension tag/topic.
 4. Create a release and use JitPack or Maven to host the assets.
 
+### Todo
+- Serializable UI
+- Support layout changes inside JavaScript events (click event for example).
+
