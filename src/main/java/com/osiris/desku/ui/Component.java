@@ -198,9 +198,10 @@ public class Component<T> {
     }
 
     /**
-     * Removes this style attribute from {@link #style}.
+     * Removes this style attribute from {@link #style},
+     * thus enforcing its default state/style.
      */
-    public T overflowRemove() {
+    public T overflowDefault() {
         style.remove("overflow");
         return target;
     }
@@ -250,7 +251,11 @@ public class Component<T> {
         return target;
     }
 
-    public T orderRemove() {
+    /**
+     * Removes this style attribute from {@link #style},
+     * thus enforcing its default state/style.
+     */
+    public T orderDefault() {
         style.remove("order");
         return target;
     }
@@ -273,7 +278,11 @@ public class Component<T> {
         return target;
     }
 
-    public T growRemove() {
+    /**
+     * Removes this style attribute from {@link #style},
+     * thus enforcing its default state/style.
+     */
+    public T growDefault() {
         style.remove("grow");
         return target;
     }
@@ -289,7 +298,11 @@ public class Component<T> {
         return target;
     }
 
-    public T shrinkRemove() {
+    /**
+     * Removes this style attribute from {@link #style},
+     * thus enforcing its default state/style.
+     */
+    public T shrinkDefault() {
         style.remove("shrink");
         return target;
     }
