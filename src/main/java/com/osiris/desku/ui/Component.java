@@ -25,7 +25,16 @@ public class Component<T> {
     public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<Runnable> clickListeners = new CopyOnWriteArrayList<>();
+    /**
+     * The instance of the extending class. <br>
+     * Is returned in pretty much all methods, to allow method chaining by returning
+     * the extending class instead of {@link Component}.
+     */
     public T target;
+    /**
+     * Jsoup {@link Element} that can be used to convert this
+     * {@link Component} into an actual HTML string.
+     */
     public Element element;
 
     /**
