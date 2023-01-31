@@ -9,7 +9,7 @@ public class Main {
         App.name = "My-App";
 
         // Create routes
-        Route home = new MRoute("/", () -> { // You can also create a new class and extend Route
+        Route home = new MRoute("/", () -> { // It's recommended to create a new class and extend Route instead (for larger UIs)
             return new Layout().text("Hello World!"); 
         });
 
