@@ -111,7 +111,7 @@ public class Component<T> {
     /**
      * Performs {@link #update()} for this and all child components recursively. <br>
      * Note that you don't have to call this function, since it already gets called before showing the window,
-     * in {@link Route#toDocument()}.
+     * in {@link Route#getDocument()}.
      */
     public T updateAll() {
         // Update this style
@@ -194,6 +194,48 @@ public class Component<T> {
     public T spacing(boolean b) {
         if (b) style.put("spacing", "var(--space-m)");
         else style.remove("spacing");
+        return target;
+    }
+
+    /**
+     * Removes this style attribute from {@link #style}.
+     */
+    public T overflowRemove() {
+        style.remove("overflow");
+        return target;
+    }
+
+    /**
+     * By default, the overflow is visible, meaning that it is not clipped and it renders outside the element's box.
+     */
+    public T overflowVisible() {
+        style.put("overflow", "visible");
+        return target;
+    }
+
+    /**
+     * With the hidden value, the overflow is clipped, and the rest of the content is hidden.
+     */
+    public T overflowHidden() {
+        style.put("overflow", "hidden");
+        return target;
+    }
+
+    /**
+     * Setting the value to scroll, the overflow is clipped and a scrollbar is added to scroll inside the box.
+     * Note that this will add a scrollbar both horizontally and vertically (even if you do not need it).
+     * Thus {@link #overflowAuto()} might be better suited.
+     */
+    public T overflowScroll() {
+        style.put("overflow", "scroll");
+        return target;
+    }
+
+    /**
+     * The auto value is similar to scroll, but it adds scrollbars only when necessary.
+     */
+    public T overflowAuto() {
+        style.put("overflow", "auto");
         return target;
     }
 
