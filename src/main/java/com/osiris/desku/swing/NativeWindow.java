@@ -4,7 +4,6 @@ import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.EventType;
-import com.osiris.events.Action;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
@@ -295,7 +294,7 @@ public class NativeWindow extends JFrame {
         registeredJSOnClickListenerComponents.add(comp);
 
         String jsTriggerCallback = addCallback("", (message) -> {
-            comp.onClick.execute(null); // Executes all listeners
+            comp._onClick.execute(null); // Executes all listeners
         }, (error) -> {
             throw new RuntimeException(error);
         });

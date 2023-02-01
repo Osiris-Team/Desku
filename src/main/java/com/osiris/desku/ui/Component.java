@@ -62,7 +62,13 @@ public class Component<T> {
      * Executed when a JavaScript listener was removed via Java.
      */
     public final Event<EventType> onJSListenerRemoved = new Event<>();
-    public final Event<Void> onClick = new Event<>();
+    /**
+     * Executed when this component was clicked by the user (a JavaScript click event was thrown). <br>
+     * Use the {@link #onClick(Runnable)} method. Do not add actions
+     * directly via this variable, since it will only work if this component
+     * was not yet attached once to the UI.
+     */
+    public final Event<Void> _onClick = new Event<>();
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -530,8 +536,11 @@ public class Component<T> {
     // Listeners
     //
 
+    /**
+     * @see #_onClick
+     */
     public T onClick(Runnable code) {
-        onClick.addAction((obj) -> code.run());
+        _onClick.addAction((obj) -> code.run());
         onJSListenerAdded.execute(EventType.CLICK);
         // TODO onJSListenerRemoved
         return target;
