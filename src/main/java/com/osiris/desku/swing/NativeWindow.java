@@ -3,6 +3,8 @@ package com.osiris.desku.swing;
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.UI;
+import com.osiris.desku.ui.EventType;
+import com.osiris.events.Action;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
@@ -15,6 +17,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -24,6 +27,17 @@ import java.util.function.Consumer;
 public class NativeWindow extends JFrame {
     public CefBrowser browser;
     public Component browserUI;
+    /**
+     * Only not null if one of these constructors was used: <br>
+     * {@link #NativeWindow(Route)} <br>
+     * {@link #NativeWindow(UI)} <br>
+     */
+    public UI ui;
+    /**
+     * List of components that have a JavaScript click listener attached. <br>
+     * Each component here has exactly one click listener attached. <br>
+     */
+    public final CopyOnWriteArrayList<com.osiris.desku.ui.Component<?>> registeredJSOnClickListenerComponents = new CopyOnWriteArrayList<>();
 
     public NativeWindow(Route route) throws IOException {
         this(route.createUI());
@@ -31,16 +45,11 @@ public class NativeWindow extends JFrame {
 
     public NativeWindow(UI ui) throws IOException {
         this("file:///" + ui.snapshotToTempFile().getAbsolutePath());
-
-        Consumer<com.osiris.desku.ui.Component<?>> consumer = child -> {
-            for (Runnable code : child.getClickListeners()) {
-                onClick(child, code);
-            }
-        };
-
-        // Attach listeners
-        consumer.accept(ui.content);
-        ui.content.forEachChildRecursive(consumer);
+        this.ui = ui;
+        registerListeners(ui, ui.content);
+        ui.content.forEachChildRecursive(child -> {
+            registerListeners(ui, child);
+        });
     }
 
     public NativeWindow(String startURL) {
@@ -111,6 +120,7 @@ public class NativeWindow extends JFrame {
                     }
                 }
             });
+            // JavaScript cannot be executed before the page is loaded
             while (!isLoaded.get()) Thread.yield();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -226,13 +236,70 @@ public class NativeWindow extends JFrame {
                 "                 onFailure: function(error_code, error_message) {} });\n";
     }
 
-    public NativeWindow onClick(com.osiris.desku.ui.Component<?> comp, Runnable code) {
+    private String jsGetComp(String varName, int id){
+        return "var "+varName+" = document.querySelectorAll('[java-id=\"" + id + "\"]')[0];\n";
+    }
+
+    public NativeWindow registerListeners(UI ui, com.osiris.desku.ui.Component<?> comp) {
+        if(comp.uis.contains(ui)) return this;
+        comp.uis.add(ui);
+
+        // Attach Java event listeners
+        comp.onAddedChild.addAction((childComp) -> {
+            comp.element.appendChild(childComp.element);
+            browser.executeJavaScript(jsGetComp("comp", comp.id)+
+                            "var tempDiv = document.createElement('div');\n" +
+                            "tempDiv.innerHTML = `"+childComp.element.outerHtml() + "`;\n" +
+                            "comp.appendChild(tempDiv.firstChild);\n",
+                    "internal", 0);
+            registerListeners(ui, childComp);
+        });
+        comp.onRemovedChild.addAction((childComp) -> {
+            childComp.element.remove();
+            browser.executeJavaScript(jsGetComp("comp", comp.id)+
+                            jsGetComp("childComp", childComp.id)+
+                            "comp.removeChild(childComp);\n",
+                    "internal", 0);
+        });
+        comp.onStyleChanged.addAction((attribute) -> {
+            comp.element.attr(attribute.getKey(), attribute.getValue());
+            browser.executeJavaScript(jsGetComp("comp", comp.id)+
+                            "comp.setAttribute(`"+attribute.getKey()+"`,`"+attribute.getValue()+"`);\n",
+                    "internal", 0);
+        });
+        comp.onJSListenerAdded.addAction((eventType) -> {
+            attachJSEventListener(eventType, comp);
+        });
+        comp.onJSListenerRemoved.addAction((eventType) -> {
+            // TODO
+        });
+
+        // Attach JavaScript event listeners
+        jsOnClick(ui, comp);
+        return this;
+    }
+
+    private void attachJSEventListener(EventType eventType, com.osiris.desku.ui.Component<?> comp) {
+        switch (eventType){
+            case CLICK:
+                jsOnClick(ui, comp);
+                break;
+            default:
+                throw new RuntimeException("Unknown event type "+eventType+", thus failed to attach JavaScript listener for it.");
+        }
+    }
+
+    public NativeWindow jsOnClick(UI ui, com.osiris.desku.ui.Component<?> comp) {
+        if(registeredJSOnClickListenerComponents.contains(comp))
+            return this; // Already registered
+        registeredJSOnClickListenerComponents.add(comp);
+
         String jsTriggerCallback = addCallback("", (message) -> {
-            code.run();
+            comp.onClick.execute(null); // Executes all listeners
         }, (error) -> {
             throw new RuntimeException(error);
         });
-        String jsNow = "var comp = document.querySelectorAll('[java-id=\"" + comp.id + "\"]')[0];\n" +
+        String jsNow = jsGetComp("comp", comp.id) +
                 "comp.addEventListener(\"click\", () => {\n" +
                 "" + jsTriggerCallback + // JS code that triggers Java function gets executed on a click event for this component
                 "});\n";

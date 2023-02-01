@@ -28,6 +28,11 @@
     <dependencies>
         <dependency>
             <groupId>com.github.Osiris-Team</groupId>
+            <artifactId>Easy-Java-Events</artifactId>
+            <version>1.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Osiris-Team</groupId>
             <artifactId>jlib</artifactId>
             <version>16.11</version>
         </dependency>

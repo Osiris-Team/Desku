@@ -1,6 +1,8 @@
 package com.osiris.desku.ui;
 
-import com.osiris.desku.Route;
+import com.osiris.desku.UI;
+import com.osiris.events.Event;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
@@ -24,7 +26,10 @@ public class Component<T> {
     public final int id = idCounter.getAndIncrement();
     public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<Runnable> clickListeners = new CopyOnWriteArrayList<>();
+    /**
+     * List of {@link UI}s this component is attached to.
+     */
+    public final CopyOnWriteArrayList<UI> uis = new CopyOnWriteArrayList<>();
     /**
      * The instance of the extending class. <br>
      * Is returned in pretty much all methods, to allow method chaining by returning
@@ -36,6 +41,28 @@ public class Component<T> {
      * {@link Component} into an actual HTML string.
      */
     public Element element;
+
+    /**
+     * Executed when a child was added on the Java side.
+     */
+    public final Event<Component<?>> onAddedChild = new Event<>();
+    /**
+     * Executed when a child was removed on the Java side.
+     */
+    public final Event<Component<?>> onRemovedChild = new Event<>();
+    /**
+     * Executed when a style change was made on the Java side.
+     */
+    public final Event<Attribute> onStyleChanged = new Event<>();
+    /**
+     * Executed when a JavaScript listener was added via Java.
+     */
+    public final Event<EventType> onJSListenerAdded = new Event<>();
+    /**
+     * Executed when a JavaScript listener was removed via Java.
+     */
+    public final Event<EventType> onJSListenerRemoved = new Event<>();
+    public final Event<Void> onClick = new Event<>();
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -73,25 +100,38 @@ public class Component<T> {
     public T add(Collection<Component<?>> comp) {
         if (comp == null) return target;
         children.addAll(comp);
+        for (Component<?> c : comp) {onAddedChild.execute(c);}
         return target;
     }
 
     public T add(Component<?>... comp) {
         if (comp == null) return target;
         children.addAll(Arrays.asList(comp));
+        for (Component<?> c : comp) {onAddedChild.execute(c);}
         return target;
     }
 
     public T remove(Component<?>... comp) {
         if (comp == null) return target;
         children.removeAll(Arrays.asList(comp));
+        for (Component<?> c : comp) {onRemovedChild.execute(c);}
         return target;
     }
 
     public T remove(Collection<Component<?>> comp) {
         if (comp == null) return target;
         children.removeAll(comp);
+        for (Component<?> c : comp) {onRemovedChild.execute(c);}
         return target;
+    }
+
+    protected void stylePut(String key, String val){
+        style.put(key, val);
+        onStyleChanged.execute(new Attribute(key, val));
+    }
+    protected void styleRemove(String key){
+        style.remove(key);
+        onStyleChanged.execute(new Attribute(key, ""));
     }
 
     /**
@@ -100,32 +140,31 @@ public class Component<T> {
      * If child components also changed call {@link #updateAll()} instead. <br>
      */
     public T update() {
+        // Update element style
         StringBuilder sb = new StringBuilder();
         style.forEach((key, val) -> {
             sb.append(key).append(": ").append(val).append("; ");
         });
         element.attr("style", sb.toString());
+
+        // Update element children list
+        for (Element child : element.children()) { // Clear children
+            child.remove();
+        }
+        for (Component<?> childComp : children) { // Set "new" children elements, from child components
+            element.appendChild(childComp.element);
+        }
         return target;
     }
 
     /**
      * Performs {@link #update()} for this and all child components recursively. <br>
      * Note that you don't have to call this function, since it already gets called before showing the window,
-     * in {@link Route#getDocument()}.
+     * in {@link UI#getSnapshot()}.
      */
     public T updateAll() {
         // Update this style
         update();
-
-        // Clear children
-        for (Element child : element.children()) {
-            child.remove();
-        }
-
-        // Update this child list
-        for (Component<?> childComp : children) {
-            element.appendChild(childComp.element);
-        }
 
         // Recursion for all children
         for (Component<?> childComp : children) {
@@ -157,8 +196,8 @@ public class Component<T> {
      * Sets width and height of the target component and return it for method chaining.
      */
     public T size(String width, String height) {
-        style.put("width", width);
-        style.put("height", height);
+        stylePut("width", width);
+        stylePut("height", height);
         return target;
     }
 
@@ -166,7 +205,7 @@ public class Component<T> {
      * Sets width of the target component and return it for method chaining.
      */
     public T width(String s) {
-        style.put("width", s);
+        stylePut("width", s);
         return target;
     }
 
@@ -174,26 +213,26 @@ public class Component<T> {
      * Sets height of the target component and return it for method chaining.
      */
     public T height(String s) {
-        style.put("height", s);
+        stylePut("height", s);
         return target;
     }
 
 
     public T padding(boolean b) {
-        if (b) style.put("padding", "var(--space-m)");
-        else style.remove("padding");
+        if (b) stylePut("padding", "var(--space-m)");
+        else styleRemove("padding");
         return target;
     }
 
     public T margin(boolean b) {
-        if (b) style.put("margin", "var(--space-m)");
-        else style.remove("margin");
+        if (b) stylePut("margin", "var(--space-m)");
+        else styleRemove("margin");
         return target;
     }
 
     public T spacing(boolean b) {
-        if (b) style.put("spacing", "var(--space-m)");
-        else style.remove("spacing");
+        if (b) stylePut("spacing", "var(--space-m)");
+        else styleRemove("spacing");
         return target;
     }
 
@@ -202,7 +241,7 @@ public class Component<T> {
      * thus enforcing its default state/style.
      */
     public T overflowDefault() {
-        style.remove("overflow");
+        styleRemove("overflow");
         return target;
     }
 
@@ -210,7 +249,7 @@ public class Component<T> {
      * By default, the overflow is visible, meaning that it is not clipped and it renders outside the element's box.
      */
     public T overflowVisible() {
-        style.put("overflow", "visible");
+        stylePut("overflow", "visible");
         return target;
     }
 
@@ -218,7 +257,7 @@ public class Component<T> {
      * With the hidden value, the overflow is clipped, and the rest of the content is hidden.
      */
     public T overflowHidden() {
-        style.put("overflow", "hidden");
+        stylePut("overflow", "hidden");
         return target;
     }
 
@@ -228,7 +267,7 @@ public class Component<T> {
      * Thus {@link #overflowAuto()} might be better suited.
      */
     public T overflowScroll() {
-        style.put("overflow", "scroll");
+        stylePut("overflow", "scroll");
         return target;
     }
 
@@ -236,7 +275,7 @@ public class Component<T> {
      * The auto value is similar to scroll, but it adds scrollbars only when necessary.
      */
     public T overflowAuto() {
-        style.put("overflow", "auto");
+        stylePut("overflow", "auto");
         return target;
     }
 
@@ -247,7 +286,7 @@ public class Component<T> {
      * Default: 0 <br>
      */
     public T order(int i) {
-        style.put("order", "" + i);
+        stylePut("order", "" + i);
         return target;
     }
 
@@ -256,7 +295,7 @@ public class Component<T> {
      * thus enforcing its default state/style.
      */
     public T orderDefault() {
-        style.remove("order");
+        styleRemove("order");
         return target;
     }
 
@@ -274,7 +313,7 @@ public class Component<T> {
      * Default: 0 <br>
      */
     public T grow(int i) {
-        style.put("grow", "" + i);
+        stylePut("grow", "" + i);
         return target;
     }
 
@@ -283,7 +322,7 @@ public class Component<T> {
      * thus enforcing its default state/style.
      */
     public T growDefault() {
-        style.remove("grow");
+        styleRemove("grow");
         return target;
     }
 
@@ -294,7 +333,7 @@ public class Component<T> {
      * Default: 1 <br>
      */
     public T shrink(int i) {
-        style.put("shrink", "" + i);
+        stylePut("shrink", "" + i);
         return target;
     }
 
@@ -303,7 +342,7 @@ public class Component<T> {
      * thus enforcing its default state/style.
      */
     public T shrinkDefault() {
-        style.remove("shrink");
+        styleRemove("shrink");
         return target;
     }
 
@@ -314,8 +353,8 @@ public class Component<T> {
      * true/wrap: flex items will wrap onto multiple lines, from top to bottom. <br>
      */
     public T wrap(boolean b) {
-        if (b) style.put("flex-wrap", "wrap");
-        else style.put("flex-wrap", "nowrap");
+        if (b) stylePut("flex-wrap", "wrap");
+        else stylePut("flex-wrap", "nowrap");
         return target;
     }
 
@@ -328,7 +367,7 @@ public class Component<T> {
      * Note that float, clear and vertical-align have no effect on a flex item.
      */
     public T selfStart() {
-        style.put("align-self", "flex-start");
+        stylePut("align-self", "flex-start");
         return target;
     }
 
@@ -338,7 +377,7 @@ public class Component<T> {
      * @see #selfStart()
      */
     public T selfEnd() {
-        style.put("align-self", "flex-end");
+        stylePut("align-self", "flex-end");
         return target;
     }
 
@@ -348,7 +387,7 @@ public class Component<T> {
      * @see #selfStart()
      */
     public T selfCenter() {
-        style.put("align-self", "center");
+        stylePut("align-self", "center");
         return target;
     }
 
@@ -359,7 +398,7 @@ public class Component<T> {
      * @see #selfStart()
      */
     public T selfAuto() {
-        style.put("align-self", "auto");
+        stylePut("align-self", "auto");
         return target;
     }
 
@@ -369,7 +408,7 @@ public class Component<T> {
      * @see #selfStart()
      */
     public T selfStretch() {
-        style.put("align-self", "stretch");
+        stylePut("align-self", "stretch");
         return target;
     }
 
@@ -377,7 +416,7 @@ public class Component<T> {
      * Aligns items top to bottom.
      */
     public T childVertical() {
-        style.put("flex-direction", "column");
+        stylePut("flex-direction", "column");
         return target;
     }
 
@@ -385,7 +424,7 @@ public class Component<T> {
      * (Default) Aligns items left to right in ltr; right to left in rtl.
      */
     public T childHorizontal() {
-        style.put("flex-direction", "row");
+        stylePut("flex-direction", "row");
         return target;
     }
 
@@ -394,7 +433,7 @@ public class Component<T> {
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
     public T childStart() {
-        style.put("justify-content", "flex-start");
+        stylePut("justify-content", "flex-start");
         return target;
     }
 
@@ -403,7 +442,7 @@ public class Component<T> {
      * flex-end: items are packed toward the end of the flex-direction.
      */
     public T childEnd() {
-        style.put("justify-content", "flex-end");
+        stylePut("justify-content", "flex-end");
         return target;
     }
 
@@ -412,7 +451,7 @@ public class Component<T> {
      * center: items are centered along the line
      */
     public T childCenter() {
-        style.put("justify-content", "center");
+        stylePut("justify-content", "center");
         return target;
     }
 
@@ -421,7 +460,7 @@ public class Component<T> {
      * space-between: items are evenly distributed in the line; first item is on the start line, last item on the end line
      */
     public T childSpaceBetween() {
-        style.put("justify-content", "space-between");
+        stylePut("justify-content", "space-between");
         return target;
     }
 
@@ -434,7 +473,7 @@ public class Component<T> {
      * the next item because that next item has its own spacing that applies.
      */
     public T childSpaceAround() {
-        style.put("justify-content", "space-around");
+        stylePut("justify-content", "space-around");
         return target;
     }
 
@@ -444,7 +483,7 @@ public class Component<T> {
      * between any two items (and the space to the edges) is equal.
      */
     public T childSpaceEvenly() {
-        style.put("justify-content", "space-around");
+        stylePut("justify-content", "space-around");
         return target;
     }
 
@@ -454,7 +493,7 @@ public class Component<T> {
      * stretch: stretch to fill the container (still respect min-width/max-width)
      */
     public T childStretch() {
-        style.put("align-items", "stretch");
+        stylePut("align-items", "stretch");
         return target;
     }
 
@@ -463,7 +502,7 @@ public class Component<T> {
      * It applies that spacing only between items not on the outer edges.
      */
     public T childGap(String s) {
-        style.put("gap", s);
+        stylePut("gap", s);
         return target;
     }
 
@@ -473,7 +512,7 @@ public class Component<T> {
      * Gap between rows/Y-Axis/height.
      */
     public T childGapY(String s) {
-        style.put("row-gap", s);
+        stylePut("row-gap", s);
         return target;
     }
 
@@ -483,7 +522,7 @@ public class Component<T> {
      * Gap between columns/X-Axis/width.
      */
     public T childGapX(String s) {
-        style.put("column-gap", s);
+        stylePut("column-gap", s);
         return target;
     }
 
@@ -492,11 +531,9 @@ public class Component<T> {
     //
 
     public T onClick(Runnable code) {
-        clickListeners.add(code);
+        onClick.addAction((obj) -> code.run());
+        onJSListenerAdded.execute(EventType.CLICK);
+        // TODO onJSListenerRemoved
         return target;
-    }
-
-    public CopyOnWriteArrayList<Runnable> getClickListeners() {
-        return clickListeners;
     }
 }

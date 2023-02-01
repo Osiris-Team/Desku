@@ -39,5 +39,4 @@ way its pretty easy to create a Desku-Extension:
 
 ### Todo
 - Serializable UI
-- Support layout changes inside JavaScript events (click event for example).
 
