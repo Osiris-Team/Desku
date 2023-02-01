@@ -9,15 +9,19 @@ import com.osiris.jlib.Stream;
 public class VerticalLayout extends Component<VerticalLayout> {
 
     static { // Executed only once
-        String styles = "" +
-                "vl{" + // Style affects all components with the tag "vl"
-                "display: flex;" +
-                "flex-direction: column;" +
-                "}";
-        // You can also add a css file to your resources folder.
-        // The file below will be named "com.osiris.desku.VerticalLayout.css"
-        // styles = Stream.toString(App.getResource(VerticalLayout.class + ".css"));
-        App.appendToGlobalStyles(styles);
+        try{
+            String styles = "" +
+                    "vl{" + // Style affects all components with the tag "vl"
+                    "display: flex;" +
+                    "flex-direction: column;" +
+                    "}";
+            // You can also add a css file the current classes' package/folder.
+            // The file below is at "com/osiris/desku/VerticalLayout.css"
+            //styles = Stream.toString(App.getResource(VerticalLayout.class.toString().replace(".","/") + ".css"));
+            App.appendToGlobalStyles(styles);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public VerticalLayout() {
