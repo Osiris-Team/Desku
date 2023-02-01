@@ -39,4 +39,4 @@ way its pretty easy to create a Desku-Extension:
 
 ### Todo
 - Serializable UI
-
+- Default components suit similar to https://vaadin.com/docs/latest/components
