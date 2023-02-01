@@ -34,7 +34,7 @@
         <dependency>
             <groupId>com.github.Osiris-Team</groupId>
             <artifactId>jlib</artifactId>
-            <version>16.11</version>
+            <version>16.12</version>
         </dependency>
         <!-- https://github.com/jcefmaven/jcefmaven -->
         <dependency>

@@ -125,11 +125,23 @@ public class App {
     }
 
     /**
+     * If the provided resource cannot be found it also checks these directories: <br>
+     * - App.workingDir <br>
+     * - App.workingDir + "/src/main/java" <br>
+     * - App.workingDir + "/src/test/java" <br>
      * @param path expected relative path to a file inside the current jar. Example: help.txt or /help.txt
      */
-    public static InputStream getResource(String path) {
+    public static InputStream getResource(String path) throws IOException {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
-        return App.class.getResourceAsStream(fullPath);
+        InputStream in = App.class.getResourceAsStream(fullPath);
+        if(in != null) return in;
+        File f = new File(App.workingDir + fullPath);
+        if(f.exists()) return Files.newInputStream(f.toPath());
+        f = new File(App.workingDir + "/src/main/java" + fullPath);
+        if(f.exists()) return Files.newInputStream(f.toPath());
+        f = new File(App.workingDir + "/src/test/java" + fullPath); // Support JUnit tests
+        if(f.exists()) return Files.newInputStream(f.toPath());
+        return null;
     }
 
     public static void appendToGlobalStyles(String s) {
