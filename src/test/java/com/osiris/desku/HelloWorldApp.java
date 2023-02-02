@@ -2,6 +2,7 @@ package com.osiris.desku;
 
 import com.osiris.desku.swing.NativeWindow;
 import com.osiris.desku.ui.Layout;
+import com.osiris.desku.ui.Text;
 
 import java.io.IOException;
 
@@ -12,7 +13,7 @@ public class HelloWorldApp {
 
         // Create routes
         Route home = new MRoute("/", () -> {
-            return new Layout().text("Hello World!");
+            return new Layout().add(new Text("Hello World!"));
         });
 
         // Create windows

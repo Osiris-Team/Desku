@@ -3,6 +3,7 @@ package com.osiris.desku.routes;
 import com.osiris.desku.Route;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.Layout;
+import com.osiris.desku.ui.Text;
 
 public class About extends Route {
     public About() {
@@ -10,6 +11,6 @@ public class About extends Route {
     }
     @Override
     public Component<?> loadContent() {
-        return new Layout().text("Currently at "+ path);
+        return new Layout().add(new Text("Currently at "+ path));
     }
 }

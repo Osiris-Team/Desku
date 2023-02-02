@@ -93,47 +93,4 @@ public class Layout extends Component<Layout> {
         return l;
     }
 
-    public Layout text(String s) {
-        return textM(s);
-    }
-
-    public Layout textXS(String s) {
-        Text t = new Text(s);
-        t.sizeXS();
-        add(t);
-        setCompSize(t);
-        return this;
-    }
-
-    public Layout textS(String s) {
-        Text t = new Text(s);
-        t.sizeS();
-        add(t);
-        setCompSize(t);
-        return this;
-    }
-
-    public Layout textM(String s) {
-        Text t = new Text(s);
-        t.sizeM();
-        add(t);
-        setCompSize(t);
-        return this;
-    }
-
-    public Layout textL(String s) {
-        Text t = new Text(s);
-        t.sizeL();
-        add(t);
-        return this;
-    }
-
-    public Layout textXL(String s) {
-        Text t = new Text(s);
-        t.sizeXL();
-        add(t);
-        setCompSize(t);
-        return this;
-    }
-
 }

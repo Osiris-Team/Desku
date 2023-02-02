@@ -1,6 +1,7 @@
 package com.osiris.desku.ui;
 
 import com.osiris.desku.UI;
+import com.osiris.desku.ui.events.ClickEvent;
 import com.osiris.events.Event;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -31,18 +32,6 @@ public class Component<T> {
      */
     public final CopyOnWriteArrayList<UI> uis = new CopyOnWriteArrayList<>();
     /**
-     * The instance of the extending class. <br>
-     * Is returned in pretty much all methods, to allow method chaining by returning
-     * the extending class instead of {@link Component}.
-     */
-    public T target;
-    /**
-     * Jsoup {@link Element} that can be used to convert this
-     * {@link Component} into an actual HTML string.
-     */
-    public Element element;
-
-    /**
      * Executed when a child was added on the Java side.
      */
     public final Event<Component<?>> onAddedChild = new Event<>();
@@ -64,11 +53,22 @@ public class Component<T> {
     public final Event<EventType> onJSListenerRemoved = new Event<>();
     /**
      * Executed when this component was clicked by the user (a JavaScript click event was thrown). <br>
-     * Use the {@link #onClick(Runnable)} method. Do not add actions
+     * Use the {@link #onClick(Consumer)} method. Do not add actions
      * directly via this variable, since it will only work if this component
      * was not yet attached once to the UI.
      */
-    public final Event<Void> _onClick = new Event<>();
+    public final Event<ClickEvent> _onClick = new Event<>();
+    /**
+     * The instance of the extending class. <br>
+     * Is returned in pretty much all methods, to allow method chaining by returning
+     * the extending class instead of {@link Component}.
+     */
+    public T target;
+    /**
+     * Jsoup {@link Element} that can be used to convert this
+     * {@link Component} into an actual HTML string.
+     */
+    public Element element;
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -106,36 +106,45 @@ public class Component<T> {
     public T add(Collection<Component<?>> comp) {
         if (comp == null) return target;
         children.addAll(comp);
-        for (Component<?> c : comp) {onAddedChild.execute(c);}
+        for (Component<?> c : comp) {
+            onAddedChild.execute(c);
+        }
         return target;
     }
 
     public T add(Component<?>... comp) {
         if (comp == null) return target;
         children.addAll(Arrays.asList(comp));
-        for (Component<?> c : comp) {onAddedChild.execute(c);}
+        for (Component<?> c : comp) {
+            onAddedChild.execute(c);
+        }
         return target;
     }
 
     public T remove(Component<?>... comp) {
         if (comp == null) return target;
         children.removeAll(Arrays.asList(comp));
-        for (Component<?> c : comp) {onRemovedChild.execute(c);}
+        for (Component<?> c : comp) {
+            onRemovedChild.execute(c);
+        }
         return target;
     }
 
     public T remove(Collection<Component<?>> comp) {
         if (comp == null) return target;
         children.removeAll(comp);
-        for (Component<?> c : comp) {onRemovedChild.execute(c);}
+        for (Component<?> c : comp) {
+            onRemovedChild.execute(c);
+        }
         return target;
     }
 
-    protected void stylePut(String key, String val){
+    protected void stylePut(String key, String val) {
         style.put(key, val);
         onStyleChanged.execute(new Attribute(key, val));
     }
-    protected void styleRemove(String key){
+
+    protected void styleRemove(String key) {
         style.remove(key);
         onStyleChanged.execute(new Attribute(key, ""));
     }
@@ -539,8 +548,8 @@ public class Component<T> {
     /**
      * @see #_onClick
      */
-    public T onClick(Runnable code) {
-        _onClick.addAction((obj) -> code.run());
+    public T onClick(Consumer<ClickEvent> code) {
+        _onClick.addAction((event) -> code.accept(event));
         onJSListenerAdded.execute(EventType.CLICK);
         // TODO onJSListenerRemoved
         return target;

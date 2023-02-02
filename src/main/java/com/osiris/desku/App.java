@@ -13,11 +13,9 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -123,18 +121,19 @@ public class App {
      * - App.workingDir <br>
      * - App.workingDir + "/src/main/java" <br>
      * - App.workingDir + "/src/test/java" <br>
+     *
      * @param path expected relative path to a file inside the current jar. Example: help.txt or /help.txt
      */
     public static InputStream getResource(String path) throws IOException {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
         InputStream in = App.class.getResourceAsStream(fullPath);
-        if(in != null) return in;
+        if (in != null) return in;
         File f = new File(App.workingDir + fullPath);
-        if(f.exists()) return Files.newInputStream(f.toPath());
+        if (f.exists()) return Files.newInputStream(f.toPath());
         f = new File(App.workingDir + "/src/main/java" + fullPath);
-        if(f.exists()) return Files.newInputStream(f.toPath());
+        if (f.exists()) return Files.newInputStream(f.toPath());
         f = new File(App.workingDir + "/src/test/java" + fullPath); // Support JUnit tests
-        if(f.exists()) return Files.newInputStream(f.toPath());
+        if (f.exists()) return Files.newInputStream(f.toPath());
         return null;
     }
 
@@ -143,18 +142,19 @@ public class App {
      * - App.workingDir <br>
      * - App.workingDir + "/src/main/java" <br>
      * - App.workingDir + "/src/test/java" <br>
+     *
      * @param path expected relative path to a file inside the current jar. Example: help.txt or /help.txt
      */
     public static URL getResourceURL(String path) throws IOException {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
         URL url = App.class.getResource(fullPath);
-        if(url != null) return url;
+        if (url != null) return url;
         File f = new File(App.workingDir + fullPath);
-        if(f.exists()) return f.toURI().toURL();
+        if (f.exists()) return f.toURI().toURL();
         f = new File(App.workingDir + "/src/main/java" + fullPath);
-        if(f.exists()) return f.toURI().toURL();
+        if (f.exists()) return f.toURI().toURL();
         f = new File(App.workingDir + "/src/test/java" + fullPath); // Support JUnit tests
-        if(f.exists()) return f.toURI().toURL();
+        if (f.exists()) return f.toURI().toURL();
         return null;
     }
 

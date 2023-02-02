@@ -4,6 +4,7 @@ import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.EventType;
+import com.osiris.desku.ui.events.ClickEvent;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
@@ -24,6 +25,11 @@ import java.util.function.Consumer;
  *
  */
 public class NativeWindow extends JFrame {
+    /**
+     * List of components that have a JavaScript click listener attached. <br>
+     * Each component here has exactly one click listener attached. <br>
+     */
+    public final CopyOnWriteArrayList<com.osiris.desku.ui.Component<?>> registeredJSOnClickListenerComponents = new CopyOnWriteArrayList<>();
     public CefBrowser browser;
     public Component browserUI;
     /**
@@ -32,11 +38,6 @@ public class NativeWindow extends JFrame {
      * {@link #NativeWindow(UI)} <br>
      */
     public UI ui;
-    /**
-     * List of components that have a JavaScript click listener attached. <br>
-     * Each component here has exactly one click listener attached. <br>
-     */
-    public final CopyOnWriteArrayList<com.osiris.desku.ui.Component<?>> registeredJSOnClickListenerComponents = new CopyOnWriteArrayList<>();
 
     public NativeWindow(Route route) throws IOException {
         this(route.createUI());
@@ -235,35 +236,37 @@ public class NativeWindow extends JFrame {
                 "                 onFailure: function(error_code, error_message) {} });\n";
     }
 
-    private String jsGetComp(String varName, int id){
-        return "var "+varName+" = document.querySelectorAll('[java-id=\"" + id + "\"]')[0];\n";
+    private String jsGetComp(String varName, int id) {
+        return "var " + varName + " = document.querySelectorAll('[java-id=\"" + id + "\"]')[0];\n";
     }
 
     public NativeWindow registerListeners(UI ui, com.osiris.desku.ui.Component<?> comp) {
-        if(comp.uis.contains(ui)) return this;
+        if (comp.uis.contains(ui)) return this;
         comp.uis.add(ui);
 
         // Attach Java event listeners
         comp.onAddedChild.addAction((childComp) -> {
+            childComp.update();
             comp.element.appendChild(childComp.element);
-            browser.executeJavaScript(jsGetComp("comp", comp.id)+
+            browser.executeJavaScript(jsGetComp("comp", comp.id) +
                             "var tempDiv = document.createElement('div');\n" +
-                            "tempDiv.innerHTML = `"+childComp.element.outerHtml() + "`;\n" +
+                            "tempDiv.innerHTML = `" + childComp.element.outerHtml() + "`;\n" +
                             "comp.appendChild(tempDiv.firstChild);\n",
                     "internal", 0);
             registerListeners(ui, childComp);
         });
         comp.onRemovedChild.addAction((childComp) -> {
+            childComp.update();
             childComp.element.remove();
-            browser.executeJavaScript(jsGetComp("comp", comp.id)+
-                            jsGetComp("childComp", childComp.id)+
+            browser.executeJavaScript(jsGetComp("comp", comp.id) +
+                            jsGetComp("childComp", childComp.id) +
                             "comp.removeChild(childComp);\n",
                     "internal", 0);
         });
         comp.onStyleChanged.addAction((attribute) -> {
             comp.element.attr(attribute.getKey(), attribute.getValue());
-            browser.executeJavaScript(jsGetComp("comp", comp.id)+
-                            "comp.setAttribute(`"+attribute.getKey()+"`,`"+attribute.getValue()+"`);\n",
+            browser.executeJavaScript(jsGetComp("comp", comp.id) +
+                            "comp.setAttribute(`" + attribute.getKey() + "`,`" + attribute.getValue() + "`);\n",
                     "internal", 0);
         });
         comp.onJSListenerAdded.addAction((eventType) -> {
@@ -274,33 +277,44 @@ public class NativeWindow extends JFrame {
         });
 
         // Attach JavaScript event listeners
-        jsOnClick(ui, comp);
+        if (!comp._onClick.actions.isEmpty())
+            jsOnClick(ui, comp);
         return this;
     }
 
     private void attachJSEventListener(EventType eventType, com.osiris.desku.ui.Component<?> comp) {
-        switch (eventType){
+        switch (eventType) {
             case CLICK:
                 jsOnClick(ui, comp);
                 break;
             default:
-                throw new RuntimeException("Unknown event type "+eventType+", thus failed to attach JavaScript listener for it.");
+                throw new RuntimeException("Unknown event type " + eventType + ", thus failed to attach JavaScript listener for it.");
         }
     }
 
     public NativeWindow jsOnClick(UI ui, com.osiris.desku.ui.Component<?> comp) {
-        if(registeredJSOnClickListenerComponents.contains(comp))
+        if (registeredJSOnClickListenerComponents.contains(comp))
             return this; // Already registered
         registeredJSOnClickListenerComponents.add(comp);
-
-        String jsTriggerCallback = addCallback("", (message) -> {
-            comp._onClick.execute(null); // Executes all listeners
-        }, (error) -> {
-            throw new RuntimeException(error);
-        });
         String jsNow = jsGetComp("comp", comp.id) +
-                "comp.addEventListener(\"click\", () => {\n" +
-                "" + jsTriggerCallback + // JS code that triggers Java function gets executed on a click event for this component
+                "comp.addEventListener(\"click\", (event) => {\n" +
+                addCallback("" +
+                        "function getObjProps(obj) {\n" +
+                        "  var s = '{';\n" +
+                        "  for (const key in obj) {\n" +
+                        "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
+                        "      s += (`\"${key}\": \"${obj[key]}\",`);\n" +
+                        "    }\n" +
+                        "  }\n" +
+                        "  if(s[s.length-1] == ',') s = s.slice(0, s.length-1);" + // Remove last ,
+                        "  s += '}';\n" +
+                        "  return s;\n" +
+                        "}" +
+                        "message = getObjProps(event)\n", (message) -> {
+                    comp._onClick.execute(new ClickEvent(message, comp)); // Executes all listeners
+                }, (error) -> {
+                    throw new RuntimeException(error);
+                }) + // JS code that triggers Java function gets executed on a click event for this component
                 "});\n";
 
         browser.executeJavaScript(jsNow, "internal", 0);
