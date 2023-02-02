@@ -20,6 +20,9 @@ public class Main {
 ```
 ![img.png](img.png)
 
+A more complete example can be found at the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App)
+repo.
+
 ### Features
 - Latest Chromium HTML/CSS renderer via [JCEF](https://github.com/jcefmaven/jcefbuild).
 - Runs on Windows/Linux/Mac by installing platform-specific dependencies at first launch.
