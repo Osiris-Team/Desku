@@ -13,6 +13,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -113,15 +115,7 @@ public class App {
      */
     public static Image getResourceImage(String path) throws IOException {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
-        File img = new File(App.workingDir + fullPath);
-        if (!img.exists()) {
-            img.getParentFile().mkdirs();
-            img.createNewFile();
-            InputStream link = (App.class.getResourceAsStream(fullPath));
-            Files.copy(link, img.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            link.close();
-        }
-        return Toolkit.getDefaultToolkit().getImage(img.getAbsolutePath());
+        return Toolkit.getDefaultToolkit().getImage(getResourceURL(fullPath));
     }
 
     /**
@@ -141,6 +135,26 @@ public class App {
         if(f.exists()) return Files.newInputStream(f.toPath());
         f = new File(App.workingDir + "/src/test/java" + fullPath); // Support JUnit tests
         if(f.exists()) return Files.newInputStream(f.toPath());
+        return null;
+    }
+
+    /**
+     * If the provided resource cannot be found it also checks these directories: <br>
+     * - App.workingDir <br>
+     * - App.workingDir + "/src/main/java" <br>
+     * - App.workingDir + "/src/test/java" <br>
+     * @param path expected relative path to a file inside the current jar. Example: help.txt or /help.txt
+     */
+    public static URL getResourceURL(String path) throws IOException {
+        String fullPath = (path.startsWith("/") ? path : "/" + path);
+        URL url = App.class.getResource(fullPath);
+        if(url != null) return url;
+        File f = new File(App.workingDir + fullPath);
+        if(f.exists()) return f.toURI().toURL();
+        f = new File(App.workingDir + "/src/main/java" + fullPath);
+        if(f.exists()) return f.toURI().toURL();
+        f = new File(App.workingDir + "/src/test/java" + fullPath); // Support JUnit tests
+        if(f.exists()) return f.toURI().toURL();
         return null;
     }
 
