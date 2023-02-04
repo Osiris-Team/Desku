@@ -115,10 +115,11 @@ public class NativeWindow extends JFrame {
             // (7) To take care of shutting down CEF accordingly, it's important to call
             //     the method "dispose()" of the CefApp instance if the Java
             //     application will be closed. Otherwise you'll get asserts from CEF.
+            NativeWindow _this = this;
             addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    App.windows.remove(this);
+                    App.windows.remove(_this);
                     dispose();
                 }
             });
