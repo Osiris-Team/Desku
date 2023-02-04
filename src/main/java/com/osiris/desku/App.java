@@ -2,6 +2,7 @@ package com.osiris.desku;
 
 import com.osiris.desku.swing.LoadingWindow;
 import com.osiris.desku.swing.NativeWindow;
+import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
 import me.friwi.jcefmaven.CefAppBuilder;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
@@ -166,5 +167,21 @@ public class App {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /**
+     * Returns the .css file content as string.
+     * The css file is expected to have the same name as the class and be in the same package.
+     */
+    public static String getCSS(Class<?> clazz) throws IOException {
+        return Stream.toString(App.getResource(clazz.getName().replace(".","/") + ".css"));
+    }
+
+    /**
+     * Returns the .js file content as string.
+     * The js file is expected to have the same name as the class and be in the same package.
+     */
+    public static String getJS(Class<?> clazz) throws IOException {
+        return Stream.toString(App.getResource(clazz.getName().replace(".","/") + ".js"));
     }
 }

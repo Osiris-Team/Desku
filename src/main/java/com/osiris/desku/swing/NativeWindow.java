@@ -53,11 +53,11 @@ public class NativeWindow extends JFrame {
     }
 
     public NativeWindow(String startURL) {
-        this(startURL, false);
+        this(startURL,false, false);
     }
 
-    public NativeWindow(String startURL, boolean isTransparent) {
-        this(startURL, isTransparent, 70, 60);
+    public NativeWindow(String startURL, boolean isOffscreenRendered, boolean isTransparent) {
+        this(startURL, isOffscreenRendered, isTransparent, 70, 60);
     }
 
     /**
@@ -67,7 +67,7 @@ public class NativeWindow extends JFrame {
      * But to be more verbose, this CTOR keeps an instance of each object on the
      * way to the browser UI.
      */
-    public NativeWindow(String startURL, boolean isTransparent, int widthPercent, int heightPercent) {
+    public NativeWindow(String startURL, boolean isOffscreenRendered, boolean isTransparent, int widthPercent, int heightPercent) {
         try {
             App.windows.add(this);
             // (4) One CefBrowser instance is responsible to control what you'll see on
@@ -82,7 +82,7 @@ public class NativeWindow extends JFrame {
             //     by calling the method "getUIComponent()" on the instance of CefBrowser.
             //     The UI component is inherited from a java.awt.Component and therefore
             //     it can be embedded into any AWT UI.
-            browser = App.cefClient.createBrowser(startURL, false, isTransparent);
+            browser = App.cefClient.createBrowser(startURL, isOffscreenRendered, isTransparent);
             browserUI = browser.getUIComponent();
 
             // (6) All UI components are assigned to the default content pane of this
