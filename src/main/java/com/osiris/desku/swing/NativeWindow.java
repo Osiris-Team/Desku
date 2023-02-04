@@ -40,17 +40,27 @@ public class NativeWindow extends JFrame {
     public UI ui;
 
     public NativeWindow(Route route) throws IOException {
-        this(route.createUI());
+        this(route, false, false, 70, 60);
+    }
+
+    public NativeWindow(Route route, boolean isOffscreenRendered, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
+        this(route.createUI(), isOffscreenRendered, isTransparent, widthPercent, heightPercent);
     }
 
     public NativeWindow(UI ui) throws IOException {
-        this("file:///" + ui.snapshotToTempFile().getAbsolutePath());
+        this(ui, false, false, 70, 60);
+
+    }
+
+    public NativeWindow(UI ui, boolean isOffscreenRendered, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
+        this("file:///" + ui.snapshotToTempFile().getAbsolutePath(), isOffscreenRendered, isTransparent, widthPercent, heightPercent);
         this.ui = ui;
         registerListeners(ui, ui.content);
         ui.content.forEachChildRecursive(child -> {
             registerListeners(ui, child);
         });
     }
+
 
     public NativeWindow(String startURL) {
         this(startURL,false, false);
