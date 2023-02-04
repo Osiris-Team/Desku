@@ -93,22 +93,24 @@ public class NativeWindow extends JFrame {
             //     The UI component is inherited from a java.awt.Component and therefore
             //     it can be embedded into any AWT UI.
             browser = App.cefClient.createBrowser(startURL, isOffscreenRendered, isTransparent);
-            browserUI = browser.getUIComponent();
+            if(!isOffscreenRendered){
+                browserUI = browser.getUIComponent();
 
-            // (6) All UI components are assigned to the default content pane of this
-            //     JFrame and afterwards the frame is made visible to the user.
-            getContentPane().add(browserUI, BorderLayout.CENTER);
-            if (widthPercent <= 0 || heightPercent <= 0) {
-                widthPercent = 100;
-                heightPercent = 100;
+                // (6) All UI components are assigned to the default content pane of this
+                //     JFrame and afterwards the frame is made visible to the user.
+                getContentPane().add(browserUI, BorderLayout.CENTER);
+                if (widthPercent <= 0 || heightPercent <= 0) {
+                    widthPercent = 100;
+                    heightPercent = 100;
+                }
+                width(widthPercent);
+                height(heightPercent);
+                setIconImage(App.getIcon());
+                setTitle(App.name);
+                Swing.center(this);
+                revalidate();
+                setVisible(true);
             }
-            width(widthPercent);
-            height(heightPercent);
-            setIconImage(App.getIcon());
-            setTitle(App.name);
-            Swing.center(this);
-            revalidate();
-            setVisible(true);
 
             // (7) To take care of shutting down CEF accordingly, it's important to call
             //     the method "dispose()" of the CefApp instance if the Java
