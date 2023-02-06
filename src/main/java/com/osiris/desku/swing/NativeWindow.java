@@ -124,7 +124,7 @@ public class NativeWindow extends JFrame {
                 }
             });
 
-            AtomicBoolean isLoaded = new AtomicBoolean(false);
+            AtomicBoolean isLoaded = new AtomicBoolean(!browser.isLoading());
             App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
                 @Override
                 public void onLoadEnd(CefBrowser b, CefFrame frame, int httpStatusCode) {

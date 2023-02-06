@@ -69,7 +69,12 @@ public class App {
 
             // (0) Initialize CEF using the maven loader
             CefAppBuilder builder = new CefAppBuilder();
-            builder.setProgressHandler(new LoadingWindow().getProgressHandler());
+            try{
+                builder.setProgressHandler(new LoadingWindow().getProgressHandler());
+            } catch (Exception e) {
+                // Expected to fail on Android/iOS
+                AL.warn("Failed to open startup loading window, thus not displaying/logging JCEF load status.", e);
+            }
             builder.getCefSettings().windowless_rendering_enabled = false;
             // USE builder.setAppHandler INSTEAD OF CefApp.addAppHandler!
             // Fixes compatibility issues with MacOSX
