@@ -1,4 +1,4 @@
-package com.osiris.desku.routes;
+package com.osiris.desku.simple_app.about;
 
 import com.osiris.desku.Route;
 import com.osiris.desku.ui.Component;

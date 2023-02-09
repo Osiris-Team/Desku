@@ -31,5 +31,8 @@ public class VerticalLayout extends Component<VerticalLayout> {
     public VerticalLayout() {
         init(this, "vl");
         // Make sure to call init before anything else!
+
+        // You can get the UI this component is loaded in, like so:
+        System.out.println(UI.current);
     }
 }

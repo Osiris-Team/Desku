@@ -2,6 +2,10 @@
 Java Framework for developing Desktop Applications with Java, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
 
+<p align="center">
+  <img src="https://github.com/Osris-Team/Desku/blob/master/docs/img.png?raw=true" alt=""/>
+</p>
+
 ```java
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -18,7 +22,6 @@ public class Main {
     }
 }
 ```
-![img.png](img.png)
 
 A more complete example can be found at the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App)
 repo.

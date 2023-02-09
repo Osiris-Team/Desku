@@ -40,4 +40,22 @@ public class Text extends Component<Text> {
         return this;
     }
 
+    public Text sizeXXL() {
+        style.put("font-size", "var(--font-size-xxl)");
+        return this;
+    }
+
+    public Text sizeXXXL() {
+        style.put("font-size", "var(--font-size-xxxl)");
+        return this;
+    }
+
+    public Text bold() {
+        style.put("font-weight", "bold");
+        return this;
+    }
+    public Text bolder() {
+        style.put("font-weight", "bolder");
+        return this;
+    }
 }

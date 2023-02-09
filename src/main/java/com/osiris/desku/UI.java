@@ -1,7 +1,9 @@
 package com.osiris.desku;
 
 import com.osiris.desku.ui.Component;
+import com.osiris.jlib.UtilsFiles;
 import com.osiris.jlib.logger.AL;
+import org.apache.commons.io.FileUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class UI {
     /**
@@ -18,9 +21,16 @@ public class UI {
     public final Route route;
     public final Component<?> content;
 
+    public static volatile UI current = null;
+    public static final ReentrantLock lock = new ReentrantLock();
+
     public UI(Route route) {
+        lock.lock();
+        current = this;
         this.route = route;
         this.content = route.loadContent();
+        current = null;
+        lock.unlock();
     }
 
     /**
@@ -34,6 +44,14 @@ public class UI {
         content.updateAll();
         outlet.appendChild(content.element);
         return html;
+    }
+
+    public File getDir(){
+        // TODO in testing this resolves to the same directory after restarting even though it should be a new one
+        // this results in cached files in that directory like images not getting updated, if changed.
+        File dir = new File(App.tempDir + "/" + Integer.toHexString(hashCode()));
+        dir.mkdirs();
+        return dir;
     }
 
     /**
@@ -52,7 +70,7 @@ public class UI {
      * @return the generated html file.
      */
     public File snapshotToTempFile(Document snapshot) throws IOException {
-        File file = new File(App.tempDir + "/" + Integer.toHexString(hashCode())
+        File file = new File(getDir()
                 + (route.path.equals("/") ? "/root.html" : (route.path + ".html")));
         if (snapshot == null) snapshot = getSnapshot();
 

@@ -239,6 +239,27 @@ public class Component<T> {
         return target;
     }
 
+    public T padding(String s) {
+        stylePut("padding", s);
+        return target;
+    }
+    public T paddingLeft(String s) {
+        stylePut("padding-left", s);
+        return target;
+    }
+    public T paddingRight(String s) {
+        stylePut("padding-right", s);
+        return target;
+    }
+    public T paddingTop(String s) {
+        stylePut("padding-top", s);
+        return target;
+    }
+    public T paddingBottom(String s) {
+        stylePut("padding-bottom", s);
+        return target;
+    }
+
     public T margin(boolean b) {
         if (b) stylePut("margin", "var(--space-m)");
         else styleRemove("margin");

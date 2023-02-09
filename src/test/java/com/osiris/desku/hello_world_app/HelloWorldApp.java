@@ -1,5 +1,8 @@
-package com.osiris.desku;
+package com.osiris.desku.hello_world_app;
 
+import com.osiris.desku.App;
+import com.osiris.desku.MRoute;
+import com.osiris.desku.Route;
 import com.osiris.desku.swing.NativeWindow;
 import com.osiris.desku.ui.Layout;
 import com.osiris.desku.ui.Text;

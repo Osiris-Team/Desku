@@ -216,4 +216,12 @@ public class App {
     public static String getJS(Class<?> clazz) throws IOException {
         return Stream.toString(App.getResource(clazz.getName().replace(".","/") + ".js"));
     }
+
+    /**
+     * @param dir {@link Class#getPackage()} to get the package/directory of a class.
+     * @param path For example "image.png" if that file is located in the provided package/directory.
+     */
+    public static InputStream getResourceInPackage(Package dir, String path) throws IOException {
+        return App.getResource(dir.getName().replace(".","/") + path);
+    }
 }
