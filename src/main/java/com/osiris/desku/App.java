@@ -2,13 +2,17 @@ package com.osiris.desku;
 
 import com.osiris.desku.swing.LoadingWindow;
 import com.osiris.desku.swing.NativeWindow;
+import com.osiris.desku.swing.events.LoadStateChange;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
 import me.friwi.jcefmaven.CefAppBuilder;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
 import org.cef.CefApp;
 import org.cef.CefClient;
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
+import org.cef.handler.CefLoadHandlerAdapter;
 
 import java.awt.*;
 import java.io.File;
@@ -59,6 +63,7 @@ public class App {
                 AL.mirrorSystemStreams(new File(workingDir + "/mirror-out.log"), new File(workingDir + "/mirror-err.log"));
             }
             AL.info("Starting application...");
+            AL.info("isOffscreenRendering = " + AppStartup.isOffscreenRendering);
             AL.info("workingDir = " + workingDir);
             AL.info("tempDir = " + tempDir);
             AL.info("userDir = " + userDir);
@@ -75,7 +80,7 @@ public class App {
                 // Expected to fail on Android/iOS
                 AL.warn("Failed to open startup loading window, thus not displaying/logging JCEF load status.", e);
             }
-            builder.getCefSettings().windowless_rendering_enabled = false;
+            builder.getCefSettings().windowless_rendering_enabled = AppStartup.isOffscreenRendering;
             // USE builder.setAppHandler INSTEAD OF CefApp.addAppHandler!
             // Fixes compatibility issues with MacOSX
             builder.setAppHandler(new MavenCefAppHandlerAdapter() {
@@ -98,6 +103,28 @@ public class App {
             config.jsCancelFunction = "cefQueryCancel";
             cefMessageRouter = CefMessageRouter.create(config);
             cefClient.addMessageRouter(cefMessageRouter);
+            // Handle load
+            App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
+                @Override
+                public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
+                    AL.info("onLoadError: "+browser.getURL()+" errorCode: "+errorCode+" errorText: "+ errorText);
+                    for (NativeWindow w : windows) {
+                        if(w.browser != null && w.browser == browser)
+                            w.onLoadStateChanged.execute(new LoadStateChange(browser, frame, errorCode,
+                                    errorText, failedUrl, false, false, false));
+                    }
+                }
+
+                @Override
+                public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
+                    AL.info("onLoadingStateChange: "+browser.getURL()+" isLoading: "+isLoading);
+                    for (NativeWindow w : windows) {
+                        if(w.browser != null && w.browser == browser)
+                            w.onLoadStateChanged.execute(new LoadStateChange(browser, null, null,
+                                    null, null, isLoading, canGoBack, canGoForward));
+                    }
+                }
+            });
 
             AL.info("Started application successfully!");
         } catch (Exception e) {

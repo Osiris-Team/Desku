@@ -1,14 +1,17 @@
 package com.osiris.desku.swing;
 
 import com.osiris.desku.App;
+import com.osiris.desku.AppStartup;
 import com.osiris.desku.Route;
 import com.osiris.desku.UI;
+import com.osiris.desku.swing.events.LoadStateChange;
 import com.osiris.desku.ui.EventType;
 import com.osiris.desku.ui.events.ClickEvent;
+import com.osiris.events.Event;
+import com.osiris.jlib.logger.AL;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
-import org.cef.handler.CefLoadHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 
 import javax.swing.*;
@@ -24,12 +27,14 @@ import java.util.function.Consumer;
 /**
  *
  */
-public class NativeWindow extends JFrame {
+public class NativeWindow {
     /**
      * List of components that have a JavaScript click listener attached. <br>
      * Each component here has exactly one click listener attached. <br>
      */
     public final CopyOnWriteArrayList<com.osiris.desku.ui.Component<?>> registeredJSOnClickListenerComponents = new CopyOnWriteArrayList<>();
+    public OffscreenJFrame offscreenFrame;
+    public JFrame onscreenFrame;
     public CefBrowser browser;
     public Component browserUI;
     /**
@@ -38,22 +43,23 @@ public class NativeWindow extends JFrame {
      * {@link #NativeWindow(UI)} <br>
      */
     public UI ui;
+    public final Event<LoadStateChange> onLoadStateChanged = new Event<>();
 
     public NativeWindow(Route route) throws IOException {
-        this(route, false, false, 70, 60);
+        this(route, false, 70, 60);
     }
 
-    public NativeWindow(Route route, boolean isOffscreenRendered, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
-        this(route.createUI(), isOffscreenRendered, isTransparent, widthPercent, heightPercent);
+    public NativeWindow(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
+        this(route.createUI(), isTransparent, widthPercent, heightPercent);
     }
 
     public NativeWindow(UI ui) throws IOException {
-        this(ui, false, false, 70, 60);
+        this(ui, false, 70, 60);
 
     }
 
-    public NativeWindow(UI ui, boolean isOffscreenRendered, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
-        this("file:///" + ui.snapshotToTempFile().getAbsolutePath(), isOffscreenRendered, isTransparent, widthPercent, heightPercent);
+    public NativeWindow(UI ui, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
+        this("file:///" + ui.snapshotToTempFile().getAbsolutePath(), isTransparent, widthPercent, heightPercent);
         this.ui = ui;
         registerListeners(ui, ui.content);
         ui.content.forEachChildRecursive(child -> {
@@ -63,11 +69,11 @@ public class NativeWindow extends JFrame {
 
 
     public NativeWindow(String startURL) {
-        this(startURL,false, false);
+        this(startURL, false);
     }
 
-    public NativeWindow(String startURL, boolean isOffscreenRendered, boolean isTransparent) {
-        this(startURL, isOffscreenRendered, isTransparent, 70, 60);
+    public NativeWindow(String startURL, boolean isTransparent) {
+        this(startURL, isTransparent, 70, 60);
     }
 
     /**
@@ -77,9 +83,19 @@ public class NativeWindow extends JFrame {
      * But to be more verbose, this CTOR keeps an instance of each object on the
      * way to the browser UI.
      */
-    public NativeWindow(String startURL, boolean isOffscreenRendered, boolean isTransparent, int widthPercent, int heightPercent) {
+    public NativeWindow(String startURL, boolean isTransparent, int widthPercent, int heightPercent) {
         try {
+            AL.info("Starting new window with url: "+ startURL+" transparent: "+isTransparent+" width: "+widthPercent+"% height: "+heightPercent+"%");
+            AL.info("Please stand by...");
             App.windows.add(this);
+            boolean isOffscreen = AppStartup.isOffscreenRendering;
+            AtomicBoolean isLoaded = new AtomicBoolean(false);
+            onLoadStateChanged.addAction((action, event) -> {
+               if(event.isError() || !event.isLoading){
+                   action.remove();
+                   isLoaded.set(true);
+               }
+            }, Exception::printStackTrace);
             // (4) One CefBrowser instance is responsible to control what you'll see on
             //     the UI component of the instance. It can be displayed off-screen
             //     rendered or windowed rendered. To get an instance of CefBrowser you
@@ -92,49 +108,64 @@ public class NativeWindow extends JFrame {
             //     by calling the method "getUIComponent()" on the instance of CefBrowser.
             //     The UI component is inherited from a java.awt.Component and therefore
             //     it can be embedded into any AWT UI.
-            browser = App.cefClient.createBrowser(startURL, isOffscreenRendered, isTransparent);
-            if(!isOffscreenRendered){
+            //browser = new CefBrowserWrOsr(App.cefClient, startURL, null);
+            browser = App.cefClient.createBrowser(startURL, isOffscreen, isTransparent);
+            if(isOffscreen){
+                // TODO JCEF has problems with triggering load events when in osr mode
+                // TODO thus the below will not work correctly.
+                isLoaded.set(true);
+                offscreenFrame = new OffscreenJFrame();
                 browserUI = browser.getUIComponent();
 
                 // (6) All UI components are assigned to the default content pane of this
                 //     JFrame and afterwards the frame is made visible to the user.
-                getContentPane().add(browserUI, BorderLayout.CENTER);
+                offscreenFrame.add(browserUI, BorderLayout.CENTER);
                 if (widthPercent <= 0 || heightPercent <= 0) {
                     widthPercent = 100;
                     heightPercent = 100;
                 }
                 width(widthPercent);
                 height(heightPercent);
-                setIconImage(App.getIcon());
-                setTitle(App.name);
-                Swing.center(this);
-                revalidate();
-                setVisible(true);
-            }
+                //offscreenFrame.setIconImage(App.getIcon());
+                //Swing.center(offscreenFrame);
+                offscreenFrame.revalidate();
+                offscreenFrame.setVisible(true);
+                offscreenFrame.startRender((frame) -> {}, 250);
+            } else{
+                onscreenFrame = new JFrame(App.name);
+                browserUI = browser.getUIComponent();
 
-            // (7) To take care of shutting down CEF accordingly, it's important to call
-            //     the method "dispose()" of the CefApp instance if the Java
-            //     application will be closed. Otherwise you'll get asserts from CEF.
-            NativeWindow _this = this;
-            addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    App.windows.remove(_this);
-                    dispose();
+                // (6) All UI components are assigned to the default content pane of this
+                //     JFrame and afterwards the frame is made visible to the user.
+                onscreenFrame.getContentPane().add(browserUI, BorderLayout.CENTER);
+                if (widthPercent <= 0 || heightPercent <= 0) {
+                    widthPercent = 100;
+                    heightPercent = 100;
                 }
-            });
+                width(widthPercent);
+                height(heightPercent);
+                onscreenFrame.setIconImage(App.getIcon());
+                Swing.center(onscreenFrame);
+                onscreenFrame.revalidate();
+                onscreenFrame.setVisible(true);
 
-            AtomicBoolean isLoaded = new AtomicBoolean(!browser.isLoading());
-            App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
-                @Override
-                public void onLoadEnd(CefBrowser b, CefFrame frame, int httpStatusCode) {
-                    if (b == browser) {
-                        isLoaded.set(true);
+                // (7) To take care of shutting down CEF accordingly, it's important to call
+                //     the method "dispose()" of the CefApp instance if the Java
+                //     application will be closed. Otherwise you'll get asserts from CEF.
+                NativeWindow _this = this;
+                onscreenFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        App.windows.remove(_this);
+                        onscreenFrame.dispose();
                     }
-                }
-            });
+                });
+            }
+            
+            long ms = System.currentTimeMillis();
             // JavaScript cannot be executed before the page is loaded
             while (!isLoaded.get()) Thread.yield();
+            AL.info("Init took "+(System.currentTimeMillis() - ms)+"ms for "+this);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -142,6 +173,7 @@ public class NativeWindow extends JFrame {
 
     public void close() {
         browser.doClose();
+        App.windows.remove(this);
     }
 
     /**
@@ -158,8 +190,8 @@ public class NativeWindow extends JFrame {
      * @param widthPercent 0 to 100% of the parent size (screen if null).
      */
     public void width(int widthPercent) {
-        Objects.requireNonNull(this);
-        updateWidth(this.getParent(), this, widthPercent);
+        if(onscreenFrame != null) updateWidth(onscreenFrame.getParent(), onscreenFrame, widthPercent);
+        if(offscreenFrame != null) updateWidth(offscreenFrame.getParent(), offscreenFrame, widthPercent);
     }
 
     /**
@@ -176,13 +208,16 @@ public class NativeWindow extends JFrame {
      * @param heightPercent 0 to 100% of the parent size (screen if null).
      */
     public void height(int heightPercent) {
-        updateHeight(this.getParent(), this, heightPercent);
+        if(onscreenFrame != null) updateHeight(onscreenFrame.getParent(), onscreenFrame, heightPercent);
+        if(offscreenFrame != null) updateHeight(offscreenFrame.getParent(), offscreenFrame, heightPercent);
     }
 
     private void updateWidth(Component parent, Component target, int widthPercent) {
         int parentWidth; // If no parent provided use the screen dimensions
         if (parent != null) parentWidth = parent.getWidth();
-        else parentWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
+        else parentWidth =
+                GraphicsEnvironment.isHeadless() ? 1920 // FHD
+                        : Toolkit.getDefaultToolkit().getScreenSize().width;
         Dimension size = new Dimension(parentWidth / 100 * widthPercent, target.getHeight());
         target.setSize(size);
         target.setPreferredSize(size);
@@ -192,7 +227,9 @@ public class NativeWindow extends JFrame {
     private void updateHeight(Component parent, Component target, int heightPercent) {
         int parentHeight; // If no parent provided use the screen dimensions
         if (parent != null) parentHeight = parent.getHeight();
-        else parentHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
+        else parentHeight =
+                GraphicsEnvironment.isHeadless() ? 1080 // FHD
+                        : Toolkit.getDefaultToolkit().getScreenSize().height;
         Dimension size = new Dimension(target.getWidth(), parentHeight / 100 * heightPercent);
         target.setSize(size);
         target.setPreferredSize(size);
@@ -200,12 +237,12 @@ public class NativeWindow extends JFrame {
     }
 
     public NativeWindow plusX(int x) {
-        this.setLocation(getX() + x, getY());
+        onscreenFrame.setLocation(onscreenFrame.getX() + x, onscreenFrame.getY());
         return this;
     }
 
     public NativeWindow plusY(int y) {
-        this.setLocation(getX(), getY() + y);
+        onscreenFrame.setLocation(onscreenFrame.getX(), onscreenFrame.getY() + y);
         return this;
     }
 
