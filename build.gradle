@@ -31,7 +31,7 @@ test {
 }
 
 group = 'com.osiris.desku'
-version = 'LATEST'
+version = '0.5.8'
 description = 'Desku'
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
