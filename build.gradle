@@ -34,6 +34,8 @@ group = 'com.osiris.desku'
 version = '0.5.8'
 description = 'Desku'
 java.sourceCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = 1.8 // java 8
+targetCompatibility = 1.8
 
 java {
     withSourcesJar()
