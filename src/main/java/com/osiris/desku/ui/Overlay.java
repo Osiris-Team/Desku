@@ -18,5 +18,7 @@ public class Overlay extends Layout{
         stylePut("bottom", "0");
         stylePut("left", "0");
         stylePut("right", "0");
+        stylePut("width", "fit-content");
+        stylePut("height", "fit-content");
     }
 }
