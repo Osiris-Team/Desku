@@ -34,24 +34,7 @@ public abstract class Route {
                 "  <meta charset=\"UTF-8\" />\n" +
                 "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n" +
                 "  <style>\n" +
-                "    html{\n" +
-                "      --space-xs: 0.25rem;\n" +
-                "      --space-s: 0.5rem;\n" +
-                "      --space-m: 1rem;\n" +
-                "      --space-l: 1.5rem;\n" +
-                "      --space-xl: 2.5rem;\n" +
-                "      --font-size-xxs: 0.75rem;\n" +
-                "      --font-size-xs: 0.8125rem;\n" +
-                "      --font-size-s: 0.875rem;\n" +
-                "      --font-size-m: 1rem;\n" +
-                "      --font-size-l: 1.125rem;\n" +
-                "      --font-size-xl: 1.375rem;\n" +
-                "      --font-size-xxl: 1.75rem;\n" +
-                "      --font-size-xxxl: 2.5rem;" +
-                "    }\n" +
-                "    #outlet * {\n" + // All children of outlet will be flex
-                "      display: flex;\n" +
-                "    }\n" +
+                App.theme.toCss() +
                 "    body, #outlet {\n" +
                 "      height: 100vh;\n" +
                 "      width: 100%;\n" +

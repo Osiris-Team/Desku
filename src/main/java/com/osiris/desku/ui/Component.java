@@ -1,5 +1,6 @@
 package com.osiris.desku.ui;
 
+import com.osiris.desku.App;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.events.ClickEvent;
 import com.osiris.events.Event;
@@ -16,6 +17,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class Component<T> {
+    static {
+        try{
+            String styles = "" +
+                    "#outlet * {\n" +
+                    "  display: flex;\n" +  // All children of outlet will be flex
+                    "}\n";
+            App.appendToGlobalStyles(styles);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static final AtomicInteger idCounter = new AtomicInteger();
     /**
      * Equals the attribute "java-id" inside HTML and thus useful for finding this object via JavaScript. <br>

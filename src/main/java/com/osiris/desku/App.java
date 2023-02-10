@@ -3,6 +3,7 @@ package com.osiris.desku;
 import com.osiris.desku.swing.LoadingWindow;
 import com.osiris.desku.swing.NativeWindow;
 import com.osiris.desku.swing.events.LoadStateChange;
+import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
 import me.friwi.jcefmaven.CefAppBuilder;
@@ -54,6 +55,10 @@ public class App {
     public static final File userDir = new File(System.getProperty("user.home") + "/" + name);
     public static CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
     public static CopyOnWriteArrayList<NativeWindow> windows = new CopyOnWriteArrayList<>();
+    /**
+     * The default theme that affects all views.
+     */
+    public static Theme theme = new Theme();
 
     static {
         try {

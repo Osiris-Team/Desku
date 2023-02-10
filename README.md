@@ -48,3 +48,17 @@ way its pretty easy to create a Desku-Extension:
 ### Todo
 - Serializable UI
 - Default components suit similar to https://vaadin.com/docs/latest/components
+
+### Documentation
+
+<div>
+<details>
+<summary>How to change the theme?</summary>
+
+The theme can be changed quite easily by setting
+the `App.theme` variable. <br>
+Create your own themes by extending the `Theme` class
+where you modify existing attributes or add new ones
+and update the `App.theme` variable.
+</details>
+</div>
