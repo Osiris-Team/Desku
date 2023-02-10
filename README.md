@@ -2,6 +2,8 @@
 Java Framework for developing Desktop Applications with Java, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
 
+**Note that support for mobile apps (Android/iOS) is planned and being worked on.**
+
 <p align="center">
   <img src="https://github.com/Osiris-Team/Desku/blob/main/docs/img.png?raw=true" alt=""/>
 </p>
