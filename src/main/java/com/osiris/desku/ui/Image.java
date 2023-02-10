@@ -13,13 +13,18 @@ public class Image extends Component<Image> {
     public Image(Class<?> clazz, String src) {
         init(this, "img");
 
+        // Copy image if necessary
+        String packagePath = "/" + clazz.getPackage().getName().replace(".","/");
+        String imgNewPath = (packagePath.equals("/") ? "" : packagePath)
+                + (src.startsWith("/") ? src : ("/" + src));
+        File img = new File(UI.current.getDir() + imgNewPath);
+
         // Set src of image
-        String attrSrc = src;
+        String attrSrc = imgNewPath;
         if(attrSrc.startsWith("/")) attrSrc = attrSrc.replaceFirst("/", "");
         element.attr("src", attrSrc);
 
-        // Copy image if necessary
-        File img = new File(UI.current.getDir() + (src.startsWith("/") ? src : ("/" + src)));
+
         if(img.exists()) return;
         img.getParentFile().mkdirs();
         try{

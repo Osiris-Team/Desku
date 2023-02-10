@@ -2,10 +2,7 @@ package com.osiris.desku.simple_app.home;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
-import com.osiris.desku.ui.Component;
-import com.osiris.desku.ui.Image;
-import com.osiris.desku.ui.Layout;
-import com.osiris.desku.ui.Text;
+import com.osiris.desku.ui.*;
 
 import java.io.IOException;
 
@@ -45,6 +42,13 @@ public class Home extends Route {
                 .add(new Text("Medium").sizeM())
                 .add(new Text("Large").sizeL())
                 .add(new Text("XLarge").sizeXL());
+
+        // Overlays
+        ly.add(new Overlay(null).add(new Text("Overlay over the page")));
+        ly.vertical().stylePut("background-color", "blue").size("100px", "100px").add(
+                new Overlay(ly.lastAdded).stylePut("background-color", "red")
+                        .add(new Text("Overlay over parent.")));
+
         return ly;
     }
 }

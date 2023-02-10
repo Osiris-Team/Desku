@@ -2,6 +2,7 @@ package com.osiris.desku.ui;
 
 public class Layout extends Component<Layout> {
     private String nextWidth, nextHeight;
+    public Component<?> lastAdded;
 
     public Layout() {
         this(false);
@@ -53,6 +54,7 @@ public class Layout extends Component<Layout> {
         for (Component<?> c : components) {
             super.add(c);
             setCompSize(c);
+            lastAdded = c;
         }
         return this;
     }

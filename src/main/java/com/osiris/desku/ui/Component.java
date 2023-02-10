@@ -25,7 +25,7 @@ public class Component<T> {
      * </pre>
      */
     public final int id = idCounter.getAndIncrement();
-    public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
     /**
      * List of {@link UI}s this component is attached to.
@@ -139,14 +139,16 @@ public class Component<T> {
         return target;
     }
 
-    protected void stylePut(String key, String val) {
+    public T stylePut(String key, String val) {
         style.put(key, val);
         onStyleChanged.execute(new Attribute(key, val));
+        return target;
     }
 
-    protected void styleRemove(String key) {
+    public T styleRemove(String key) {
         style.remove(key);
         onStyleChanged.execute(new Attribute(key, ""));
+        return target;
     }
 
     /**
