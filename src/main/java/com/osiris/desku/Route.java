@@ -4,8 +4,6 @@ import com.osiris.desku.ui.Component;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 public abstract class Route {
     /**
      * Must start with "/".
@@ -18,10 +16,6 @@ public abstract class Route {
     }
 
     public abstract Component<?> loadContent();
-
-    public UI createUI() {
-        return new UI(this);
-    }
 
     /**
      * @return the default HTML layout for this route. Content should be added to div with

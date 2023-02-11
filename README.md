@@ -61,4 +61,47 @@ Create your own themes by extending the `Theme` class
 where you modify existing attributes or add new ones
 and update the `App.theme` variable.
 </details>
+
+<details>
+<summary>How do I add my own JavaScript event listener?</summary>
+
+Probably the best and easiest way to show is with an example.
+The code below shows the JavaScript click event being implemented:
+```java
+public class ClickEvent extends JavaScriptEvent {
+    public final boolean isTrusted;
+    public final int screenX, screenY;
+
+    public ClickEvent(String rawJSMessage, Component<?> comp) {
+        super(rawJSMessage, comp);
+        this.isTrusted = jsMessage.get("isTrusted").getAsBoolean();
+        this.screenX = jsMessage.get("screenX").getAsInt();
+        this.screenY = jsMessage.get("screenY").getAsInt();
+    }
+}
+
+public class MyComp extends Component<MyComp>{
+    /**
+     * Do not add actions via this variable, use {@link #onClick(Consumer)} instead.
+     */
+    public final Event<ClickEvent> _onClick = new Event<>();
+    public MyComp(){
+        init(this, "my-comp");
+    }
+    /**
+     * Adds a listener that gets executed when this component was clicked.
+     */
+    public MyComp onClick(Consumer<ClickEvent> code) {
+        _onClick.addAction((event) -> code.accept(event));
+        Component<?> _this = this;
+        UI.current().registerJSListener("click", _this, (msg) -> {
+            _onClick.execute(new ClickEvent(msg, _this)); // Executes all listeners
+        });
+        return target;
+    }
+};
+```
+You can register listeners on any JavaScript event 
+you'd like: https://developer.mozilla.org/en-US/docs/Web/Events
+</details>
 </div>

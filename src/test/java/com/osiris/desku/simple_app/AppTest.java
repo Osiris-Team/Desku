@@ -4,7 +4,7 @@ import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.simple_app.home.Home;
-import com.osiris.desku.swing.NativeWindow;
+import com.osiris.desku.UI;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ class AppTest {
         Route about = new About();
 
         // Create windows
-        NativeWindow winHome = new NativeWindow(home);
+        UI winHome = new UI(home);
         winHome.openDevTools();
         //new NativeWindow(about).plusX(20).plusY(20);
 

@@ -3,7 +3,7 @@ package com.osiris.desku.hello_world_app;
 import com.osiris.desku.App;
 import com.osiris.desku.MRoute;
 import com.osiris.desku.Route;
-import com.osiris.desku.swing.NativeWindow;
+import com.osiris.desku.UI;
 import com.osiris.desku.ui.Layout;
 import com.osiris.desku.ui.Text;
 
@@ -20,6 +20,6 @@ public class HelloWorldApp {
         });
 
         // Create windows
-        new NativeWindow(home);
+        new UI(home);
     }
 }

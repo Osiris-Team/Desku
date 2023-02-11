@@ -12,5 +12,4 @@ public class ClickEvent extends JavaScriptEvent {
         this.screenX = jsMessage.get("screenX").getAsInt();
         this.screenY = jsMessage.get("screenY").getAsInt();
     }
-
 }

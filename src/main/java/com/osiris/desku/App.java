@@ -1,7 +1,6 @@
 package com.osiris.desku;
 
 import com.osiris.desku.swing.LoadingWindow;
-import com.osiris.desku.swing.NativeWindow;
 import com.osiris.desku.swing.events.LoadStateChange;
 import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
@@ -54,7 +53,7 @@ public class App {
      */
     public static final File userDir = new File(System.getProperty("user.home") + "/" + name);
     public static CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
-    public static CopyOnWriteArrayList<NativeWindow> windows = new CopyOnWriteArrayList<>();
+    public static CopyOnWriteArrayList<UI> windows = new CopyOnWriteArrayList<>();
     /**
      * The default theme that affects all views.
      */
@@ -79,7 +78,7 @@ public class App {
 
             // (0) Initialize CEF using the maven loader
             CefAppBuilder builder = new CefAppBuilder();
-            try{
+            try {
                 builder.setProgressHandler(new LoadingWindow().getProgressHandler());
             } catch (Exception e) {
                 // Expected to fail on Android/iOS
@@ -112,9 +111,9 @@ public class App {
             App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
                 @Override
                 public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
-                    AL.info("onLoadError: "+browser.getURL()+" errorCode: "+errorCode+" errorText: "+ errorText);
-                    for (NativeWindow w : windows) {
-                        if(w.browser != null && w.browser == browser)
+                    AL.info("onLoadError: " + browser.getURL() + " errorCode: " + errorCode + " errorText: " + errorText);
+                    for (UI w : windows) {
+                        if (w.browser != null && w.browser == browser)
                             w.onLoadStateChanged.execute(new LoadStateChange(browser, frame, errorCode,
                                     errorText, failedUrl, false, false, false));
                     }
@@ -122,9 +121,9 @@ public class App {
 
                 @Override
                 public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
-                    AL.info("onLoadingStateChange: "+browser.getURL()+" isLoading: "+isLoading);
-                    for (NativeWindow w : windows) {
-                        if(w.browser != null && w.browser == browser)
+                    AL.info("onLoadingStateChange: " + browser.getURL() + " isLoading: " + isLoading);
+                    for (UI w : windows) {
+                        if (w.browser != null && w.browser == browser)
                             w.onLoadStateChanged.execute(new LoadStateChange(browser, null, null,
                                     null, null, isLoading, canGoBack, canGoForward));
                     }
@@ -211,7 +210,7 @@ public class App {
      * The css file is expected to have the same name as the class and be in the same package.
      */
     public static String getCSS(Class<?> clazz) throws IOException {
-        return Stream.toString(App.getResource(clazz.getName().replace(".","/") + ".css"));
+        return Stream.toString(App.getResource(clazz.getName().replace(".", "/") + ".css"));
     }
 
     /**
@@ -219,14 +218,14 @@ public class App {
      * The js file is expected to have the same name as the class and be in the same package.
      */
     public static String getJS(Class<?> clazz) throws IOException {
-        return Stream.toString(App.getResource(clazz.getName().replace(".","/") + ".js"));
+        return Stream.toString(App.getResource(clazz.getName().replace(".", "/") + ".js"));
     }
 
     /**
-     * @param dir {@link Class#getPackage()} to get the package/directory of a class.
+     * @param dir  {@link Class#getPackage()} to get the package/directory of a class.
      * @param path For example "image.png" if that file is located in the provided package/directory.
      */
     public static InputStream getResourceInPackage(Package dir, String path) throws IOException {
-        return App.getResource(dir.getName().replace(".","/") + path);
+        return App.getResource(dir.getName().replace(".", "/") + path);
     }
 }

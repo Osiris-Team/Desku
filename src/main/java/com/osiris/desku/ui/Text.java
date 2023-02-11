@@ -54,6 +54,7 @@ public class Text extends Component<Text> {
         style.put("font-weight", "bold");
         return this;
     }
+
     public Text bolder() {
         style.put("font-weight", "bolder");
         return this;

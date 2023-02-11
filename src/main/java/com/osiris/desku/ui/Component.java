@@ -4,6 +4,7 @@ import com.osiris.desku.App;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.events.ClickEvent;
 import com.osiris.events.Event;
+import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
@@ -13,12 +14,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class Component<T> {
+    public static final Executor executor = Executors.newCachedThreadPool();
+    private static final AtomicInteger idCounter = new AtomicInteger();
+
     static {
-        try{
+        try {
             String styles = "" +
                     "#outlet * {\n" +
                     "  display: flex;\n" +  // All children of outlet will be flex
@@ -29,7 +35,6 @@ public class Component<T> {
         }
     }
 
-    private static final AtomicInteger idCounter = new AtomicInteger();
     /**
      * Equals the attribute "java-id" inside HTML and thus useful for finding this object via JavaScript. <br>
      * Example: The code below will return the object with the java-id = 5.
@@ -38,12 +43,7 @@ public class Component<T> {
      * </pre>
      */
     public final int id = idCounter.getAndIncrement();
-    protected final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
-    /**
-     * List of {@link UI}s this component is attached to.
-     */
-    public final CopyOnWriteArrayList<UI> uis = new CopyOnWriteArrayList<>();
     /**
      * Executed when a child was added on the Java side.
      */
@@ -57,20 +57,10 @@ public class Component<T> {
      */
     public final Event<Attribute> onStyleChanged = new Event<>();
     /**
-     * Executed when a JavaScript listener was added via Java.
-     */
-    public final Event<EventType> onJSListenerAdded = new Event<>();
-    /**
-     * Executed when a JavaScript listener was removed via Java.
-     */
-    public final Event<EventType> onJSListenerRemoved = new Event<>();
-    /**
-     * Executed when this component was clicked by the user (a JavaScript click event was thrown). <br>
-     * Use the {@link #onClick(Consumer)} method. Do not add actions
-     * directly via this variable, since it will only work if this component
-     * was not yet attached once to the UI.
+     * Do not add actions via this variable, use {@link #onClick(Consumer)} instead.
      */
     public final Event<ClickEvent> _onClick = new Event<>();
+    protected final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     /**
      * The instance of the extending class. <br>
      * Is returned in pretty much all methods, to allow method chaining by returning
@@ -82,6 +72,42 @@ public class Component<T> {
      * {@link Component} into an actual HTML string.
      */
     public Element element;
+
+    public Component() {
+        // Attach Java event listeners
+        UI win = UI.current();
+        Runnable registration = () -> {
+            onAddedChild.addAction((childComp) -> {
+                childComp.update();
+                element.appendChild(childComp.element);
+                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
+                                "var tempDiv = document.createElement('div');\n" +
+                                "tempDiv.innerHTML = `" + childComp.element.outerHtml() + "`;\n" +
+                                "comp.appendChild(tempDiv.firstChild);\n",
+                        "internal", 0);
+            });
+            onRemovedChild.addAction((childComp) -> {
+                childComp.update();
+                childComp.element.remove();
+                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
+                                win.jsGetComp("childComp", childComp.id) +
+                                "comp.removeChild(childComp);\n",
+                        "internal", 0);
+            });
+            onStyleChanged.addAction((attribute) -> {
+                element.attr(attribute.getKey(), attribute.getValue());
+                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
+                                "comp.setAttribute(`" + attribute.getKey() + "`,`" + attribute.getValue() + "`);\n",
+                        "internal", 0);
+            });
+        };
+        if(!win.isLoading) registration.run();
+        else win.onLoadStateChanged.addAction((action, event) -> {
+            if(event.isLoading) return;
+            action.remove();
+            registration.run();
+        }, AL::warn);
+    }
 
     /**
      * <p style="color: red">Must be called before any other method in this class!</p>
@@ -114,6 +140,19 @@ public class Component<T> {
         this.target = target;
         this.element = new Element(tag, baseUri);
         element.attr("java-id", "" + id);
+    }
+
+    /**
+     * Executes the provided code asynchronously in another thread. <br>
+     * Uses {@link Executors#newCachedThreadPool()} internally.
+     *
+     * @param code contains this component as parameter.
+     */
+    public T async(Consumer<T> code) {
+        executor.execute(() -> {
+            code.accept(target);
+        });
+        return target;
     }
 
     public T add(Collection<Component<?>> comp) {
@@ -258,18 +297,22 @@ public class Component<T> {
         stylePut("padding", s);
         return target;
     }
+
     public T paddingLeft(String s) {
         stylePut("padding-left", s);
         return target;
     }
+
     public T paddingRight(String s) {
         stylePut("padding-right", s);
         return target;
     }
+
     public T paddingTop(String s) {
         stylePut("padding-top", s);
         return target;
     }
+
     public T paddingBottom(String s) {
         stylePut("padding-bottom", s);
         return target;
@@ -582,12 +625,16 @@ public class Component<T> {
     //
 
     /**
-     * @see #_onClick
+     * Adds a listener that gets executed when this component <br>
+     * was clicked by the user (a JavaScript click event was thrown). <br>
+     * @see UI#registerJSListener(String, Component, Consumer)
      */
     public T onClick(Consumer<ClickEvent> code) {
         _onClick.addAction((event) -> code.accept(event));
-        onJSListenerAdded.execute(EventType.CLICK);
-        // TODO onJSListenerRemoved
+        Component<?> _this = this;
+        UI.current().registerJSListener("click", _this, (msg) -> {
+            _onClick.execute(new ClickEvent(msg, _this)); // Executes all listeners
+        });
         return target;
     }
 }

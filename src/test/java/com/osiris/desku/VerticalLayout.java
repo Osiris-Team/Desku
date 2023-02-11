@@ -1,11 +1,6 @@
 package com.osiris.desku;
 
 import com.osiris.desku.ui.Component;
-import com.osiris.jlib.Stream;
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Example for a custom component.
@@ -32,7 +27,7 @@ public class VerticalLayout extends Component<VerticalLayout> {
         init(this, "vl");
         // Make sure to call init before anything else!
 
-        // You can get the UI this component is loaded in, like so:
-        System.out.println(UI.current);
+        // You can get the window this component is loaded in, like so:
+        System.out.println(UI.current());
     }
 }

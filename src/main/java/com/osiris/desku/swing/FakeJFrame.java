@@ -1,17 +1,17 @@
 package com.osiris.desku.swing;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
-import javax.swing.*;
 
-public class OffscreenJFrame extends JPanel {
+public class FakeJFrame extends JPanel {
     private BufferedImage lastRenderedImg;
 
-    public void startRender(Consumer<BufferedImage> onRender, long sleepMs){
+    public void startRender(Consumer<BufferedImage> onRender, long sleepMs) {
         new Thread(() -> {
-            try{
-                while (true){
+            try {
+                while (true) {
                     render();
                     onRender.accept(lastRenderedImg);
                     Thread.sleep(sleepMs);
@@ -22,7 +22,7 @@ public class OffscreenJFrame extends JPanel {
         }).start();
     }
 
-    public Image render(){
+    public Image render() {
         BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics g = image.createGraphics();
         this.paint(g);

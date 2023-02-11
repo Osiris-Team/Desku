@@ -1,8 +1,8 @@
 package com.osiris.desku.ui;
 
 public class Layout extends Component<Layout> {
-    private String nextWidth, nextHeight;
     public Component<?> lastAdded;
+    private String nextWidth, nextHeight;
 
     public Layout() {
         this(false);

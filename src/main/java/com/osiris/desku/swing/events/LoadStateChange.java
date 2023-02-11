@@ -36,7 +36,7 @@ public class LoadStateChange {
         this.canGoForward = canGoForward;
     }
 
-    public boolean isError(){
+    public boolean isError() {
         return errorCode != null || errorText != null || failedUrl != null;
     }
 }
