@@ -62,6 +62,8 @@ where you modify existing attributes or add new ones
 and update the `App.theme` variable.
 </details>
 
+
+
 <details>
 <summary>How do I add my own JavaScript event listener?</summary>
 
@@ -104,4 +106,18 @@ public class MyComp extends Component<MyComp>{
 You can register listeners on any JavaScript event 
 you'd like: https://developer.mozilla.org/en-US/docs/Web/Events
 </details>
+
+
+
+<details>
+<summary>How to get the HTML of a component?</summary>
+
+Get the components' HTML string via 
+`component.element.outerHTML()`. <br>
+Note that this also includes all its children.
+To make sure it equals the actual in memory representation
+call `component.updateAll()` before retrieving the HTML.
+</details>
+
+
 </div>
