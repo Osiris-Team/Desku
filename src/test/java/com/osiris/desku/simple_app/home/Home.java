@@ -3,8 +3,14 @@ package com.osiris.desku.simple_app.home;
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.ui.*;
+import com.osiris.desku.ui.display.Image;
+import com.osiris.desku.ui.display.Text;
+import com.osiris.desku.ui.input.Button;
+import com.osiris.desku.ui.layout.Layout;
+import com.osiris.desku.ui.layout.Overlay;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Home extends Route {
     static {
@@ -30,12 +36,15 @@ public class Home extends Route {
             System.out.println("Clicked text!");
             ly.add(new Text("Clicked text!"));
         }));
+
+        // Layouts
         ly.vertical().padding(true)
                 .add(new Text("Child vertical layout. Items: "))
                 .add(new Text("Small").sizeS())
                 .add(new Text("Medium").sizeM())
                 .add(new Text("Large").sizeL())
                 .add(new Text("XLarge").sizeXL());
+
         ly.horizontal().padding(true)
                 .add(new Text("Child horizontal layout. Items: "))
                 .add(new Text("Small").sizeS())
@@ -48,6 +57,15 @@ public class Home extends Route {
         ly.vertical().stylePut("background-color", "blue").size("100px", "100px").add(
                 new Overlay(ly.lastAdded).stylePut("background-color", "red")
                         .add(new Text("Overlay over parent.")));
+
+        // Inputs
+        AtomicInteger i = new AtomicInteger();
+        ly.add(new Button("This is a button!").onClick(e -> {
+            String s = "Clicked "+i.incrementAndGet()+" times";
+            System.out.println(s);
+            e.comp.element.text(s);
+            e.comp.update();
+        }));
 
         return ly;
     }

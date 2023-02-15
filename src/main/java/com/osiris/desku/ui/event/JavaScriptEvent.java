@@ -1,4 +1,4 @@
-package com.osiris.desku.ui.events;
+package com.osiris.desku.ui.event;
 
 import com.google.gson.JsonObject;
 import com.osiris.desku.ui.Component;

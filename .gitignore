@@ -1,4 +1,5 @@
 **/target/
+**/build/
 /error
 /warn
 /full

@@ -1,4 +1,7 @@
-package com.osiris.desku.ui;
+package com.osiris.desku.ui.layout;
+
+import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.layout.Layout;
 
 public class Overlay extends Layout {
 

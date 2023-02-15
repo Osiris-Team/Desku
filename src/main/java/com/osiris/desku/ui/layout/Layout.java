@@ -1,4 +1,6 @@
-package com.osiris.desku.ui;
+package com.osiris.desku.ui.layout;
+
+import com.osiris.desku.ui.Component;
 
 public class Layout extends Component<Layout> {
     public Component<?> lastAdded;

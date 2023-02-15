@@ -1,7 +1,7 @@
 package com.osiris.desku;
 
-import com.osiris.desku.ui.Layout;
-import com.osiris.desku.ui.Text;
+import com.osiris.desku.ui.layout.Layout;
+import com.osiris.desku.ui.display.Text;
 import com.osiris.jlib.logger.AL;
 import org.junit.jupiter.api.Test;
 

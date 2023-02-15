@@ -1,4 +1,6 @@
-package com.osiris.desku.ui;
+package com.osiris.desku.ui.display;
+
+import com.osiris.desku.ui.Component;
 
 public class Text extends Component<Text> {
     public Text(String s) {

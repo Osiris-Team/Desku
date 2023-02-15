@@ -2,7 +2,7 @@ package com.osiris.desku.ui;
 
 import com.osiris.desku.App;
 import com.osiris.desku.UI;
-import com.osiris.desku.ui.events.ClickEvent;
+import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.Attribute;
@@ -629,11 +629,11 @@ public class Component<T> {
      * was clicked by the user (a JavaScript click event was thrown). <br>
      * @see UI#registerJSListener(String, Component, Consumer)
      */
-    public T onClick(Consumer<ClickEvent> code) {
+    public T onClick(Consumer<ClickEvent<T>> code) {
         _onClick.addAction((event) -> code.accept(event));
-        Component<?> _this = this;
+        Component<T> _this = this;
         UI.current().registerJSListener("click", _this, (msg) -> {
-            _onClick.execute(new ClickEvent(msg, _this)); // Executes all listeners
+            _onClick.execute(new ClickEvent<T>(msg, _this)); // Executes all listeners
         });
         return target;
     }
