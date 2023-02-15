@@ -63,7 +63,7 @@ public class Home extends Route {
         ly.add(new Button("This is a button!").onClick(e -> {
             String s = "Clicked "+i.incrementAndGet()+" times";
             System.out.println(s);
-            e.comp.element.text(s);
+            e.comp.element.text(s); // TODO find out how to update the actual UI with this change
             e.comp.update();
         }));
 
