@@ -2,12 +2,11 @@ package com.osiris.desku.ui;
 
 import com.osiris.desku.App;
 import com.osiris.desku.UI;
+import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.Element;
+import org.jsoup.nodes.*;
 import org.jsoup.parser.Tag;
 
 import java.util.Arrays;
@@ -70,6 +69,13 @@ public class Component<T> {
     /**
      * Jsoup {@link Element} that can be used to convert this
      * {@link Component} into an actual HTML string.
+     * <u>
+     *     Note that changes to this element are only visible in the UI if
+     *     they are done before it gets loaded the first time. <br>
+     *     This means that changes to this element made in a click event for example
+     *     will not be visible in the UI. <br>
+     *     Use wrapper methods like {@link #innerHTML(String)} for example.
+     * </u>
      */
     public Element element;
 
@@ -139,6 +145,17 @@ public class Component<T> {
     public void init(T target, Tag tag, String baseUri) {
         this.target = target;
         this.element = new Element(tag, baseUri);
+        element.attr("java-id", "" + id);
+    }
+
+    /**
+     * <p style="color: red">Must be called before any other method in this class!</p>
+     *
+     * @param target the object to be styled.
+     */
+    public void init(T target, Element element) {
+        this.target = target;
+        this.element = element;
         element.attr("java-id", "" + id);
     }
 
@@ -243,17 +260,43 @@ public class Component<T> {
         return target;
     }
 
+    /**
+     * Loops through all children recursively. <br>
+     * Loop through {@link #children} instead if you only want the direct children of this component.
+     */
     public void forEachChildRecursive(Consumer<Component<?>> code) {
         for (Component<?> child : this.children) {
             forEachChildRecursive(child, code);
         }
     }
 
+    /**
+     * Loops through all children recursively. <br>
+     * Loop through {@link #children} instead if you only want the direct children of this component.
+     */
     public void forEachChildRecursive(Component<?> comp, Consumer<Component<?>> code) {
         code.accept(comp);
         for (Component<?> child : comp.children) {
             forEachChildRecursive(child, code);
         }
+    }
+
+    /**
+     * @see Element#text(String)
+     */
+    public T innerHTML(String text){
+        remove(children);
+        add(new Text(text));
+        return target;
+    }
+
+    /**
+     * @see Element#html(String)
+     */
+    public T innerHTML(Component<?> comp){
+        remove(children);
+        add(comp);
+        return target;
     }
 
     public T sizeFull() {
