@@ -16,6 +16,7 @@ repositories {
     maven {
         url = uri('https://repo.maven.apache.org/maven2/')
     }
+    mavenCentral()
 }
 
 dependencies {
@@ -23,6 +24,8 @@ dependencies {
     implementation 'com.github.Osiris-Team:jlib:16.12'
     implementation 'me.friwi:jcefmaven:109.1.11'
     implementation 'org.jsoup:jsoup:1.15.3'
+    implementation 'net.sf.cssbox:cssbox:5.0.0'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
 }
 
