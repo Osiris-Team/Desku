@@ -35,6 +35,7 @@ repo.
 - Localhost-free and server-less.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 implementation, thus making simple/complex layout creation faster and easier than ever.
+- Focus on method-chaining and low-code.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
