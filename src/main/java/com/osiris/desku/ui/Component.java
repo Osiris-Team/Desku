@@ -4,6 +4,8 @@ import com.osiris.desku.App;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
+import com.osiris.desku.ui.layout.Layout;
+import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.*;
@@ -185,6 +187,31 @@ public class Component<T> {
         };
         UI.set(ui, t);
         t.start();
+        return target;
+    }
+
+    /**
+     * Same as {@link #async(Consumer)} but
+     * adds an overlay that
+     * shows the text "Loading..." and dims/darkens this component,
+     * until the async task finishes.
+     */
+    public T asyncWithOverlay(Consumer<T> code) {
+        UI ui = UI.current();
+        Layout overlay = new Overlay(this)
+                .childCenter().stylePut("background", "rgba(0,0,0,0.3)")
+                .sizeFull();
+        add(overlay);
+        overlay.add(new Text("Loading...")
+                .stylePut("color", "white").sizeXL().selfCenter());
+        overlay.add(new Text("This might take a while, please be patient.")
+                .stylePut("color", "white").sizeS().selfCenter());
+        executor.execute(() -> {
+            code.accept(target);
+            ui.access(() -> {
+               remove(overlay);
+            });
+        });
         return target;
     }
 
