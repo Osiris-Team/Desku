@@ -65,17 +65,24 @@ public class Home extends Route {
         // Layouts
         ly.vertical().padding(true)
                 .add(new Text("Child vertical layout. Items: "))
+                .add(new Text("XSmall").sizeXS())
                 .add(new Text("Small").sizeS())
                 .add(new Text("Medium").sizeM())
                 .add(new Text("Large").sizeL())
-                .add(new Text("XLarge").sizeXL());
+                .add(new Text("XLarge").sizeXL())
+                .add(new Text("XLarge").sizeXL())
+                .add(new Text("XXLarge").sizeXXL())
+                .add(new Text("XXXLarge").sizeXXXL());
 
         ly.horizontal().padding(true)
                 .add(new Text("Child horizontal layout. Items: "))
+                .add(new Text("XSmall").sizeXS())
                 .add(new Text("Small").sizeS())
                 .add(new Text("Medium").sizeM())
                 .add(new Text("Large").sizeL())
-                .add(new Text("XLarge").sizeXL());
+                .add(new Text("XLarge").sizeXL())
+                .add(new Text("XXLarge").sizeXXL())
+                .add(new Text("XXXLarge").sizeXXXL());
 
         // Overlays
         ly.add(new Overlay(null).add(new Text("Overlay over the page")));
@@ -88,8 +95,7 @@ public class Home extends Route {
         ly.add(new Button("This is a button!").onClick(e -> {
             String s = "Clicked "+i.incrementAndGet()+" times";
             System.out.println(s);
-            e.comp.element.text(s); // TODO find out how to update the actual UI with this change
-            e.comp.update();
+            e.comp.text.set(s);
         }));
 
         return ly;

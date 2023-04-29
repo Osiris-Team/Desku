@@ -177,6 +177,16 @@ public class Component<T> {
     }
 
     /**
+     * Executes the provided code synchronously in the current thread. <br>
+     *
+     * @param code the code to be executed now, contains this component as parameter.
+     */
+    public T sync(Consumer<T> code) {
+        code.accept(target);
+        return target;
+    }
+
+    /**
      * Executes the provided code asynchronously in a new thread. <br>
      * This function needs to be run inside UI context
      * since it executes {@link UI#get()}, otherwise {@link NullPointerException} is thrown. <br>
@@ -742,7 +752,7 @@ public class Component<T> {
         _onClick.addAction((event) -> code.accept(event));
         Component<T> _this = this;
         UI.get().registerJSListener("click", _this, (msg) -> {
-            _onClick.execute(new ClickEvent<T>(msg, _this)); // Executes all listeners
+            _onClick.execute(new ClickEvent<T>(msg, (T) _this)); // Executes all listeners
         });
         return target;
     }

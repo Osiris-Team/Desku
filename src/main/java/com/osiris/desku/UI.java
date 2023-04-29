@@ -416,7 +416,7 @@ public class UI {
      * @param comp      component to register the listener on.
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
-    public UI registerJSListener(String eventName, Component<?> comp, Consumer<String> onEvent) {
+    public <T> UI registerJSListener(String eventName, Component<T> comp, Consumer<String> onEvent) {
         synchronized (listenersAndComps) {
             List<Component<?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
