@@ -35,11 +35,12 @@ public class Home extends Route {
                         .size("40vh", "20vh").bold())
                 .add(new Image(this.getClass(), "/images/pc.png").width("30vw").selfCenter());
         ly.add(new Text("I am clickable text! Click me!").selfCenter().onClick(event -> {
-            System.out.println("Clicked text!");
-            ly.add(new Text("Clicked text!"));
+            event.comp.set("Thank you for clicking!");
         }));
 
+        //
         // Async
+        //
         ly.add(new Text("Asynchronously update a component: Loading...").padding(true).async(txt -> {
             try{
                 for (int i = 1; i <= 100; i++) {
@@ -62,7 +63,9 @@ public class Home extends Route {
             }
         }));
 
+        //
         // Layouts
+        //
         ly.vertical().padding(true)
                 .add(new Text("Child vertical layout. Items: "))
                 .add(new Text("XSmall").sizeXS())
@@ -84,13 +87,17 @@ public class Home extends Route {
                 .add(new Text("XXLarge").sizeXXL())
                 .add(new Text("XXXLarge").sizeXXXL());
 
+        //
         // Overlays
+        //
         ly.add(new Overlay(null).add(new Text("Overlay over the page")));
         ly.vertical().putStyle("background-color", "blue").size("100px", "100px").add(
                 new Overlay(ly.lastAdded).putStyle("background-color", "red")
                         .add(new Text("Overlay over parent.")));
 
+        //
         // Inputs
+        //
         AtomicInteger i = new AtomicInteger();
         ly.add(new Button("This is a button!").onClick(e -> {
             String s = "Clicked "+i.incrementAndGet()+" times";
