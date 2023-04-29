@@ -19,8 +19,8 @@ public class Main {
             return new Layout().add(new Text("Hello World!")); 
         });
 
-        // Create windows
-        new NativeWindow(home);
+        // Create and show windows
+        new UI(home);
     }
 }
 ```
