@@ -22,7 +22,7 @@ public class Image extends Component<Image> {
         // Set src of image
         String attrSrc = imgNewPath;
         if (attrSrc.startsWith("/")) attrSrc = attrSrc.replaceFirst("/", "");
-        element.attr("src", attrSrc);
+        actor.attr("src", attrSrc);
 
         // Create image file if needed
         if (img.exists()) return;

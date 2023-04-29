@@ -1,5 +1,6 @@
 package com.osiris.desku.ui;
 
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.osiris.desku.App;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.display.Text;
@@ -77,7 +78,7 @@ public class Component<T> {
      *     Use wrapper methods like {@link #innerHTML(String)} for example.
      * </u>
      */
-    public Element element;
+    public Actor actor;
 
     public Component() {
         // Attach Java event listeners
@@ -85,23 +86,23 @@ public class Component<T> {
         Runnable registration = () -> {
             onAddedChild.addAction((childComp) -> {
                 childComp.update();
-                element.appendChild(childComp.element);
+                actor.appendChild(childComp.actor);
                 win.browser.executeJavaScript(win.jsGetComp("comp", id) +
                                 "var tempDiv = document.createElement('div');\n" +
-                                "tempDiv.innerHTML = `" + childComp.element.outerHtml() + "`;\n" +
+                                "tempDiv.innerHTML = `" + childComp.actor.outerHtml() + "`;\n" +
                                 "comp.appendChild(tempDiv.firstChild);\n",
                         "internal", 0);
             });
             onRemovedChild.addAction((childComp) -> {
                 childComp.update();
-                childComp.element.remove();
+                childComp.actor.remove();
                 win.browser.executeJavaScript(win.jsGetComp("comp", id) +
                                 win.jsGetComp("childComp", childComp.id) +
                                 "comp.removeChild(childComp);\n",
                         "internal", 0);
             });
             onStyleChanged.addAction((attribute) -> {
-                element.attr(attribute.getKey(), attribute.getValue());
+                actor.attr(attribute.getKey(), attribute.getValue());
                 win.browser.executeJavaScript(win.jsGetComp("comp", id) +
                                 "comp.setAttribute(`" + attribute.getKey() + "`,`" + attribute.getValue() + "`);\n",
                         "internal", 0);
@@ -122,8 +123,8 @@ public class Component<T> {
      */
     public void init(T target, String tag) {
         this.target = target;
-        this.element = new Element(tag);
-        element.attr("java-id", "" + id);
+        this.actor = new Element(tag);
+        actor.attr("java-id", "" + id);
     }
 
     /**
@@ -133,8 +134,8 @@ public class Component<T> {
      */
     public void init(T target, Tag tag, String baseUri, Attributes attributes) {
         this.target = target;
-        this.element = new Element(tag, baseUri, attributes);
-        element.attr("java-id", "" + id);
+        this.actor = new Element(tag, baseUri, attributes);
+        actor.attr("java-id", "" + id);
     }
 
     /**
@@ -144,8 +145,8 @@ public class Component<T> {
      */
     public void init(T target, Tag tag, String baseUri) {
         this.target = target;
-        this.element = new Element(tag, baseUri);
-        element.attr("java-id", "" + id);
+        this.actor = new Element(tag, baseUri);
+        actor.attr("java-id", "" + id);
     }
 
     /**
@@ -155,7 +156,7 @@ public class Component<T> {
      */
     public void init(T target, Element element) {
         this.target = target;
-        this.element = element;
+        this.actor = element;
         element.attr("java-id", "" + id);
     }
 
@@ -231,14 +232,14 @@ public class Component<T> {
         style.forEach((key, val) -> {
             sb.append(key).append(": ").append(val).append("; ");
         });
-        element.attr("style", sb.toString());
+        actor.attr("style", sb.toString());
 
         // Update element children list
-        for (Element child : element.children()) { // Clear children
+        for (Element child : actor.children()) { // Clear children
             child.remove();
         }
         for (Component<?> childComp : children) { // Set "new" children elements, from child components
-            element.appendChild(childComp.element);
+            actor.appendChild(childComp.actor);
         }
         return target;
     }

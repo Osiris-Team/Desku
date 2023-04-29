@@ -1,10 +1,22 @@
 package com.osiris.desku;
 
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.kotcrab.vis.ui.VisUI;
+import com.kotcrab.vis.ui.widget.PopupMenu;
 import com.osiris.desku.swing.LoadingWindow;
 import com.osiris.desku.swing.events.LoadStateChange;
 import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
+import dev.lyze.flexbox.FlexBox;
+import io.github.orioncraftmc.meditate.enums.YogaFlexDirection;
+import io.github.orioncraftmc.meditate.enums.YogaWrap;
 import me.friwi.jcefmaven.CefAppBuilder;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
 import org.cef.CefApp;
@@ -14,7 +26,6 @@ import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
 import org.cef.handler.CefLoadHandlerAdapter;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,16 +38,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class App {
+public class App extends ApplicationAdapter {
 
     /**
      * Should be the directory in which this application was started. <br>
      * Can be used to store information that is not specific to an user. <br>
      */
     public static final File workingDir = new File(System.getProperty("user.dir"));
-    public static final CefApp cef;
-    public static final CefClient cefClient;
-    public static final CefMessageRouter cefMessageRouter;
     public static final AtomicInteger cefMessageRouterRequestId = new AtomicInteger();
     public static String name = "My Todo";
     /**
@@ -59,6 +67,10 @@ public class App {
      */
     public static Theme theme = new Theme();
 
+    public static CopyOnWriteArrayList<Runnable> onRender = new CopyOnWriteArrayList<>();
+    public static Stage stage;
+    public static FlexBox root;
+
     static {
         try {
             Logger.getGlobal().setLevel(Level.SEVERE);
@@ -76,67 +88,90 @@ public class App {
             if (styles.exists()) styles.delete();
             styles.createNewFile();
 
-            // (0) Initialize CEF using the maven loader
-            CefAppBuilder builder = new CefAppBuilder();
-            try {
-                builder.setProgressHandler(new LoadingWindow().getProgressHandler());
-            } catch (Exception e) {
-                // Expected to fail on Android/iOS
-                AL.warn("Failed to open startup loading window, thus not displaying/logging JCEF load status.", e);
-            }
-            builder.getCefSettings().windowless_rendering_enabled = AppStartup.isOffscreenRendering;
-            // USE builder.setAppHandler INSTEAD OF CefApp.addAppHandler!
-            // Fixes compatibility issues with MacOSX
-            builder.setAppHandler(new MavenCefAppHandlerAdapter() {
-                @Override
-                public void stateHasChanged(org.cef.CefApp.CefAppState state) {
-                    // Shutdown the app if the native CEF part is terminated
-                    if (state == CefApp.CefAppState.TERMINATED) System.exit(0);
-                }
-            });
-            // (1) The entry point to JCEF is always the class CefApp.
-            cef = builder.build();
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                CefApp.getInstance().dispose();
-            }));
-            // (2) JCEF can handle one to many browser instances simultaneous.
-            cefClient = cef.createClient();
-            // (3) Create a simple message router to receive messages from CEF.
-            CefMessageRouter.CefMessageRouterConfig config = new CefMessageRouter.CefMessageRouterConfig();
-            config.jsQueryFunction = "cefQuery";
-            config.jsCancelFunction = "cefQueryCancel";
-            cefMessageRouter = CefMessageRouter.create(config);
-            cefClient.addMessageRouter(cefMessageRouter);
-            // Handle load
-            App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
-                @Override
-                public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
-                    AL.info("onLoadError: " + browser.getURL() + " errorCode: " + errorCode + " errorText: " + errorText);
-                    for (UI w : windows) {
-                        if (w.browser != null && w.browser == browser)
-                            w.onLoadStateChanged.execute(new LoadStateChange(browser, frame, errorCode,
-                                    errorText, failedUrl, false, false, false));
-                    }
-                }
-
-                @Override
-                public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
-                    AL.info("onLoadingStateChange: " + browser.getURL() + " isLoading: " + isLoading);
-                    for (UI w : windows) {
-                        if (w.browser != null && w.browser == browser)
-                            w.onLoadStateChanged.execute(new LoadStateChange(browser, null, null,
-                                    null, null, isLoading, canGoBack, canGoForward));
-                    }
-                }
-            });
-
             AL.info("Started application successfully!");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Image getIcon() throws IOException {
+    @Override
+    public void create() {
+        VisUI.load();
+        stage = new Stage(new ScreenViewport());
+        onRender.add(() -> {
+            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        });
+        onRender.add(() -> {
+            stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
+            stage.draw();
+        });
+        root = new FlexBox();
+        root.setFillParent(true);
+        root.getRoot()
+                .setFlexDirection(YogaFlexDirection.ROW)
+                .setWrap(YogaWrap.WRAP);
+        stage.addActor(root);
+
+        Gdx.input.setInputProcessor(stage);
+
+        stage.addListener(new InputListener() { // F12 to enable debug
+            boolean debug = false;
+            @Override
+            public boolean keyDown (InputEvent event, int keycode) {
+                if (keycode == Input.Keys.F12) {
+                    debug = !debug;
+                    root.setDebug(debug, true);
+                    for (Actor actor : stage.getActors()) {
+                        if (actor instanceof Group) {
+                            Group group = (Group) actor;
+                            group.setDebug(debug, true);
+                        }
+                    }
+                    return true;
+                }
+
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        if (width == 0 && height == 0) return; //see https://github.com/libgdx/libgdx/issues/3673#issuecomment-177606278
+        stage.getViewport().update(width, height, true);
+        PopupMenu.removeEveryMenu(stage);
+        class WindowResizeEvent extends Event {
+        }
+        WindowResizeEvent resizeEvent = new WindowResizeEvent();
+        for (Actor actor : stage.getActors()) {
+            actor.fire(resizeEvent);
+        }
+    }
+
+    @Override
+    public void render() {
+        for (Runnable runnable : onRender) {
+            runnable.run();
+        }
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void dispose() {
+        VisUI.dispose();
+        stage.dispose();
+    }
+
+    public static java.awt.Image getIcon() throws IOException {
         try {
             return getResourceImage("/icon.png");
         } catch (Exception e) {
@@ -148,9 +183,9 @@ public class App {
     /**
      * @param path expected relative path to a file inside the current jar. Example: icon.png or /icon.png
      */
-    public static Image getResourceImage(String path) throws IOException {
+    public static java.awt.Image getResourceImage(String path) throws IOException {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
-        return Toolkit.getDefaultToolkit().getImage(getResourceURL(fullPath));
+        return java.awt.Toolkit.getDefaultToolkit().getImage(getResourceURL(fullPath));
     }
 
     /**

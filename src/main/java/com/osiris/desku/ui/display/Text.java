@@ -1,19 +1,31 @@
 package com.osiris.desku.ui.display;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.jogamp.graph.font.FontFactory;
 import com.osiris.desku.ui.Component;
 
 public class Text extends Component<Text> {
     public Text(String s) {
         init(this, "txt");
-        element.appendText(s);
+        actor.appendText(s);
+    }
+
+    private void updateActor(){
+
     }
 
     public String get() {
-        return element.text();
+        return actor.text();
     }
 
     public Text append(String s) {
-        element.appendText(s);
+        actor.appendText(s);
         return this;
     }
 
