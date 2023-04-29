@@ -72,47 +72,47 @@ public class Text extends Component<Text> {
     }
 
     public Text sizeXS() {
-        style.put("font-size", "var(--font-size-xs)");
+        putStyle("font-size", "var(--font-size-xs)");
         return this;
     }
 
     public Text sizeS() {
-        style.put("font-size", "var(--font-size-s)");
+        putStyle("font-size", "var(--font-size-s)");
         return this;
     }
 
     public Text sizeM() {
-        style.put("font-size", "var(--font-size-m)");
+        putStyle("font-size", "var(--font-size-m)");
         return this;
     }
 
     public Text sizeL() {
-        style.put("font-size", "var(--font-size-l)");
+        putStyle("font-size", "var(--font-size-l)");
         return this;
     }
 
     public Text sizeXL() {
-        style.put("font-size", "var(--font-size-xl)");
+        putStyle("font-size", "var(--font-size-xl)");
         return this;
     }
 
     public Text sizeXXL() {
-        style.put("font-size", "var(--font-size-xxl)");
+        putStyle("font-size", "var(--font-size-xxl)");
         return this;
     }
 
     public Text sizeXXXL() {
-        style.put("font-size", "var(--font-size-xxxl)");
+        putStyle("font-size", "var(--font-size-xxxl)");
         return this;
     }
 
     public Text bold() {
-        style.put("font-weight", "bold");
+        putStyle("font-weight", "bold");
         return this;
     }
 
     public Text bolder() {
-        style.put("font-weight", "bolder");
+        putStyle("font-weight", "bolder");
         return this;
     }
 }
