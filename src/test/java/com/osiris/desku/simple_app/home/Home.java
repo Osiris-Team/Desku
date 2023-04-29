@@ -2,12 +2,14 @@ package com.osiris.desku.simple_app.home;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
+import com.osiris.desku.UI;
 import com.osiris.desku.ui.*;
 import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.input.Button;
 import com.osiris.desku.ui.layout.Layout;
 import com.osiris.desku.ui.layout.Overlay;
+import com.osiris.jlib.logger.AL;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,9 +34,21 @@ public class Home extends Route {
                         .sizeXXL().selfCenter()
                         .size("40vh", "20vh").bold())
                 .add(new Image(this.getClass(), "/images/pc.png").width("30vw").selfCenter());
-        ly.add(new Text("Click me!").selfCenter().onClick(event -> {
+        ly.add(new Text("I am clickable text! Click me!").selfCenter().onClick(event -> {
             System.out.println("Clicked text!");
             ly.add(new Text("Clicked text!"));
+        }));
+
+        // Async
+        ly.add(new Text("Asynchronously update a component: Loading...").padding(true).async(txt -> {
+            try{
+                for (int i = 1; i <= 100; i++) {
+                    Thread.sleep(1000);
+                    txt.set("Asynchronously update a component: Loading... "+ i +"%");
+                }
+            } catch (Exception e) {
+                AL.warn(e);
+            }
         }));
 
         // Layouts
@@ -54,8 +68,8 @@ public class Home extends Route {
 
         // Overlays
         ly.add(new Overlay(null).add(new Text("Overlay over the page")));
-        ly.vertical().stylePut("background-color", "blue").size("100px", "100px").add(
-                new Overlay(ly.lastAdded).stylePut("background-color", "red")
+        ly.vertical().putStyle("background-color", "blue").size("100px", "100px").add(
+                new Overlay(ly.lastAdded).putStyle("background-color", "red")
                         .add(new Text("Overlay over parent.")));
 
         // Inputs

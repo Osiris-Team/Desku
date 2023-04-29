@@ -17,14 +17,14 @@ public class Image extends Component<Image> {
         String packagePath = "/" + clazz.getPackage().getName().replace(".", "/");
         String imgNewPath = (packagePath.equals("/") ? "" : packagePath)
                 + (src.startsWith("/") ? src : ("/" + src));
-        File img = new File(UI.current().getDir() + imgNewPath);
+        File img = new File(UI.get().getDir() + imgNewPath);
 
         // Set src of image
         String attrSrc = imgNewPath;
         if (attrSrc.startsWith("/")) attrSrc = attrSrc.replaceFirst("/", "");
         element.attr("src", attrSrc);
 
-        // Create image file if needed
+        // Create image file if needed otherwise use existing one
         if (img.exists()) return;
         img.getParentFile().mkdirs();
         try {

@@ -28,6 +28,6 @@ public class VerticalLayout extends Component<VerticalLayout> {
         // Make sure to call init before anything else!
 
         // You can get the window this component is loaded in, like so:
-        System.out.println(UI.current());
+        System.out.println(UI.get());
     }
 }

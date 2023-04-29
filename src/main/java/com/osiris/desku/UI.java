@@ -26,6 +26,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -76,14 +77,43 @@ public class UI {
     }
 
     /**
-     * Always null, except when inside... <br>
+     * Always null, except when code is running inside... <br>
      * - {@link #access(Runnable)} <br>
-     * - {@link #accessAsync(Runnable)} <br>
      * - constructor {@link #UI(Route, boolean, int, int)} when generating this UIs' HTML  for the first time. <br>
      * - any triggered JavaScript event that was registered via {@link #registerJSListener(String, Component, Consumer)}. <br>
+     * or {@link #set(UI, Thread...)} was called before.
      */
-    public static UI current() {
-        return current;
+    public static UI get() {
+        if(current != null)
+            return current;
+        else{
+            // Current code is not inside access(), thus we check the thread
+            synchronized (threadsAndUIs){
+                return threadsAndUIs.get(Thread.currentThread());
+            }
+        }
+    }
+
+    private static final Map<Thread, UI> threadsAndUIs = new HashMap<>();
+
+    /**
+     * Maps the provided threads to the provided UI, so that when calling
+     * {@link UI#get()} inside those threads it returns the provided UI.
+     */
+    public static void set(UI ui, Thread... threads) {
+        synchronized (threadsAndUIs){
+            for (Thread t : threads) {
+                threadsAndUIs.put(t, ui);
+            }
+        }
+    }
+
+    public static void remove(Thread... threads) {
+        synchronized (threadsAndUIs){
+            for (Thread t : threads) {
+                threadsAndUIs.remove(t);
+            }
+        }
     }
 
     /**
@@ -96,17 +126,6 @@ public class UI {
         code.run();
         current = null;
         access.unlock();
-        return this;
-    }
-
-    /**
-     * Access this window synchronously, but later in another thread.
-     * Also sets {@link #current} to this window.
-     */
-    public UI accessAsync(Runnable code) {
-        Component.executor.execute(() -> {
-            access(code);
-        });
         return this;
     }
 

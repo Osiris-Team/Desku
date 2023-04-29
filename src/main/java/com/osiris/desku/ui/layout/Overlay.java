@@ -1,7 +1,6 @@
 package com.osiris.desku.ui.layout;
 
 import com.osiris.desku.ui.Component;
-import com.osiris.desku.ui.layout.Layout;
 
 public class Overlay extends Layout {
 
@@ -11,17 +10,17 @@ public class Overlay extends Layout {
     public Overlay(Component<?> parent) {
         init(this, "overlay");
         if (parent == null)
-            this.stylePut("position", "fixed"); // Sit on top of page
+            this.putStyle("position", "fixed"); // Sit on top of page
         else {
-            parent.stylePut("position", "relative"); // Sit on top of parent
-            this.stylePut("position", "absolute");
+            parent.putStyle("position", "relative"); // Sit on top of parent
+            this.putStyle("position", "absolute");
         }
-        stylePut("background-color", "rgba(0,0,0,0)"); // Transparent background
-        stylePut("top", "0");
-        stylePut("bottom", "0");
-        stylePut("left", "0");
-        stylePut("right", "0");
-        stylePut("width", "fit-content");
-        stylePut("height", "fit-content");
+        putStyle("background-color", "rgba(0,0,0,0)"); // Transparent background
+        putStyle("top", "0");
+        putStyle("bottom", "0");
+        putStyle("left", "0");
+        putStyle("right", "0");
+        putStyle("width", "fit-content");
+        putStyle("height", "fit-content");
     }
 }

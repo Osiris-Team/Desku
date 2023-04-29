@@ -34,7 +34,8 @@ repo.
 - Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
 - Localhost-free and server-less.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
-implementation, thus making simple/complex layout creation faster and easier than ever.
+bindings, thus making simple/complex layout creation faster and easier than ever.
+- Update the UI asynchronously hassle-free.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
@@ -48,6 +49,7 @@ way its pretty easy to create a Desku-Extension:
 ### Todo
 - Serializable UI
 - Default components suit similar to https://vaadin.com/docs/latest/components
+- Rethink Localhost-free and server-less decision, since this as a webserver might be something.
 
 ### Documentation
 
