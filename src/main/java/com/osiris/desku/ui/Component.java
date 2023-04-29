@@ -196,21 +196,18 @@ public class Component<T> {
      * shows the text "Loading..." and dims/darkens this component,
      * until the async task finishes.
      */
-    public T asyncWithOverlay(Consumer<T> code) {
-        UI ui = UI.current();
-        Layout overlay = new Overlay(this)
-                .childCenter().stylePut("background", "rgba(0,0,0,0.3)")
-                .sizeFull();
-        add(overlay);
-        overlay.add(new Text("Loading...")
-                .stylePut("color", "white").sizeXL().selfCenter());
-        overlay.add(new Text("This might take a while, please be patient.")
-                .stylePut("color", "white").sizeS().selfCenter());
-        executor.execute(() -> {
-            code.accept(target);
-            ui.access(() -> {
-               remove(overlay);
-            });
+    public T asyncWithOverlay(BiConsumer<T, Overlay> code) {
+        async(_this -> {
+            Overlay overlay = (Overlay) new Overlay(this)
+                    .childCenter().putStyle("background", "rgba(0,0,0,0.3)")
+                    .sizeFull();
+            add(overlay);
+            overlay.add(new Text("Loading...")
+                    .putStyle("color", "white").sizeXL().selfCenter());
+            overlay.add(new Text("This might take a while, please be patient.")
+                    .putStyle("color", "white").sizeS().selfCenter());
+            code.accept(target, overlay);
+            remove(overlay);
         });
         return target;
     }
