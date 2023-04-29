@@ -35,6 +35,7 @@ repo.
 - Localhost-free and server-less.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
+- Focus on method-chaining and low-code.
 - Update the UI asynchronously hassle-free.
 
 ### Extensions
