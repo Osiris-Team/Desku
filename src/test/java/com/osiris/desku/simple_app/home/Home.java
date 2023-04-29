@@ -50,6 +50,17 @@ public class Home extends Route {
                 AL.warn(e);
             }
         }));
+        ly.add(new Layout().size("300px", "100px").asyncWithOverlay((comp, overlay) -> {
+            try{
+                Text txt = new Text("Waiting 10 seconds...");
+                comp.add(txt);
+                Thread.sleep(10000);
+                txt.set("Finished after 10 seconds!");
+                comp.putStyle("background", "#32a852");
+            } catch (Exception e) {
+                AL.warn(e);
+            }
+        }));
 
         // Layouts
         ly.vertical().padding(true)

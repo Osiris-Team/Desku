@@ -105,10 +105,23 @@ public class Component<T> {
                         "internal", 0);
             });
             onStyleChanged.addAction((attribute) -> {
-                element.attr(attribute.getKey(), attribute.getValue());
-                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
-                                "comp.setAttribute(`" + attribute.getKey() + "`,`" + attribute.getValue() + "`);\n",
-                        "internal", 0);
+                if(attribute.getValue().isEmpty()){ // Remove style
+                    String style = element.hasAttr("style") ? element.attributes().get("style") : "";
+                    int iKeyFirstChar = style.indexOf(attribute.getKey());
+                    if(iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
+                    style = style.substring(0, iKeyFirstChar) + style.substring(style.indexOf(";", iKeyFirstChar) + 1);
+                    element.attr("style", style); // Change in-memory representation
+                    win.browser.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
+                                    "comp.style."+attribute.getKey()+" = ``;\n",
+                            "internal", 0);
+                } else{ // Add style
+                    String style = element.hasAttr("style") ? element.attributes().get("style") : "";
+                    style += attribute.getKey()+": "+attribute.getValue()+";";
+                    element.attr("style", style); // Change in-memory representation
+                    win.browser.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
+                                    "comp.style."+attribute.getKey()+" = `"+attribute.getValue()+"`;\n",
+                            "internal", 0);
+                }
             });
         };
         if(!win.isLoading) registration.run();
