@@ -19,14 +19,15 @@ public class Main {
             return new Layout().add(new Text("Hello World!")); 
         });
 
-        // Create windows
-        new NativeWindow(home);
+        // Create and show windows
+        new UI(home);
     }
 }
 ```
 
-A more complete example can be found at the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App)
-repo.
+A more complete example can be found [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app)
+or at the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App)
+repo (probably outdated).
 
 ### Features
 - Latest Chromium HTML/CSS renderer via [JCEF](https://github.com/jcefmaven/jcefbuild).
@@ -35,6 +36,7 @@ repo.
 - Localhost-free and server-less.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
+- You decide! Code your UI in Java or directly in HTML/CSS, or both!
 - Focus on method-chaining and low-code.
 - Update the UI asynchronously hassle-free.
 
@@ -44,7 +46,7 @@ It can be a single component or a complete suite of multiple components, either
 way its pretty easy to create a Desku-Extension:
 1. Add the Desku dependency.
 2. Extend the Component class and start coding (example component [here](https://github.com/Osiris-Team/Desku/blob/main/src/test/java/com/osiris/desku/VerticalLayout.java)).
-3. Publish your repo on GitHub with the #desku-extension tag/topic.
+3. Publish your repo on GitHub with the #desku-extension tag/topic (also mention the Desku version your extension supports / was built with).
 4. Create a release and use JitPack or Maven to host the assets.
 
 ### Todo
