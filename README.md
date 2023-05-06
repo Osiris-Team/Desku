@@ -2,10 +2,6 @@
 Java Framework for developing Desktop Applications with Java, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
 
-All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app)
-and a production ready starter app exists at the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App)
-repo (maybe outdated).
-
 **Note that support for mobile apps (Android/iOS) is planned and being worked on.**
 
 <p align="center">
@@ -30,6 +26,10 @@ public class Main {
 ```
 
 ### Features
+All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app)
+and a production ready starter app exists at the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App)
+repo (maybe outdated).
+
 - Latest Chromium HTML/CSS renderer via [JCEF](https://github.com/jcefmaven/jcefbuild).
 - Runs on Windows/Linux/Mac by installing platform-specific dependencies at first launch.
 - Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
