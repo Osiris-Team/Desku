@@ -51,6 +51,7 @@ way its pretty easy to create a Desku-Extension:
 
 ### Todo
 - Serializable UI
+- Navigation between UIs/Windows
 - Default components suit similar to https://vaadin.com/docs/latest/components
 - Rethink Localhost-free and server-less decision, since this as a webserver might be something.
 
