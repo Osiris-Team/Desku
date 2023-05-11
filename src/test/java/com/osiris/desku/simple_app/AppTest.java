@@ -2,9 +2,9 @@ package com.osiris.desku.simple_app;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
+import com.osiris.desku.UI;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.simple_app.home.Home;
-import com.osiris.desku.UI;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

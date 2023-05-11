@@ -8,7 +8,7 @@ import com.osiris.desku.ui.Component;
 public class VerticalLayout extends Component<VerticalLayout> {
 
     static { // Executed only once
-        try{
+        try {
             String styles = "" +
                     "vl{" + // Style affects all components with the tag "vl"
                     "display: flex;" +

@@ -55,6 +55,7 @@ public class UI {
     public JFrame onscreenFrame;
     public CefBrowser browser;
     public java.awt.Component browserUI;
+
     public UI(Route route) throws IOException {
         this(route, false, 70, 60);
     }
@@ -66,7 +67,7 @@ public class UI {
         this.route = route;
         this.content = route.loadContent();
         onLoadStateChanged.addAction((e) -> {
-            if(e.isLoading) return;
+            if (e.isLoading) return;
             isLoading = false;
         });
 
@@ -84,11 +85,11 @@ public class UI {
      * or {@link #set(UI, Thread...)} was called before.
      */
     public static UI get() {
-        if(current != null)
+        if (current != null)
             return current;
-        else{
+        else {
             // Current code is not inside access(), thus we check the thread
-            synchronized (threadsAndUIs){
+            synchronized (threadsAndUIs) {
                 return threadsAndUIs.get(Thread.currentThread());
             }
         }
@@ -101,7 +102,7 @@ public class UI {
      * {@link UI#get()} inside those threads it returns the provided UI.
      */
     public static void set(UI ui, Thread... threads) {
-        synchronized (threadsAndUIs){
+        synchronized (threadsAndUIs) {
             for (Thread t : threads) {
                 threadsAndUIs.put(t, ui);
             }
@@ -109,7 +110,7 @@ public class UI {
     }
 
     public static void remove(Thread... threads) {
-        synchronized (threadsAndUIs){
+        synchronized (threadsAndUIs) {
             for (Thread t : threads) {
                 threadsAndUIs.remove(t);
             }
@@ -380,7 +381,7 @@ public class UI {
         // 1. execute js code
         // 2. execute callback in java with params from js code
         // 3. return success to js code and execute it
-        String id = "" + App.cefMessageRouterRequestId.getAndIncrement();
+        String id = String.valueOf(App.cefMessageRouterRequestId.getAndIncrement());
         App.cefMessageRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
@@ -412,6 +413,7 @@ public class UI {
     /**
      * Registers this listener directly only if the page was loaded,
      * otherwise adds an action to {@link #onLoadStateChanged} to register the listener later.
+     *
      * @param eventName name of the JavaScript event to listen for.
      * @param comp      component to register the listener on.
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
@@ -429,32 +431,31 @@ public class UI {
         }
         String jsNow = jsGetComp("comp", comp.id) +
                 "comp.addEventListener(\"" + eventName + "\", (event) => {\n" +
-                addCallback("" +
-                        "function getObjProps(obj) {\n" +
-                        "  var s = '{';\n" +
-                        "  for (const key in obj) {\n" +
-                        "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
-                        "      s += (`\"${key}\": \"${obj[key]}\",`);\n" +
-                        "    }\n" +
-                        "  }\n" +
-                        "  if(s[s.length-1] == ',') s = s.slice(0, s.length-1);" + // Remove last ,
-                        "  s += '}';\n" +
-                        "  return s;\n" +
-                        "}" +
-                        "message = getObjProps(event)\n",
+                addCallback("function getObjProps(obj) {\n" +
+                                "  var s = '{';\n" +
+                                "  for (const key in obj) {\n" +
+                                "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
+                                "      s += (`\"${key}\": \"${obj[key]}\",`);\n" +
+                                "    }\n" +
+                                "  }\n" +
+                                "  if(s[s.length-1] == ',') s = s.slice(0, s.length-1);" + // Remove last ,
+                                "  s += '}';\n" +
+                                "  return s;\n" +
+                                "}" +
+                                "message = getObjProps(event)\n",
                         (message) -> {
                             access(() -> {
                                 onEvent.accept(message); // Should execute all listeners
                             });
-                            },
+                        },
                         (error) -> {
                             throw new RuntimeException(error);
                         }) + // JS code that triggers Java function gets executed on a click event for this component
                 "});\n";
 
-        if(!isLoading) browser.executeJavaScript(jsNow, "internal", 0);
+        if (!isLoading) browser.executeJavaScript(jsNow, "internal", 0);
         else onLoadStateChanged.addAction((action, event) -> {
-            if(event.isLoading) return;
+            if (event.isLoading) return;
             action.remove();
             browser.executeJavaScript(jsNow, "internal", 0);
         }, AL::warn);

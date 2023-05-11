@@ -34,9 +34,9 @@ public class Text extends Component<Text> {
                         "internal", 0);
             });
         };
-        if(!win.isLoading) registration.run();
+        if (!win.isLoading) registration.run();
         else win.onLoadStateChanged.addAction((action, event) -> {
-            if(event.isLoading) return;
+            if (event.isLoading) return;
             action.remove();
             registration.run();
         }, AL::warn);
@@ -51,13 +51,13 @@ public class Text extends Component<Text> {
         return element.text();
     }
 
-    public Text set(String s){
+    public Text set(String s) {
         clear();
         append(s);
         return this;
     }
 
-    public Text clear(){
+    public Text clear() {
         for (TextNode txt : element.textNodes()) {
             txt.remove(); // Remove all text nodes from parent
         }

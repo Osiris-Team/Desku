@@ -1,7 +1,5 @@
 package com.osiris.desku.ui.event;
 
-import com.osiris.desku.ui.Component;
-
 public class ClickEvent<T> extends JavaScriptEvent<T> {
     public final boolean isTrusted;
     public final int screenX, screenY;

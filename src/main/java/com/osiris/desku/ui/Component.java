@@ -27,8 +27,7 @@ public class Component<T> {
 
     static {
         try {
-            String styles = "" +
-                    "#outlet * {\n" +
+            String styles = "#outlet * {\n" +
                     "  display: flex;\n" +  // All children of outlet will be flex
                     "}\n";
             App.appendToGlobalStyles(styles);
@@ -46,7 +45,8 @@ public class Component<T> {
      */
     public final int id = idCounter.getAndIncrement();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
-    public static class AddedChildEvent{
+
+    public static class AddedChildEvent {
         /**
          * Component that got added.
          */
@@ -72,6 +72,7 @@ public class Component<T> {
             this.isReplace = isReplace;
         }
     }
+
     /**
      * Executed when a child was added on the Java side. <br>
      * It's a {@link  Pair} because it might be an insert operation and thus
@@ -101,11 +102,11 @@ public class Component<T> {
      * Jsoup {@link Element} that can be used to convert this
      * {@link Component} into an actual HTML string.
      * <u>
-     *     Note that changes to this element are only visible in the UI if
-     *     they are done before it gets loaded the first time. <br>
-     *     This means that changes to this element made in a click event for example
-     *     will not be visible in the UI. <br>
-     *     Use wrapper methods like {@link #innerHTML(String)} for example.
+     * Note that changes to this element are only visible in the UI if
+     * they are done before it gets loaded the first time. <br>
+     * This means that changes to this element made in a click event for example
+     * will not be visible in the UI. <br>
+     * Use wrapper methods like {@link #innerHTML(String)} for example.
      * </u>
      */
     public Element element;
@@ -115,7 +116,7 @@ public class Component<T> {
         UI win = UI.get();
         Runnable registration = () -> {
             onAddedChild.addAction((e) -> { // event
-                if(e.otherChildComp == null){
+                if (e.otherChildComp == null) {
                     children.add(e.childComp);
                     e.childComp.update();
                     element.appendChild(e.childComp.element);
@@ -124,7 +125,7 @@ public class Component<T> {
                                     "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
                                     "parentComp.appendChild(tempDiv.firstChild);\n",
                             "internal", 0);
-                } else if(e.isInsert){
+                } else if (e.isInsert) {
                     int iOtherComp = children.indexOf(e.otherChildComp);
                     children.set(iOtherComp, e.childComp);
                     e.childComp.update();
@@ -135,7 +136,7 @@ public class Component<T> {
                                     "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
                                     "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
                             "internal", 0);
-                } else if(e.isReplace){
+                } else if (e.isReplace) {
                     int iOtherComp = children.indexOf(e.otherChildComp);
                     children.set(iOtherComp, e.childComp);
                     e.childComp.update();
@@ -159,28 +160,28 @@ public class Component<T> {
                         "internal", 0);
             });
             onStyleChanged.addAction((attribute) -> {
-                if(attribute.getValue().isEmpty()){ // Remove style
+                if (attribute.getValue().isEmpty()) { // Remove style
                     String style = element.hasAttr("style") ? element.attributes().get("style") : "";
                     int iKeyFirstChar = style.indexOf(attribute.getKey());
-                    if(iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
+                    if (iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
                     style = style.substring(0, iKeyFirstChar) + style.substring(style.indexOf(";", iKeyFirstChar) + 1);
                     element.attr("style", style); // Change in-memory representation
                     win.browser.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.style."+attribute.getKey()+" = ``;\n",
+                                    "comp.style." + attribute.getKey() + " = ``;\n",
                             "internal", 0);
-                } else{ // Add style
+                } else { // Add style
                     String style = element.hasAttr("style") ? element.attributes().get("style") : "";
-                    style += attribute.getKey()+": "+attribute.getValue()+";";
+                    style += attribute.getKey() + ": " + attribute.getValue() + ";";
                     element.attr("style", style); // Change in-memory representation
                     win.browser.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.style."+attribute.getKey()+" = `"+attribute.getValue()+"`;\n",
+                                    "comp.style." + attribute.getKey() + " = `" + attribute.getValue() + "`;\n",
                             "internal", 0);
                 }
             });
         };
-        if(!win.isLoading) registration.run();
+        if (!win.isLoading) registration.run();
         else win.onLoadStateChanged.addAction((action, event) -> {
-            if(event.isLoading) return;
+            if (event.isLoading) return;
             action.remove();
             registration.run();
         }, AL::warn);
@@ -194,7 +195,7 @@ public class Component<T> {
     public void init(T target, String tag) {
         this.target = target;
         this.element = new Element(tag);
-        element.attr("java-id", "" + id);
+        element.attr("java-id", String.valueOf(id));
     }
 
     /**
@@ -205,7 +206,7 @@ public class Component<T> {
     public void init(T target, Tag tag, String baseUri, Attributes attributes) {
         this.target = target;
         this.element = new Element(tag, baseUri, attributes);
-        element.attr("java-id", "" + id);
+        element.attr("java-id", String.valueOf(id));
     }
 
     /**
@@ -216,7 +217,7 @@ public class Component<T> {
     public void init(T target, Tag tag, String baseUri) {
         this.target = target;
         this.element = new Element(tag, baseUri);
-        element.attr("java-id", "" + id);
+        element.attr("java-id", String.valueOf(id));
     }
 
     /**
@@ -227,7 +228,7 @@ public class Component<T> {
     public void init(T target, Element element) {
         this.target = target;
         this.element = element;
-        element.attr("java-id", "" + id);
+        element.attr("java-id", String.valueOf(id));
     }
 
     /**
@@ -255,7 +256,7 @@ public class Component<T> {
     public T later(Consumer<T> code) {
         UI ui = UI.get();
         Objects.requireNonNull(ui);
-        Thread t = new Thread(){
+        Thread t = new Thread() {
             @Override
             public void run() {
                 code.accept(target);
@@ -290,14 +291,14 @@ public class Component<T> {
     }
 
     public Consumer<AddedChildEvent> _add = (e) -> {
-        if(e.otherChildComp == null){
+        if (e.otherChildComp == null) {
             children.add(e.childComp);
             onAddedChild.execute(e);
-        } else if(e.isInsert){
+        } else if (e.isInsert) {
             int iOtherComp = children.indexOf(e.otherChildComp);
             children.set(iOtherComp, e.childComp);
             onAddedChild.execute(e);
-        } else if(e.isReplace){
+        } else if (e.isReplace) {
             int iOtherComp = children.indexOf(e.otherChildComp);
             children.set(iOtherComp, e.childComp);
             onAddedChild.execute(e);
@@ -343,17 +344,19 @@ public class Component<T> {
 
     /**
      * Does nothing if newComp or oldComp is null.
+     *
      * @throws IndexOutOfBoundsException if oldComp does not exist in {@link #children}.
      */
     public T replace(Component<?> oldComp, Component<?> newComp) {
         if (oldComp == null || newComp == null) return target;
-        if(!children.contains(oldComp)) throw new IndexOutOfBoundsException("Provided old component to be replaced does not exist in children!");
+        if (!children.contains(oldComp))
+            throw new IndexOutOfBoundsException("Provided old component to be replaced does not exist in children!");
         _add.accept(new AddedChildEvent(newComp, oldComp, false, true));
         return target;
     }
 
     public Consumer<Component<?>> _remove = child -> {
-        if(children.contains(child)){
+        if (children.contains(child)) {
             onRemovedChild.execute(child);
         }
     };
@@ -474,7 +477,7 @@ public class Component<T> {
     /**
      * @see Element#text(String)
      */
-    public T innerHTML(String text){
+    public T innerHTML(String text) {
         remove(children);
         add(new Text(text));
         return target;
@@ -483,7 +486,7 @@ public class Component<T> {
     /**
      * @see Element#html(String)
      */
-    public T innerHTML(Component<?> comp){
+    public T innerHTML(Component<?> comp) {
         remove(children);
         add(comp);
         return target;
@@ -613,7 +616,7 @@ public class Component<T> {
      * Default: 0 <br>
      */
     public T order(int i) {
-        putStyle("order", "" + i);
+        putStyle("order", String.valueOf(i));
         return target;
     }
 
@@ -640,7 +643,7 @@ public class Component<T> {
      * Default: 0 <br>
      */
     public T grow(int i) {
-        putStyle("grow", "" + i);
+        putStyle("grow", String.valueOf(i));
         return target;
     }
 
@@ -660,7 +663,7 @@ public class Component<T> {
      * Default: 1 <br>
      */
     public T shrink(int i) {
-        putStyle("shrink", "" + i);
+        putStyle("shrink", String.valueOf(i));
         return target;
     }
 
@@ -860,6 +863,7 @@ public class Component<T> {
     /**
      * Adds a listener that gets executed when this component <br>
      * was clicked by the user (a JavaScript click event was thrown). <br>
+     *
      * @see UI#registerJSListener(String, Component, Consumer)
      */
     public T onClick(Consumer<ClickEvent<T>> code) {

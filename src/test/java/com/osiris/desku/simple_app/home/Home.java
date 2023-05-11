@@ -2,10 +2,10 @@ package com.osiris.desku.simple_app.home;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
-import com.osiris.desku.ui.*;
+import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.display.RTable;
 import com.osiris.desku.ui.display.Table;
-import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.input.Button;
 import com.osiris.desku.ui.layout.Layout;
@@ -25,6 +25,7 @@ public class Home extends Route {
             throw new RuntimeException(e);
         }
     }
+
     public Home() {
         super("/");
     }
@@ -45,17 +46,17 @@ public class Home extends Route {
         // Async
         //
         ly.add(new Text("Asynchronously update a component: Loading...").padding(true).later(txt -> {
-            try{
+            try {
                 for (int i = 1; i <= 100; i++) {
                     Thread.sleep(1000);
-                    txt.set("Asynchronously update a component: Loading... "+ i +"%");
+                    txt.set("Asynchronously update a component: Loading... " + i + "%");
                 }
             } catch (Exception e) {
                 AL.warn(e);
             }
         }));
         ly.add(new Layout().size("300px", "100px").laterWithOverlay((comp, overlay) -> {
-            try{
+            try {
                 Text txt = new Text("Waiting 10 seconds...");
                 comp.add(txt);
                 Thread.sleep(10000);
@@ -103,7 +104,7 @@ public class Home extends Route {
         //
         AtomicInteger i = new AtomicInteger();
         ly.add(new Button("This is a button!").onClick(e -> {
-            String s = "Clicked "+i.incrementAndGet()+" times";
+            String s = "Clicked " + i.incrementAndGet() + " times";
             System.out.println(s);
             e.comp.text.set(s);
         }));
@@ -116,7 +117,7 @@ public class Home extends Route {
                 .row("Data 3", "Data 4"));
 
         // Tables via reflection
-        class Person{
+        class Person {
             public String name;
             public int age;
 
@@ -129,7 +130,7 @@ public class Home extends Route {
         list.add(new Person("John", 34));
         list.add(new Person("Peter", 56));
         list.add(new Person("Maria", 33));
-        try{
+        try {
             ly.add(new RTable(Person.class).rows(list)); // One liner ;)
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);

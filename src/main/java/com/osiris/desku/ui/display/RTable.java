@@ -9,11 +9,10 @@ import java.util.function.Predicate;
 /**
  * Table with additional methods for reflection.
  */
-public class RTable extends Table{
+public class RTable extends Table {
     public Class<?> clazz;
     public Predicate<Field> fieldPredicate = field -> {
-        if (Modifier.isTransient(field.getModifiers())) return false;
-        else return true;
+        return !Modifier.isTransient(field.getModifiers());
     };
 
     /**
@@ -25,7 +24,7 @@ public class RTable extends Table{
     }
 
     /**
-     * @param clazz uses this classes' fields for the headers.
+     * @param clazz          uses this classes' fields for the headers.
      * @param fieldPredicate is used to determine which fields to use.
      */
     public RTable(Class<?> clazz, Predicate<Field> fieldPredicate) {
@@ -39,17 +38,17 @@ public class RTable extends Table{
      * Easily set the fields of the provided class as headers. <br>
      * Transient fields are ignored.
      */
-    public Table headers(Class<?> clazz){
+    public Table headers(Class<?> clazz) {
         return headers(clazz, fieldPredicate);
     }
 
     /**
      * Easily set the fields of the provided class as headers. <br>
      */
-    public Table headers(Class<?> clazz, Predicate<Field> predicate){
+    public Table headers(Class<?> clazz, Predicate<Field> predicate) {
         this.headers.removeAll();
         for (Field f : clazz.getFields()) {
-            if(predicate.test(f)){
+            if (predicate.test(f)) {
                 String name = f.getName();
                 this.headers.add(new Header().add(new Text(name)));
             }
@@ -66,6 +65,7 @@ public class RTable extends Table{
 
     /**
      * Removes current rows and creates news ones with the data contained in the provided list.
+     *
      * @param rows list of objects where each object will fill a row with the values of its fields.
      *             The {@link Object#toString()} method will be used for each field
      *             (only if field is NOT null, otherwise an empty value will be added).
@@ -77,7 +77,7 @@ public class RTable extends Table{
     public <T> Table rows(Iterable<T> rows, Predicate<Field> predicate) throws IllegalAccessException {
         List<Field> fields = new ArrayList<>();
         for (Field f : clazz.getFields()) {
-            if(predicate.test(f)){
+            if (predicate.test(f)) {
                 f.setAccessible(true);
                 fields.add(f);
             }

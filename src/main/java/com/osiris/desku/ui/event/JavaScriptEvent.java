@@ -1,7 +1,6 @@
 package com.osiris.desku.ui.event;
 
 import com.google.gson.JsonObject;
-import com.osiris.desku.ui.Component;
 import com.osiris.jlib.json.JsonFile;
 
 public abstract class JavaScriptEvent<T> {

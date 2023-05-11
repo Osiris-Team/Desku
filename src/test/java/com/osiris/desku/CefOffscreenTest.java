@@ -1,37 +1,22 @@
 package com.osiris.desku;
 
-import com.osiris.desku.swing.LoadingWindow;
-import com.osiris.jlib.logger.AL;
 import me.friwi.jcefmaven.CefAppBuilder;
 import me.friwi.jcefmaven.CefInitializationException;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
 import me.friwi.jcefmaven.UnsupportedPlatformException;
 import org.cef.CefApp;
-import org.cef.CefApp.CefAppState;
 import org.cef.CefClient;
-import org.cef.CefSettings;
-import org.cef.OS;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
-import org.cef.handler.CefAppHandlerAdapter;
 import org.cef.handler.CefDisplayHandlerAdapter;
 import org.cef.handler.CefFocusHandlerAdapter;
 import org.cef.handler.CefLoadHandlerAdapter;
 import org.junit.jupiter.api.Test;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.KeyboardFocusManager;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.IOException;
-
-import javax.swing.JFrame;
-import javax.swing.JTextField;
 
 /**
  * Based on: https://bitbucket.org/chromiumembedded/java-cef/src/master/java/tests/simple/MainFrame.java
@@ -49,10 +34,10 @@ public class CefOffscreenTest {
  * It displays a JFrame with a JTextField at its top and a CefBrowser in its
  * center. The JTextField is used to enter and assign an URL to the browser UI.
  * No additional handlers or callbacks are used in this example.
- *
+ * <p>
  * The number of used JCEF classes is reduced (nearly) to its minimum and should
  * assist you to get familiar with JCEF.
- *
+ * <p>
  * For a more feature complete example have also a look onto the example code
  * within the package "tests.detailed".
  */
@@ -87,7 +72,7 @@ class MainFrame extends JFrame {
         client_.addLoadHandler(new CefLoadHandlerAdapter() {
             @Override
             public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
-                System.out.println("onLoadingStateChange "+ browser.getURL() + " "+  isLoading +" " +canGoBack +" "+ canGoForward);
+                System.out.println("onLoadingStateChange " + browser.getURL() + " " + isLoading + " " + canGoBack + " " + canGoForward);
             }
         });
 
@@ -160,7 +145,7 @@ class MainFrame extends JFrame {
         //     JFrame and afterwards the frame is made visible to the user.
         getContentPane().add(address_, BorderLayout.NORTH);
         getContentPane().add(browerUI_, BorderLayout.CENTER);
-        if(!useOSR){
+        if (!useOSR) {
             pack();
             setSize(800, 600);
             setVisible(true);
