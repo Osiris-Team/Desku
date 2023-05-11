@@ -4,21 +4,20 @@ import com.osiris.desku.App;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
-import com.osiris.desku.ui.layout.Layout;
 import com.osiris.desku.ui.layout.Overlay;
+import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
-import org.jsoup.nodes.*;
+import jdk.internal.net.http.common.Pair;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -47,10 +46,38 @@ public class Component<T> {
      */
     public final int id = idCounter.getAndIncrement();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
+    public static class AddedChildEvent{
+        /**
+         * Component that got added.
+         */
+        public final Component<?> childComp;
+        /**
+         * Should only be relevant and not null when either
+         * {@link #isInsert} or {@link #isReplace} is true.
+         */
+        public final Component<?> otherChildComp;
+        /**
+         * If true, then {@link #otherChildComp} should now be the next child in the list after {@link #childComp}.
+         */
+        public final boolean isInsert;
+        /**
+         * If true, then {@link #otherChildComp} should NOT exist in the list anymore.
+         */
+        public final boolean isReplace;
+
+        public AddedChildEvent(Component<?> childComp, Component<?> otherChildComp, boolean isInsert, boolean isReplace) {
+            this.childComp = childComp;
+            this.otherChildComp = otherChildComp;
+            this.isInsert = isInsert;
+            this.isReplace = isReplace;
+        }
+    }
     /**
-     * Executed when a child was added on the Java side.
+     * Executed when a child was added on the Java side. <br>
+     * It's a {@link  Pair} because it might be an insert operation and thus
+     * the id of the component must be given.
      */
-    public final Event<Component<?>> onAddedChild = new Event<>();
+    public final Event<AddedChildEvent> onAddedChild = new Event<>();
     /**
      * Executed when a child was removed on the Java side.
      */
@@ -87,16 +114,43 @@ public class Component<T> {
         // Attach Java event listeners
         UI win = UI.get();
         Runnable registration = () -> {
-            onAddedChild.addAction((childComp) -> {
-                childComp.update();
-                element.appendChild(childComp.element);
-                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
-                                "var tempDiv = document.createElement('div');\n" +
-                                "tempDiv.innerHTML = `" + childComp.element.outerHtml() + "`;\n" +
-                                "comp.appendChild(tempDiv.firstChild);\n",
-                        "internal", 0);
+            onAddedChild.addAction((e) -> { // event
+                if(e.otherChildComp == null){
+                    children.add(e.childComp);
+                    e.childComp.update();
+                    element.appendChild(e.childComp.element);
+                    win.browser.executeJavaScript(win.jsGetComp("parentComp", id) +
+                                    "var tempDiv = document.createElement('div');\n" +
+                                    "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
+                                    "parentComp.appendChild(tempDiv.firstChild);\n",
+                            "internal", 0);
+                } else if(e.isInsert){
+                    int iOtherComp = children.indexOf(e.otherChildComp);
+                    children.set(iOtherComp, e.childComp);
+                    e.childComp.update();
+                    element.insertChildren(iOtherComp, e.childComp.element);
+                    win.browser.executeJavaScript(win.jsGetComp("parentComp", id) +
+                                    win.jsGetComp("otherChildComp", e.otherChildComp.id) +
+                                    "var tempDiv = document.createElement('div');\n" +
+                                    "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
+                                    "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
+                            "internal", 0);
+                } else if(e.isReplace){
+                    int iOtherComp = children.indexOf(e.otherChildComp);
+                    children.set(iOtherComp, e.childComp);
+                    e.childComp.update();
+                    element.insertChildren(iOtherComp, e.childComp.element);
+                    win.browser.executeJavaScript(win.jsGetComp("parentComp", id) +
+                                    win.jsGetComp("otherChildComp", e.otherChildComp.id) +
+                                    "var tempDiv = document.createElement('div');\n" +
+                                    "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
+                                    "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
+                            "internal", 0);
+                    onRemovedChild.execute(e.otherChildComp); // Removes from children, (node) children, and actual UI
+                }
             });
             onRemovedChild.addAction((childComp) -> {
+                children.remove(childComp);
                 childComp.update();
                 childComp.element.remove();
                 win.browser.executeJavaScript(win.jsGetComp("comp", id) +
@@ -181,7 +235,7 @@ public class Component<T> {
      *
      * @param code the code to be executed now, contains this component as parameter.
      */
-    public T sync(Consumer<T> code) {
+    public T now(Consumer<T> code) {
         code.accept(target);
         return target;
     }
@@ -198,7 +252,7 @@ public class Component<T> {
      *
      * @param code the code to be executed asynchronously, contains this component as parameter.
      */
-    public T async(Consumer<T> code) {
+    public T later(Consumer<T> code) {
         UI ui = UI.get();
         Objects.requireNonNull(ui);
         Thread t = new Thread(){
@@ -214,13 +268,13 @@ public class Component<T> {
     }
 
     /**
-     * Same as {@link #async(Consumer)} but
+     * Same as {@link #later(Consumer)} but
      * adds an overlay that
      * shows the text "Loading..." and dims/darkens this component,
      * until the async task finishes.
      */
-    public T asyncWithOverlay(BiConsumer<T, Overlay> code) {
-        async(_this -> {
+    public T laterWithOverlay(BiConsumer<T, Overlay> code) {
+        later(_this -> {
             Overlay overlay = (Overlay) new Overlay(this)
                     .childCenter().putStyle("background", "rgba(0,0,0,0.3)")
                     .sizeFull();
@@ -235,53 +289,113 @@ public class Component<T> {
         return target;
     }
 
-    public T add(Collection<Component<?>> comp) {
-        if (comp == null) return target;
-        children.addAll(comp);
-        for (Component<?> c : comp) {
-            onAddedChild.execute(c);
+    public Consumer<AddedChildEvent> _add = (e) -> {
+        if(e.otherChildComp == null){
+            children.add(e.childComp);
+            onAddedChild.execute(e);
+        } else if(e.isInsert){
+            int iOtherComp = children.indexOf(e.otherChildComp);
+            children.set(iOtherComp, e.childComp);
+            onAddedChild.execute(e);
+        } else if(e.isReplace){
+            int iOtherComp = children.indexOf(e.otherChildComp);
+            children.set(iOtherComp, e.childComp);
+            onAddedChild.execute(e);
+            onRemovedChild.execute(e.otherChildComp); // Removes from children, (node) children, and actual UI
         }
+    };
+
+    public T add(Iterable<Component<?>> comps) {
+        if (comps == null) return target;
+        GodIterator.forEach(comps, c -> {
+            _add.accept(new AddedChildEvent(c, null, false, false));
+        });
         return target;
     }
 
-    public T add(Component<?>... comp) {
-        if (comp == null) return target;
-        children.addAll(Arrays.asList(comp));
-        for (Component<?> c : comp) {
-            onAddedChild.execute(c);
-        }
+    public T add(Component<?>... comps) {
+        if (comps == null) return target;
+        GodIterator.forEach(comps, c -> {
+            _add.accept(new AddedChildEvent(c, null, false, false));
+        });
         return target;
     }
+
+    /**
+     * @throws IndexOutOfBoundsException
+     */
+    public T addAt(int index, Component<?> comp) {
+        if (comp == null) return target;
+        Component<?> otherChildComp = children.get(index);
+        _add.accept(new AddedChildEvent(comp, otherChildComp, true, false));
+        return target;
+    }
+
+    /**
+     * @throws IndexOutOfBoundsException
+     */
+    public T replaceAt(int index, Component<?> comp) {
+        if (comp == null) return target;
+        Component<?> otherChildComp = children.get(index);
+        _add.accept(new AddedChildEvent(comp, otherChildComp, false, true));
+        return target;
+    }
+
+    /**
+     * Does nothing if newComp or oldComp is null.
+     * @throws IndexOutOfBoundsException if oldComp does not exist in {@link #children}.
+     */
+    public T replace(Component<?> oldComp, Component<?> newComp) {
+        if (oldComp == null || newComp == null) return target;
+        if(!children.contains(oldComp)) throw new IndexOutOfBoundsException("Provided old component to be replaced does not exist in children!");
+        _add.accept(new AddedChildEvent(newComp, oldComp, false, true));
+        return target;
+    }
+
+    public Consumer<Component<?>> _remove = child -> {
+        if(children.contains(child)){
+            onRemovedChild.execute(child);
+        }
+    };
 
     public T removeAll() {
         for (Component<?> child : children) {
-            children.remove(child);
-            onRemovedChild.execute(child);
+            _remove.accept(child);
         }
         return target;
     }
 
-    public T remove(Component<?>... comp) {
-        if (comp == null) return target;
-        List<Component<?>> _comp = Arrays.asList(comp);
-        for (Component<?> child : children) {
-            if(_comp.contains(child)){
-                children.remove(child);
-                onRemovedChild.execute(child);
-            }
-        }
+    public T remove(Component<?>... comps) {
+        if (comps == null) return target;
+        GodIterator.forEach(comps, _remove);
         return target;
     }
 
-    public T remove(Collection<Component<?>> comp) {
-        if (comp == null) return target;
-        for (Component<?> child : children) {
-            if(comp.contains(child)){
-                children.remove(child);
-                onRemovedChild.execute(child);
-            }
-        }
+    public T remove(Iterable<Component<?>> comps) {
+        if (comps == null) return target;
+        GodIterator.forEach(comps, _remove);
         return target;
+    }
+
+    /**
+     * Removes the element at the specified position in this list.
+     * Shifts any subsequent elements to the left (subtracts one from their
+     * indices).  Returns the element that was removed from the list.
+     *
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     */
+    public T removeAt(int index) {
+        Component<?> child = children.get(index);
+        _remove.accept(child);
+        return target;
+    }
+
+    private static ArrayList<Component<?>> toList(Iterable<Component<?>> comps) {
+        ArrayList<Component<?>> list = new ArrayList<>();
+        for (Component<?> c : comps) {
+            list.add(c);
+        }
+        return list;
     }
 
     public T putStyle(String key, String val) {

@@ -2,8 +2,9 @@ package com.osiris.desku.simple_app.home;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
-import com.osiris.desku.UI;
 import com.osiris.desku.ui.*;
+import com.osiris.desku.ui.display.RTable;
+import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.input.Button;
@@ -12,6 +13,8 @@ import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.jlib.logger.AL;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Home extends Route {
@@ -41,7 +44,7 @@ public class Home extends Route {
         //
         // Async
         //
-        ly.add(new Text("Asynchronously update a component: Loading...").padding(true).async(txt -> {
+        ly.add(new Text("Asynchronously update a component: Loading...").padding(true).later(txt -> {
             try{
                 for (int i = 1; i <= 100; i++) {
                     Thread.sleep(1000);
@@ -51,7 +54,7 @@ public class Home extends Route {
                 AL.warn(e);
             }
         }));
-        ly.add(new Layout().size("300px", "100px").asyncWithOverlay((comp, overlay) -> {
+        ly.add(new Layout().size("300px", "100px").laterWithOverlay((comp, overlay) -> {
             try{
                 Text txt = new Text("Waiting 10 seconds...");
                 comp.add(txt);
@@ -104,6 +107,34 @@ public class Home extends Route {
             System.out.println(s);
             e.comp.text.set(s);
         }));
+
+        //
+        // Tables
+        //
+        ly.add(new Table().headers("Header 1", "Header 2")
+                .row("Data 1", "Data 2")
+                .row("Data 3", "Data 4"));
+
+        // Tables via reflection
+        class Person{
+            public String name;
+            public int age;
+
+            public Person(String name, int age) {
+                this.name = name;
+                this.age = age;
+            }
+        }
+        List<Person> list = new ArrayList<>();
+        list.add(new Person("John", 34));
+        list.add(new Person("Peter", 56));
+        list.add(new Person("Maria", 33));
+        try{
+            ly.add(new RTable(Person.class).rows(list)); // One liner ;)
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
 
         return ly;
     }

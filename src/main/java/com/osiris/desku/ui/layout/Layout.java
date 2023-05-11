@@ -52,8 +52,8 @@ public class Layout extends Component<Layout> {
      * set if {@link #widthNext(String)} or {@link #heightNext(String)} was called before.
      */
     @Override
-    public Layout add(Component<?>... components) {
-        for (Component<?> c : components) {
+    public Layout add(Component<?>... comps) {
+        for (Component<?> c : comps) {
             super.add(c);
             setCompSize(c);
             lastAdded = c;
