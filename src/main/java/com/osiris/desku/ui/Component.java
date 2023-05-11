@@ -8,7 +8,6 @@ import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
-import jdk.internal.net.http.common.Pair;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
@@ -75,8 +74,7 @@ public class Component<T> {
 
     /**
      * Executed when a child was added on the Java side. <br>
-     * It's a {@link  Pair} because it might be an insert operation and thus
-     * the id of the component must be given.
+     * @see AddedChildEvent
      */
     public final Event<AddedChildEvent> onAddedChild = new Event<>();
     /**
