@@ -25,6 +25,11 @@ public class App {
     public static final File workingDir = new File(System.getProperty("user.dir"));
     public static String name = "My Todo";
     /**
+     * Examples: google.com or wikipedia.com or localhost
+     */
+    public static String domainName = "localhost";
+    public static int port = -1;
+    /**
      * Should get cleared by the operating system on reboots. <br>
      * Example on Windows: <br>
      * C:\Users\UserName\AppData\Local\Temp\AppName

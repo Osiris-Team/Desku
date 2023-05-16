@@ -23,6 +23,7 @@ dependencies {
     implementation 'com.github.Osiris-Team:jlib:16.12'
     implementation 'me.friwi:jcefmaven:109.1.11'
     implementation 'org.jsoup:jsoup:1.15.3'
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
 }
 

@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -46,6 +47,8 @@ public abstract class UI {
     }
 
     public UI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
+        startWebSocketServer();
+
         access.lock();
         current = this;
 
@@ -60,6 +63,7 @@ public abstract class UI {
         access.unlock();
 
         priv_init("file:///" + snapshotToTempFile().getAbsolutePath(), isTransparent, widthPercent, heightPercent);
+        startWebSocketClient(webSocketServer.domain, webSocketServer.port);
     }
 
     /**
@@ -140,6 +144,11 @@ public abstract class UI {
 
     public void close() {
         UIManager.uis.remove(this);
+        try {
+            webSocketServer.stop();
+        } catch (Exception e) {
+        }
+        AL.info("Closed WebSocketServer " + webSocketServer.domain + ":" + webSocketServer.port + " for UI: " + this);
     }
 
     /**
@@ -256,15 +265,30 @@ public abstract class UI {
     /**
      * Returns new JS (JavaScript) code, that when executed in client browser
      * results in onJSFunctionExecuted being executed. <br>
-     * It wraps around your jsCode and adds callback related stuff, as well as error handling.
+     * It wraps around your jsCode and adds callback related stuff, as well as error handling. <br>
+     * Its a permanent callback, because the returned JS code can be executed multiple times
+     * which results in onJSFunctionExecuted or onJSFuntionFailed to get executed multiple times too. <br>
      *
      * @param jsCode               modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
      *                             Your JS code could look like this: <br>
      *                             message = 'first second third etc...';
      * @param onJSFunctionExecuted executed when the provided jsCode executes successfully. String contains the message variable that can be set in your jsCode.
-     * @param onJsFunctionFailed   executed when the provided jsCode threw an exception. String contains details about the exception/error.
+     * @param onJSFunctionFailed   executed when the provided jsCode threw an exception. String contains details about the exception/error.
      */
-    public abstract String addCallback(String jsCode, Consumer<String> onJSFunctionExecuted, Consumer<String> onJsFunctionFailed);
+    public String addPermanentCallback(String jsCode, Consumer<String> onJSFunctionExecuted, Consumer<String> onJSFunctionFailed) {
+        // 1. execute js code
+        // 2. execute callback in java with params from js code
+        // 3. return success to js code and execute it
+        int id = webSocketServer.counter.getAndIncrement();
+        synchronized (webSocketServer.javaScriptCallbacks) {
+            PendingJavaScriptResult pendingJavaScriptResult = new PendingJavaScriptResult(id, onJSFunctionExecuted, onJSFunctionFailed);
+            webSocketServer.javaScriptCallbacks.add(pendingJavaScriptResult);
+        }
+        return "var message = '';\n" + // Separated by space
+                "var error = null;\n" +
+                "try{" + jsCode + "} catch (e) { error = e; }\n" +
+                jsClientSendWebSocketMessage("(error == null ? ('" + id + " '+message) : ('!" + id + " '+error))");
+    }
 
     public String jsGetComp(String varName, int id) {
         return "var " + varName + " = document.querySelectorAll('[java-id=\"" + id + "\"]')[0];\n";
@@ -291,7 +315,7 @@ public abstract class UI {
         }
         String jsNow = jsGetComp("comp", comp.id) +
                 "comp.addEventListener(\"" + eventName + "\", (event) => {\n" +
-                addCallback("function getObjProps(obj) {\n" +
+                addPermanentCallback("function getObjProps(obj) {\n" +
                                 "  var s = '{';\n" +
                                 "  for (const key in obj) {\n" +
                                 "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
@@ -320,5 +344,78 @@ public abstract class UI {
             executeJavaScript(jsNow, "internal", 0);
         }, AL::warn);
         return this;
+    }
+
+    public class PendingJavaScriptResult {
+        public final int id;
+        public final Consumer<String> onSuccess;
+        public final Consumer<String> onError;
+        public boolean isPermanent = true;
+
+        public PendingJavaScriptResult(int id, Consumer<String> onSuccess, Consumer<String> onError) {
+            this.id = id;
+            this.onSuccess = onSuccess;
+            this.onError = onError;
+        }
+    }
+
+    public WSServer webSocketServer = null;
+
+    /**
+     * Uses {@link App#domainName} and searches for a random free port
+     * (if {@link App#port} is -1) to use for the WebSocketServer.
+     */
+    public void startWebSocketServer() throws IOException {
+        int freePort = App.port;
+        if (freePort == -1)
+            try (ServerSocket serverSocket = new ServerSocket(0)) {
+                // Set the port to 0 to let the system allocate a free port
+                freePort = serverSocket.getLocalPort();
+            }
+        startWebSocketServer(App.domainName, freePort);
+    }
+
+    /**
+     * Returns JS code that when executed on the client browser creates a WebSocket connection.
+     * Also creates and inits the WebSocketServer if needed (does nothing if already created).
+     *
+     * @param serverDomain
+     * @param serverPort
+     * @return
+     */
+    public synchronized void startWebSocketServer(String serverDomain, int serverPort) {
+        if (webSocketServer != null) return;
+        webSocketServer = new WSServer(serverDomain, serverPort);
+        webSocketServer.start();
+        AL.info("Started WebSocketServer " + serverDomain + ":" + serverPort + " for UI: " + this);
+    }
+
+    public void startWebSocketClient(String serverDomain, int serverPort) {
+        String url = "ws://" + serverDomain + ":" + serverPort;
+        String jsCode = "    var webSocketServer = new WebSocket('" + url + "');\n" +
+                "window.webSocketServer = webSocketServer;\n" + // Make globally accessible
+                "\n" +
+                "    webSocketServer.onOpen = function(event) {\n" +
+                "      console.log('WebSocket connection established.');\n" +
+                "\n" +
+                "      // Send a message to the server\n" +
+                "      var message = 'Hello from the client!';\n" +
+                "      socket.send(message);\n" +
+                "    };\n" +
+                "\n" +
+                "    webSocketServer.onMessage = function(event) {\n" +
+                "      // Receive a message from the server\n" +
+                "      var receivedMessage = event.data;\n" +
+                "      console.log('Received message from server:', receivedMessage);\n" +
+                "    };\n" +
+                "\n" +
+                "    webSocketServer.onClose = function(event) {\n" +
+                "      console.log('WebSocket connection closed.');\n" +
+                "    };";
+        executeJavaScript(jsCode, "internal", 0);
+    }
+
+    public String jsClientSendWebSocketMessage(String message) {
+        return "webSocketServer.send(" + message + ");\n";
     }
 }
