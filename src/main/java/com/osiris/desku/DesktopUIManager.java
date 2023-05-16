@@ -82,4 +82,14 @@ public class DesktopUIManager extends UIManager {
             }
         });
     }
+
+    @Override
+    UI createUI(Route route) throws IOException {
+        return new DesktopUI(route);
+    }
+
+    @Override
+    UI createUI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
+        return new DesktopUI(route, isTransparent, widthPercent, heightPercent);
+    }
 }
