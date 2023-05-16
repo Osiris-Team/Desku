@@ -62,7 +62,7 @@ public class DesktopUIManager extends UIManager {
             @Override
             public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
                 AL.info("onLoadError: " + browser.getURL() + " errorCode: " + errorCode + " errorText: " + errorText);
-                for (UI _uis : uis) {
+                for (UI _uis : all) {
                     DesktopUI ui = (DesktopUI) _uis;
                     if (ui.browser != null && ui.browser == browser)
                         ui.onLoadStateChanged.execute(new LoadStateChange(browser, frame, errorCode,
@@ -73,7 +73,7 @@ public class DesktopUIManager extends UIManager {
             @Override
             public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
                 AL.info("onLoadingStateChange: " + browser.getURL() + " isLoading: " + isLoading);
-                for (UI _uis : uis) {
+                for (UI _uis : all) {
                     DesktopUI ui = (DesktopUI) _uis;
                     if (ui.browser != null && ui.browser == browser)
                         ui.onLoadStateChanged.execute(new LoadStateChange(browser, null, null,
@@ -84,12 +84,12 @@ public class DesktopUIManager extends UIManager {
     }
 
     @Override
-    UI createUI(Route route) throws IOException {
+    public UI create(Route route) throws IOException {
         return new DesktopUI(route);
     }
 
     @Override
-    UI createUI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
+    public UI create(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
         return new DesktopUI(route, isTransparent, widthPercent, heightPercent);
     }
 }

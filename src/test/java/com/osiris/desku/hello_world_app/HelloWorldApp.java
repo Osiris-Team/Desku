@@ -9,7 +9,7 @@ import me.friwi.jcefmaven.UnsupportedPlatformException;
 import java.io.IOException;
 
 public class HelloWorldApp {
-    public static void main(String[] args) throws IOException, UnsupportedPlatformException, CefInitializationException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         // Setup app details
         App.init(new DesktopUIManager(false));
         App.name = "My-App";
@@ -20,6 +20,6 @@ public class HelloWorldApp {
         });
 
         // Create windows
-        new DesktopUI(home);
+        App.uis.create(home);
     }
 }

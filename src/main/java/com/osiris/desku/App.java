@@ -48,14 +48,14 @@ public class App {
      */
     public static Theme theme = new Theme();
 
-    public static UIManager uiManager = null;
+    public static UIManager uis = null;
 
     public static void init(UIManager uiManager) {
         if (uiManager == null) {
             throw new NullPointerException("Provided UI factory is null!" +
                     " Make sure to provide an implementation for the platform this app is running in.");
         }
-        App.uiManager = uiManager;
+        App.uis = uiManager;
         try {
             Logger.getGlobal().setLevel(Level.SEVERE);
             if (!AL.isStarted) {

@@ -43,7 +43,7 @@ public class DesktopUI extends UI {
      * @param heightPercent
      */
     public void init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
-        boolean isOffscreen = ((DesktopUIManager) App.uiManager).isOffscreenRendering;
+        boolean isOffscreen = ((DesktopUIManager) App.uis).isOffscreenRendering;
         AtomicBoolean isLoaded = new AtomicBoolean(false);
         onLoadStateChanged.addAction((action, event) -> {
             if (event.isError() || !event.isLoading) {
@@ -64,7 +64,7 @@ public class DesktopUI extends UI {
         //     The DesktopUI component is inherited from a java.awt.Component and therefore
         //     it can be embedded into any AWT DesktopUI.
         //browser = new CefBrowserWrOsr(App.cefClient, startURL, null);
-        browser = ((DesktopUIManager) App.uiManager).cefClient.createBrowser(startURL, isOffscreen, isTransparent);
+        browser = ((DesktopUIManager) App.uis).cefClient.createBrowser(startURL, isOffscreen, isTransparent);
         if (isOffscreen) {
             // TODO JCEF has problems with triggering load events when in osr mode
             // TODO thus the below will not work correctly.
@@ -112,7 +112,7 @@ public class DesktopUI extends UI {
             onscreenFrame.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    UIManager.uis.remove(_this);
+                    UIManager.all.remove(_this);
                     onscreenFrame.dispose();
                 }
             });

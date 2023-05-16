@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException;
 
 public class OffscreenAppTest {
     @Test
-    void test() throws IOException, ExecutionException, InterruptedException, UnsupportedPlatformException, CefInitializationException {
+    void test() throws Exception {
         //AppStartup.isOffscreenRendering = true;
         // The below somehow also triggers HeadlessExceptions even when using osr browser...
         //System.setProperty("java.awt.headless", "true");
@@ -32,7 +32,7 @@ public class OffscreenAppTest {
         });
 
         // Create windows
-        DesktopUI win = new DesktopUI(home, false, 70, 60);
+        DesktopUI win = (DesktopUI) App.uis.create(home, false, 70, 60);
         Thread.sleep(10000); // Returns directly when in osr mode, bc load event is broken
         BufferedImage img = win.browser.createScreenshot(true).get();
         File fimg = new File(App.workingDir + "/img.png");

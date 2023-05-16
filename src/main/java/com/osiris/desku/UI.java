@@ -133,7 +133,7 @@ public abstract class UI {
         try {
             AL.info("Starting new window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
             AL.info("Please stand by...");
-            UIManager.uis.add(this);
+            UIManager.all.add(this);
             long ms = System.currentTimeMillis();
             init(startURL, isTransparent, widthPercent, heightPercent);
             AL.info("Init took " + (System.currentTimeMillis() - ms) + "ms for " + this);
@@ -143,7 +143,7 @@ public abstract class UI {
     }
 
     public void close() {
-        UIManager.uis.remove(this);
+        UIManager.all.remove(this);
         try {
             webSocketServer.stop();
         } catch (Exception e) {
