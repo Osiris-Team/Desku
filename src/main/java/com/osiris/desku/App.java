@@ -1,18 +1,8 @@
 package com.osiris.desku;
 
-import com.osiris.desku.swing.LoadingWindow;
-import com.osiris.desku.swing.events.LoadStateChange;
 import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
-import me.friwi.jcefmaven.CefAppBuilder;
-import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
-import org.cef.CefApp;
-import org.cef.CefClient;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
-import org.cef.browser.CefMessageRouter;
-import org.cef.handler.CefLoadHandlerAdapter;
 
 import java.awt.*;
 import java.io.File;
@@ -23,7 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,10 +23,6 @@ public class App {
      * Can be used to store information that is not specific to an user. <br>
      */
     public static final File workingDir = new File(System.getProperty("user.dir"));
-    public static final CefApp cef;
-    public static final CefClient cefClient;
-    public static final CefMessageRouter cefMessageRouter;
-    public static final AtomicInteger cefMessageRouterRequestId = new AtomicInteger();
     public static String name = "My Todo";
     /**
      * Should get cleared by the operating system on reboots. <br>
@@ -53,13 +38,19 @@ public class App {
      */
     public static final File userDir = new File(System.getProperty("user.home") + "/" + name);
     public static CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
-    public static CopyOnWriteArrayList<UI> windows = new CopyOnWriteArrayList<>();
     /**
      * The default theme that affects all views.
      */
     public static Theme theme = new Theme();
 
-    static {
+    public static UIManager uiManager = null;
+
+    public static void init(UIManager uiManager) {
+        if (uiManager == null) {
+            throw new NullPointerException("Provided UI factory is null!" +
+                    " Make sure to provide an implementation for the platform this app is running in.");
+        }
+        App.uiManager = uiManager;
         try {
             Logger.getGlobal().setLevel(Level.SEVERE);
             if (!AL.isStarted) {
@@ -67,7 +58,8 @@ public class App {
                 AL.mirrorSystemStreams(new File(workingDir + "/mirror-out.log"), new File(workingDir + "/mirror-err.log"));
             }
             AL.info("Starting application...");
-            AL.info("isOffscreenRendering = " + AppStartup.isOffscreenRendering);
+            if (uiManager instanceof DesktopUIManager)
+                AL.info("isOffscreenRendering = " + ((DesktopUIManager) uiManager).isOffscreenRendering);
             AL.info("workingDir = " + workingDir);
             AL.info("tempDir = " + tempDir);
             AL.info("userDir = " + userDir);
@@ -75,60 +67,6 @@ public class App {
             styles.getParentFile().mkdirs();
             if (styles.exists()) styles.delete();
             styles.createNewFile();
-
-            // (0) Initialize CEF using the maven loader
-            CefAppBuilder builder = new CefAppBuilder();
-            try {
-                builder.setProgressHandler(new LoadingWindow().getProgressHandler());
-            } catch (Exception e) {
-                // Expected to fail on Android/iOS
-                AL.warn("Failed to open startup loading window, thus not displaying/logging JCEF load status.", e);
-            }
-            builder.getCefSettings().windowless_rendering_enabled = AppStartup.isOffscreenRendering;
-            // USE builder.setAppHandler INSTEAD OF CefApp.addAppHandler!
-            // Fixes compatibility issues with MacOSX
-            builder.setAppHandler(new MavenCefAppHandlerAdapter() {
-                @Override
-                public void stateHasChanged(org.cef.CefApp.CefAppState state) {
-                    // Shutdown the app if the native CEF part is terminated
-                    if (state == CefApp.CefAppState.TERMINATED) System.exit(0);
-                }
-            });
-            // (1) The entry point to JCEF is always the class CefApp.
-            cef = builder.build();
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                CefApp.getInstance().dispose();
-            }));
-            // (2) JCEF can handle one to many browser instances simultaneous.
-            cefClient = cef.createClient();
-            // (3) Create a simple message router to receive messages from CEF.
-            CefMessageRouter.CefMessageRouterConfig config = new CefMessageRouter.CefMessageRouterConfig();
-            config.jsQueryFunction = "cefQuery";
-            config.jsCancelFunction = "cefQueryCancel";
-            cefMessageRouter = CefMessageRouter.create(config);
-            cefClient.addMessageRouter(cefMessageRouter);
-            // Handle load
-            App.cefClient.addLoadHandler(new CefLoadHandlerAdapter() {
-                @Override
-                public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
-                    AL.info("onLoadError: " + browser.getURL() + " errorCode: " + errorCode + " errorText: " + errorText);
-                    for (UI w : windows) {
-                        if (w.browser != null && w.browser == browser)
-                            w.onLoadStateChanged.execute(new LoadStateChange(browser, frame, errorCode,
-                                    errorText, failedUrl, false, false, false));
-                    }
-                }
-
-                @Override
-                public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
-                    AL.info("onLoadingStateChange: " + browser.getURL() + " isLoading: " + isLoading);
-                    for (UI w : windows) {
-                        if (w.browser != null && w.browser == browser)
-                            w.onLoadStateChanged.execute(new LoadStateChange(browser, null, null,
-                                    null, null, isLoading, canGoBack, canGoForward));
-                    }
-                }
-            });
 
             AL.info("Started application successfully!");
         } catch (Exception e) {

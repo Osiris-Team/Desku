@@ -23,18 +23,18 @@ public class Text extends Component<Text> {
         UI win = UI.get();
         Runnable registration = () -> {
             onAddedString.addAction((childString) -> {
-                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
+                win.executeJavaScript(win.jsGetComp("comp", id) +
                                 "var childString = document.createTextNode(`" + childString + "`);\n" +
                                 "comp.appendChild(childString);\n",
                         "internal", 0);
             });
             onRemovedAllStrings.addAction((_void) -> {
-                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
+                win.executeJavaScript(win.jsGetComp("comp", id) +
                                 "comp.textContent = '';\n", // remove all text nodes
                         "internal", 0);
             });
         };
-        if (!win.isLoading) registration.run();
+        if (!win.isLoading.get()) registration.run();
         else win.onLoadStateChanged.addAction((action, event) -> {
             if (event.isLoading) return;
             action.remove();

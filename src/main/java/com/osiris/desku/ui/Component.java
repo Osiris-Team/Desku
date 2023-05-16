@@ -74,6 +74,7 @@ public class Component<T> {
 
     /**
      * Executed when a child was added on the Java side. <br>
+     *
      * @see AddedChildEvent
      */
     public final Event<AddedChildEvent> onAddedChild = new Event<>();
@@ -118,7 +119,7 @@ public class Component<T> {
                     children.add(e.childComp);
                     e.childComp.update();
                     element.appendChild(e.childComp.element);
-                    win.browser.executeJavaScript(win.jsGetComp("parentComp", id) +
+                    win.executeJavaScript(win.jsGetComp("parentComp", id) +
                                     "var tempDiv = document.createElement('div');\n" +
                                     "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
                                     "parentComp.appendChild(tempDiv.firstChild);\n",
@@ -128,7 +129,7 @@ public class Component<T> {
                     children.set(iOtherComp, e.childComp);
                     e.childComp.update();
                     element.insertChildren(iOtherComp, e.childComp.element);
-                    win.browser.executeJavaScript(win.jsGetComp("parentComp", id) +
+                    win.executeJavaScript(win.jsGetComp("parentComp", id) +
                                     win.jsGetComp("otherChildComp", e.otherChildComp.id) +
                                     "var tempDiv = document.createElement('div');\n" +
                                     "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
@@ -139,7 +140,7 @@ public class Component<T> {
                     children.set(iOtherComp, e.childComp);
                     e.childComp.update();
                     element.insertChildren(iOtherComp, e.childComp.element);
-                    win.browser.executeJavaScript(win.jsGetComp("parentComp", id) +
+                    win.executeJavaScript(win.jsGetComp("parentComp", id) +
                                     win.jsGetComp("otherChildComp", e.otherChildComp.id) +
                                     "var tempDiv = document.createElement('div');\n" +
                                     "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
@@ -152,7 +153,7 @@ public class Component<T> {
                 children.remove(childComp);
                 childComp.update();
                 childComp.element.remove();
-                win.browser.executeJavaScript(win.jsGetComp("comp", id) +
+                win.executeJavaScript(win.jsGetComp("comp", id) +
                                 win.jsGetComp("childComp", childComp.id) +
                                 "comp.removeChild(childComp);\n",
                         "internal", 0);
@@ -164,20 +165,20 @@ public class Component<T> {
                     if (iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
                     style = style.substring(0, iKeyFirstChar) + style.substring(style.indexOf(";", iKeyFirstChar) + 1);
                     element.attr("style", style); // Change in-memory representation
-                    win.browser.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
+                    win.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
                                     "comp.style." + attribute.getKey() + " = ``;\n",
                             "internal", 0);
                 } else { // Add style
                     String style = element.hasAttr("style") ? element.attributes().get("style") : "";
                     style += attribute.getKey() + ": " + attribute.getValue() + ";";
                     element.attr("style", style); // Change in-memory representation
-                    win.browser.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
+                    win.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
                                     "comp.style." + attribute.getKey() + " = `" + attribute.getValue() + "`;\n",
                             "internal", 0);
                 }
             });
         };
-        if (!win.isLoading) registration.run();
+        if (!win.isLoading.get()) registration.run();
         else win.onLoadStateChanged.addAction((action, event) -> {
             if (event.isLoading) return;
             action.remove();

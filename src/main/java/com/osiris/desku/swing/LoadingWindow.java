@@ -45,7 +45,8 @@ public class LoadingWindow extends JFrame {
             }
             Objects.requireNonNull(state, "state cannot be null");
             if (percent == -1.0F || !(percent < 0.0F) && !(percent > 100.0F)) {
-                AL.info("JCEF " + state + " |> " + (percent == -1.0F ? "" : (int) percent + "%")); // cast to int, since It's anyways always .0
+                if (AL.isStarted)
+                    AL.info("JCEF " + state + " |> " + (percent == -1.0F ? "" : (int) percent + "%")); // cast to int, since It's anyways always .0
             } else {
                 throw new RuntimeException("percent has to be -1f or between 0f and 100f. Got " + percent + " instead");
             }

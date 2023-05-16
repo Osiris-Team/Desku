@@ -10,8 +10,9 @@ Java Framework for developing Desktop Applications with Java, HTML and CSS.
 
 ```java
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, UnsupportedPlatformException, CefInitializationException, InterruptedException {
         // Setup app details
+        App.init(new DesktopUIFactory(false));
         App.name = "My-App";
 
         // Create routes
@@ -20,7 +21,7 @@ public class Main {
         });
 
         // Create and show windows
-        new UI(home);
+        new DesktopUI(home);
     }
 }
 ```
@@ -123,6 +124,18 @@ Get the components' HTML string via
 Note that this also includes all its children.
 To make sure it equals the actual in memory representation
 call `component.updateAll()` before retrieving the HTML.
+</details>
+
+<details>
+<summary>How do I implement my own UI and UIManager? Why would I?</summary>
+
+UI and UIManager are both abstract classes that can be extended.
+Desku already provides implementations (DesktopUI and DesktopUIManager)
+via JCEF to be able to run on Desktop platforms like Windows, Linux and Mac.
+
+The Desku-Starter-App contains implementations for Android and iOS. If you
+want to support even more platforms make a pull-request with your implementation!
+
 </details>
 
 
