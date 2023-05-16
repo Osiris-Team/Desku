@@ -1,8 +1,6 @@
 # Desku [![](https://jitpack.io/v/Osiris-Team/Desku.svg)](https://jitpack.io/#Osiris-Team/Desku)
-Java Framework for developing Desktop Applications with Java, HTML and CSS.
+Java Framework for developing Desktop and Mobile Applications in one codebase with Java, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
-
-**Note that support for mobile apps (Android/iOS) is planned and being worked on.**
 
 <p align="center">
   <img src="https://github.com/Osiris-Team/Desku/blob/main/docs/img.png?raw=true" alt=""/>
@@ -12,7 +10,7 @@ Java Framework for developing Desktop Applications with Java, HTML and CSS.
 public class Main {
     public static void main(String[] args) throws IOException, UnsupportedPlatformException, CefInitializationException, InterruptedException {
         // Setup app details
-        App.init(new DesktopUIFactory(false));
+        App.init(new DesktopUIManager(false));
         App.name = "My-App";
 
         // Create routes
@@ -27,9 +25,9 @@ public class Main {
 ```
 
 ### Features
-All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app)
-and a production ready starter app exists at the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App)
-repo (maybe outdated).
+#### Its highly recommended to use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) to get started since it has also support for Android and iOS.
+If you only target Desktop users you can get started with the example above.
+All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app).
 
 - Latest Chromium HTML/CSS renderer via [JCEF](https://github.com/jcefmaven/jcefbuild).
 - Runs on Windows/Linux/Mac by installing platform-specific dependencies at first launch.
