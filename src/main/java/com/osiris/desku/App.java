@@ -22,7 +22,7 @@ public class App {
      * Should be the directory in which this application was started. <br>
      * Can be used to store information that is not specific to an user. <br>
      */
-    public static final File workingDir = new File(System.getProperty("user.dir"));
+    public static File workingDir = new File(System.getProperty("user.dir"));
     public static String name = "My Todo";
     /**
      * Examples: google.com or wikipedia.com or localhost
@@ -34,14 +34,14 @@ public class App {
      * Example on Windows: <br>
      * C:\Users\UserName\AppData\Local\Temp\AppName
      */
-    public static final File tempDir = new File(System.getProperty("java.io.tmpdir") + "/" + name);
-    public static final File styles = new File(tempDir + "/global-styles.css");
+    public static File tempDir = new File(System.getProperty("java.io.tmpdir") + "/" + name);
+    public static File styles = new File(tempDir + "/global-styles.css");
     /**
      * Can be used to store user-specific data. <br>
      * Example on Windows: <br>
      * C:\Users\UserName\AppName
      */
-    public static final File userDir = new File(System.getProperty("user.home") + "/" + name);
+    public static File userDir = new File(System.getProperty("user.home") + "/" + name);
     public static CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
     /**
      * The default theme that affects all views.
