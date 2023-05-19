@@ -9,7 +9,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -21,11 +20,11 @@ public class DesktopUI extends UI {
     public CefBrowser browser;
     public java.awt.Component browserDesktopUI;
 
-    public DesktopUI(Route route) throws IOException {
+    public DesktopUI(Route route) throws Exception {
         this(route, false, 70, 60);
     }
 
-    public DesktopUI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
+    public DesktopUI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
         super(route, isTransparent, widthPercent, heightPercent);
     }
 

@@ -84,7 +84,7 @@ public class DesktopUIManager extends UIManager {
     }
 
     @Override
-    public UI create(Route route) throws IOException {
+    public UI create(Route route) throws Exception {
         return new DesktopUI(route);
     }
 

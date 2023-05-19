@@ -44,34 +44,6 @@ public class Component<T> {
      */
     public final int id = idCounter.getAndIncrement();
     public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
-
-    public static class AddedChildEvent {
-        /**
-         * Component that got added.
-         */
-        public final Component<?> childComp;
-        /**
-         * Should only be relevant and not null when either
-         * {@link #isInsert} or {@link #isReplace} is true.
-         */
-        public final Component<?> otherChildComp;
-        /**
-         * If true, then {@link #otherChildComp} should now be the next child in the list after {@link #childComp}.
-         */
-        public final boolean isInsert;
-        /**
-         * If true, then {@link #otherChildComp} should NOT exist in the list anymore.
-         */
-        public final boolean isReplace;
-
-        public AddedChildEvent(Component<?> childComp, Component<?> otherChildComp, boolean isInsert, boolean isReplace) {
-            this.childComp = childComp;
-            this.otherChildComp = otherChildComp;
-            this.isInsert = isInsert;
-            this.isReplace = isReplace;
-        }
-    }
-
     /**
      * Executed when a child was added on the Java side. <br>
      *
@@ -109,6 +81,26 @@ public class Component<T> {
      * </u>
      */
     public Element element;
+    public Consumer<AddedChildEvent> _add = (e) -> {
+        if (e.otherChildComp == null) {
+            children.add(e.childComp);
+            onAddedChild.execute(e);
+        } else if (e.isInsert) {
+            int iOtherComp = children.indexOf(e.otherChildComp);
+            children.set(iOtherComp, e.childComp);
+            onAddedChild.execute(e);
+        } else if (e.isReplace) {
+            int iOtherComp = children.indexOf(e.otherChildComp);
+            children.set(iOtherComp, e.childComp);
+            onAddedChild.execute(e);
+            onRemovedChild.execute(e.otherChildComp); // Removes from children, (node) children, and actual UI
+        }
+    };
+    public Consumer<Component<?>> _remove = child -> {
+        if (children.contains(child)) {
+            onRemovedChild.execute(child);
+        }
+    };
 
     public Component() {
         // Attach Java event listeners
@@ -184,6 +176,14 @@ public class Component<T> {
             action.remove();
             registration.run();
         }, AL::warn);
+    }
+
+    private static ArrayList<Component<?>> toList(Iterable<Component<?>> comps) {
+        ArrayList<Component<?>> list = new ArrayList<>();
+        for (Component<?> c : comps) {
+            list.add(c);
+        }
+        return list;
     }
 
     /**
@@ -289,22 +289,6 @@ public class Component<T> {
         return target;
     }
 
-    public Consumer<AddedChildEvent> _add = (e) -> {
-        if (e.otherChildComp == null) {
-            children.add(e.childComp);
-            onAddedChild.execute(e);
-        } else if (e.isInsert) {
-            int iOtherComp = children.indexOf(e.otherChildComp);
-            children.set(iOtherComp, e.childComp);
-            onAddedChild.execute(e);
-        } else if (e.isReplace) {
-            int iOtherComp = children.indexOf(e.otherChildComp);
-            children.set(iOtherComp, e.childComp);
-            onAddedChild.execute(e);
-            onRemovedChild.execute(e.otherChildComp); // Removes from children, (node) children, and actual UI
-        }
-    };
-
     public T add(Iterable<Component<?>> comps) {
         if (comps == null) return target;
         GodIterator.forEach(comps, c -> {
@@ -354,12 +338,6 @@ public class Component<T> {
         return target;
     }
 
-    public Consumer<Component<?>> _remove = child -> {
-        if (children.contains(child)) {
-            onRemovedChild.execute(child);
-        }
-    };
-
     public T removeAll() {
         for (Component<?> child : children) {
             _remove.accept(child);
@@ -390,14 +368,6 @@ public class Component<T> {
         Component<?> child = children.get(index);
         _remove.accept(child);
         return target;
-    }
-
-    private static ArrayList<Component<?>> toList(Iterable<Component<?>> comps) {
-        ArrayList<Component<?>> list = new ArrayList<>();
-        for (Component<?> c : comps) {
-            list.add(c);
-        }
-        return list;
     }
 
     public T putStyle(String key, String val) {
@@ -520,7 +490,6 @@ public class Component<T> {
         putStyle("height", s);
         return target;
     }
-
 
     public T padding(boolean b) {
         if (b) putStyle("padding", "var(--space-m)");
@@ -655,7 +624,6 @@ public class Component<T> {
         return target;
     }
 
-
     /**
      * This defines the ability for a flex item to shrink if necessary. <br>
      * Negative numbers are invalid. <br>
@@ -686,7 +654,6 @@ public class Component<T> {
         else putStyle("flex-wrap", "nowrap");
         return target;
     }
-
 
     /**
      * align-self <br>
@@ -816,7 +783,6 @@ public class Component<T> {
         return target;
     }
 
-
     /**
      * align-items <br>
      * stretch: stretch to fill the container (still respect min-width/max-width)
@@ -855,10 +821,6 @@ public class Component<T> {
         return target;
     }
 
-    //
-    // Listeners
-    //
-
     /**
      * Adds a listener that gets executed when this component <br>
      * was clicked by the user (a JavaScript click event was thrown). <br>
@@ -872,5 +834,36 @@ public class Component<T> {
             _onClick.execute(new ClickEvent<T>(msg, (T) _this)); // Executes all listeners
         });
         return target;
+    }
+
+    //
+    // Listeners
+    //
+
+    public static class AddedChildEvent {
+        /**
+         * Component that got added.
+         */
+        public final Component<?> childComp;
+        /**
+         * Should only be relevant and not null when either
+         * {@link #isInsert} or {@link #isReplace} is true.
+         */
+        public final Component<?> otherChildComp;
+        /**
+         * If true, then {@link #otherChildComp} should now be the next child in the list after {@link #childComp}.
+         */
+        public final boolean isInsert;
+        /**
+         * If true, then {@link #otherChildComp} should NOT exist in the list anymore.
+         */
+        public final boolean isReplace;
+
+        public AddedChildEvent(Component<?> childComp, Component<?> otherChildComp, boolean isInsert, boolean isReplace) {
+            this.childComp = childComp;
+            this.otherChildComp = otherChildComp;
+            this.isInsert = isInsert;
+            this.isReplace = isReplace;
+        }
     }
 }

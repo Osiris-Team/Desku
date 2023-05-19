@@ -6,10 +6,10 @@ import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -26,6 +26,7 @@ import java.util.function.Consumer;
  */
 public abstract class UI {
     private static final ReentrantLock access = new ReentrantLock();
+    private static final Map<Thread, UI> threadsAndUIs = new HashMap<>();
     private static volatile UI current = null;
     public final AtomicBoolean isLoading = new AtomicBoolean(true);
     /**
@@ -41,12 +42,15 @@ public abstract class UI {
      * Not thread safe, access inside synchronized block.
      */
     public final HashMap<String, List<Component<?>>> listenersAndComps = new HashMap<>();
+    public WSServer webSocketServer = null;
+    public HTTPServer httpServer;
 
-    public UI(Route route) throws IOException {
+    public UI(Route route) throws Exception {
         this(route, false, 70, 60);
     }
 
-    public UI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws IOException {
+    public UI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
+        startHTTPServer();
         startWebSocketServer();
 
         access.lock();
@@ -62,7 +66,8 @@ public abstract class UI {
         current = null;
         access.unlock();
 
-        priv_init("file:///" + snapshotToTempFile().getAbsolutePath(), isTransparent, widthPercent, heightPercent);
+        snapshotToTempFile();
+        priv_init("http://" + App.domainName + ":" + httpServer.serverPort + (route.path.startsWith("/") ? "" : "/") + route.path, isTransparent, widthPercent, heightPercent);
         startWebSocketClient(webSocketServer.domain, webSocketServer.port);
     }
 
@@ -83,8 +88,6 @@ public abstract class UI {
             }
         }
     }
-
-    private static final Map<Thread, UI> threadsAndUIs = new HashMap<>();
 
     /**
      * Maps the provided threads to the provided UI, so that when calling
@@ -145,10 +148,16 @@ public abstract class UI {
     public void close() {
         UIManager.all.remove(this);
         try {
-            webSocketServer.stop();
+            webSocketServer.server.stop();
+            AL.info("Closed WebSocketServer " + webSocketServer.domain + ":" + webSocketServer.port + " for UI: " + this);
         } catch (Exception e) {
         }
-        AL.info("Closed WebSocketServer " + webSocketServer.domain + ":" + webSocketServer.port + " for UI: " + this);
+        try {
+            httpServer.server.stop();
+            AL.info("Closed HTTPServer " + httpServer.serverDomain + ":" + httpServer.serverPort + " for UI: " + this);
+        } catch (Exception e) {
+        }
+        AL.info("Closed " + this);
     }
 
     /**
@@ -160,6 +169,9 @@ public abstract class UI {
         Document html = route.getDocument();
         Element outlet = html.getElementById("outlet");
         content.updateAll();
+        for (Node n : outlet.childNodes()) {
+            n.remove();
+        }
         outlet.appendChild(content.element);
         return html;
     }
@@ -188,8 +200,7 @@ public abstract class UI {
      * @return the generated html file.
      */
     public File snapshotToTempFile(Document snapshot) throws IOException {
-        File file = new File(getDir()
-                + (route.path.equals("/") ? "/root.html" : (route.path + ".html")));
+        File file = getSnapshotTempFile();
         if (snapshot == null) snapshot = getSnapshot();
 
         // Create symbolic link in current folder to global-styles.css
@@ -214,6 +225,11 @@ public abstract class UI {
         if (!file.exists()) file.createNewFile();
         Files.write(file.toPath(), snapshot.outerHtml().getBytes(StandardCharsets.UTF_8));
         return file;
+    }
+
+    public File getSnapshotTempFile() {
+        return new File(getDir()
+                + (route.path.equals("/") || route.path.equals("") ? "/root.html" : (route.path + ".html")));
     }
 
     /**
@@ -346,47 +362,39 @@ public abstract class UI {
         return this;
     }
 
-    public class PendingJavaScriptResult {
-        public final int id;
-        public final Consumer<String> onSuccess;
-        public final Consumer<String> onError;
-        public boolean isPermanent = true;
-
-        public PendingJavaScriptResult(int id, Consumer<String> onSuccess, Consumer<String> onError) {
-            this.id = id;
-            this.onSuccess = onSuccess;
-            this.onError = onError;
-        }
+    public void startHTTPServer() throws Exception {
+        int freePort = App.httpServerPort;
+        if (freePort == -1) freePort = 0;
+        startHTTPServer(App.domainName, freePort);
     }
 
-    public WSServer webSocketServer = null;
+    public synchronized void startHTTPServer(String serverDomain, int serverPort) throws Exception {
+        httpServer = new HTTPServer(this, serverDomain, serverPort);
+        serverPort = httpServer.serverPort;
+        AL.info("Started HTTPServer " + serverDomain + ":" + serverPort + " for UI: " + this);
+    }
 
     /**
      * Uses {@link App#domainName} and searches for a random free port
-     * (if {@link App#port} is -1) to use for the WebSocketServer.
+     * (if {@link App#webSocketServerPort} is -1) to use for the WebSocketServer.
      */
-    public void startWebSocketServer() throws IOException {
-        int freePort = App.port;
-        if (freePort == -1)
-            try (ServerSocket serverSocket = new ServerSocket(0)) {
-                // Set the port to 0 to let the system allocate a free port
-                freePort = serverSocket.getLocalPort();
-            }
+    public void startWebSocketServer() throws Exception {
+        int freePort = App.webSocketServerPort;
+        if (freePort == -1) freePort = 0;
         startWebSocketServer(App.domainName, freePort);
     }
 
     /**
      * Returns JS code that when executed on the client browser creates a WebSocket connection.
-     * Also creates and inits the WebSocketServer if needed (does nothing if already created).
+     * Also creates and inits the WebSocketServer if needed.
      *
      * @param serverDomain
      * @param serverPort
      * @return
      */
-    public synchronized void startWebSocketServer(String serverDomain, int serverPort) {
-        if (webSocketServer != null) return;
+    public synchronized void startWebSocketServer(String serverDomain, int serverPort) throws Exception {
         webSocketServer = new WSServer(serverDomain, serverPort);
-        webSocketServer.start();
+        serverPort = webSocketServer.port;
         AL.info("Started WebSocketServer " + serverDomain + ":" + serverPort + " for UI: " + this);
     }
 
@@ -417,5 +425,18 @@ public abstract class UI {
 
     public String jsClientSendWebSocketMessage(String message) {
         return "webSocketServer.send(" + message + ");\n";
+    }
+
+    public class PendingJavaScriptResult {
+        public final int id;
+        public final Consumer<String> onSuccess;
+        public final Consumer<String> onError;
+        public boolean isPermanent = true;
+
+        public PendingJavaScriptResult(int id, Consumer<String> onSuccess, Consumer<String> onError) {
+            this.id = id;
+            this.onSuccess = onSuccess;
+            this.onError = onError;
+        }
     }
 }

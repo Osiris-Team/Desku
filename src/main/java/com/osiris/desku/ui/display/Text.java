@@ -16,6 +16,11 @@ public class Text extends Component<Text> {
      */
     public final Event<Void> onRemovedAllStrings = new Event<>();
 
+    public Text(String s) {
+        init(this, "txt");
+        append(s);
+    }
+
     @Override
     public void init(Text target, String tag) {
         super.init(target, tag);
@@ -40,11 +45,6 @@ public class Text extends Component<Text> {
             action.remove();
             registration.run();
         }, AL::warn);
-    }
-
-    public Text(String s) {
-        init(this, "txt");
-        append(s);
     }
 
     public String get() {

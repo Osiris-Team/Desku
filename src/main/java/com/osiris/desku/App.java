@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +29,21 @@ public class App {
      * Examples: google.com or wikipedia.com or localhost
      */
     public static String domainName = "localhost";
-    public static int port = -1;
+    /**
+     * Port for the WebSocket server which is used for fast communication between Java and JavaScript. <br>
+     * If -1 port is determined automatically. <br>
+     *
+     * @see UI#addPermanentCallback(String, Consumer, Consumer)
+     */
+    public static int webSocketServerPort = -1;
+    /**
+     * Port for the HTTP server which is used to provide HTML and its assets. <br>
+     * If -1 port is determined automatically. <br>
+     *
+     * @see UI#addPermanentCallback(String, Consumer, Consumer)
+     */
+    public static int httpServerPort = -1;
+
     /**
      * Should get cleared by the operating system on reboots. <br>
      * Example on Windows: <br>
