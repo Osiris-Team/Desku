@@ -1,6 +1,6 @@
 # Desku [![](https://jitpack.io/v/Osiris-Team/Desku.svg)](https://jitpack.io/#Osiris-Team/Desku)
 Java Framework for developing Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
-[Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
+[Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
 <p align="center">
   <img src="https://github.com/Osiris-Team/Desku/blob/main/docs/img.png?raw=true" alt=""/>
