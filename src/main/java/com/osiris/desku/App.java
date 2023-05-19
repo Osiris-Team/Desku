@@ -83,7 +83,7 @@ public class App {
             AL.info("workingDir = " + workingDir);
             AL.info("tempDir = " + tempDir);
             AL.info("userDir = " + userDir);
-            AL.info("Java = "+ System.getProperty("java.vendor") +" "+ System.getProperty("java.version"));
+            AL.info("Java = " + System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
             // Create styles file
             styles.getParentFile().mkdirs();
             if (styles.exists()) styles.delete();

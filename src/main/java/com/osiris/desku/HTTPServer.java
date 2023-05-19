@@ -20,7 +20,7 @@ public class HTTPServer {
 
     public HTTPServer(UI ui, String serverDomain, int serverPort) throws Exception {
         this.ui = ui;
-        this.server = new NanoHTTPD(serverDomain, serverPort){
+        this.server = new NanoHTTPD(serverDomain, serverPort) {
             @Override
             public Response serve(IHTTPSession session) {
                 String path = session.getUri();
@@ -54,20 +54,20 @@ public class HTTPServer {
         this.serverDomain = serverDomain;
     }
 
-    private static NanoHTTPD.Response sendHTMLString(String s){
+    private static NanoHTTPD.Response sendHTMLString(String s) {
         NanoHTTPD.Response r = r = newFixedLengthResponse(s);
         r.setMimeType("text/html");
         return r;
     }
 
-    private static NanoHTTPD.Response sendFile(File file){
+    private static NanoHTTPD.Response sendFile(File file) {
         NanoHTTPD.Response r = null;
         try {
             String mimeType = Files.probeContentType(file.toPath());
-            if(mimeType.contains("text")){
+            if (mimeType.contains("text")) {
                 r = newFixedLengthResponse(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8));
                 r.setMimeType(mimeType);
-            } else{
+            } else {
                 byte[] bytes = Files.readAllBytes(file.toPath());
                 ByteArrayInputStream input = new ByteArrayInputStream(bytes);
                 r = newFixedLengthResponse(new NanoHTTPD.Response.IStatus() {
@@ -83,7 +83,7 @@ public class HTTPServer {
                 }, mimeType, input, bytes.length);
                 r.setMimeType(mimeType);
             }
-            AL.debug(HTTPServer.class, mimeType+" -> "+file);
+            AL.debug(HTTPServer.class, mimeType + " -> " + file);
         } catch (IOException e) {
             AL.warn("Failed to set MIME type of response!", e);
         }

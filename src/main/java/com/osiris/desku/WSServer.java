@@ -12,19 +12,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WSServer extends WebSocketServer {
     public final String domain;
     public final int port;
-
+    /**
+     * Not thread safe unless inside synchronized block for this variable.
+     */
+    public final List<UI.PendingJavaScriptResult> javaScriptCallbacks = new ArrayList<>();
+    public final AtomicInteger counter = new AtomicInteger();
     public WSServer(String domain, int port) {
         super(new InetSocketAddress(domain, port));
         start();
         this.domain = domain;
         this.port = port;
     }
-
-    /**
-     * Not thread safe unless inside synchronized block for this variable.
-     */
-    public final List<UI.PendingJavaScriptResult> javaScriptCallbacks = new ArrayList<>();
-    public final AtomicInteger counter = new AtomicInteger();
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
