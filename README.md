@@ -1,5 +1,5 @@
 # Desku [![](https://jitpack.io/v/Osiris-Team/Desku.svg)](https://jitpack.io/#Osiris-Team/Desku)
-Java Framework for developing Desktop and Mobile Applications in one codebase with Java, HTML and CSS.
+Java Framework for developing Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
 
 <p align="center">
@@ -32,7 +32,8 @@ All features/components are tested [here](https://github.com/Osiris-Team/Desku/t
 - Latest Chromium HTML/CSS renderer via [JCEF](https://github.com/jcefmaven/jcefbuild).
 - Runs on Windows/Linux/Mac by installing platform-specific dependencies at first launch.
 - Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
-- Localhost-free and server-less.
+- Each UIs content is provided by a minimal Jetty HTTP server and
+Java <=> JavaScript interactions are handled throught a minimal WebSocket server.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
 - You decide! Code your UI in Java or directly in HTML/CSS, or both!
@@ -52,7 +53,6 @@ way its pretty easy to create a Desku-Extension:
 - Serializable UI
 - Navigation between UIs/windows
 - Default components suit similar to https://vaadin.com/docs/latest/components
-- Rethink Localhost-free and server-less decision, since this as a webserver might be something.
 
 ### Documentation
 
