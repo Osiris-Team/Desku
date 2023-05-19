@@ -10,6 +10,7 @@ import org.jsoup.nodes.Node;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -30,7 +31,7 @@ public abstract class UI {
     private static volatile UI current = null;
     public final AtomicBoolean isLoading = new AtomicBoolean(true);
     /**
-     * Relevant when wanting HTML load state of {@link #browser}.
+     * Relevant when wanting HTML load state, since we cant run JavaScript before the page is fully loaded.
      */
     public final Event<LoadStateChange> onLoadStateChanged = new Event<>();
     /**
@@ -148,12 +149,12 @@ public abstract class UI {
     public void close() {
         UIManager.all.remove(this);
         try {
-            webSocketServer.server.stop();
+            webSocketServer.stop();
             AL.info("Closed WebSocketServer " + webSocketServer.domain + ":" + webSocketServer.port + " for UI: " + this);
         } catch (Exception e) {
         }
         try {
-            httpServer.server.stop();
+            //TODOhttpServer.server.stop();
             AL.info("Closed HTTPServer " + httpServer.serverDomain + ":" + httpServer.serverPort + " for UI: " + this);
         } catch (Exception e) {
         }
@@ -364,7 +365,11 @@ public abstract class UI {
 
     public void startHTTPServer() throws Exception {
         int freePort = App.httpServerPort;
-        if (freePort == -1) freePort = 0;
+        if (freePort == -1)
+            try (ServerSocket serverSocket = new ServerSocket(0)) {
+                // Set the port to 0 to let the system allocate a free port
+                freePort = serverSocket.getLocalPort();
+            }
         startHTTPServer(App.domainName, freePort);
     }
 
@@ -380,7 +385,11 @@ public abstract class UI {
      */
     public void startWebSocketServer() throws Exception {
         int freePort = App.webSocketServerPort;
-        if (freePort == -1) freePort = 0;
+        if (freePort == -1)
+            try (ServerSocket serverSocket = new ServerSocket(0)) {
+                // Set the port to 0 to let the system allocate a free port
+                freePort = serverSocket.getLocalPort();
+            }
         startWebSocketServer(App.domainName, freePort);
     }
 
