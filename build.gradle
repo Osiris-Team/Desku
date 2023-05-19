@@ -35,8 +35,8 @@ test {
 group = 'com.osiris.desku'
 version = '0.5.8'
 description = 'Desku'
-sourceCompatibility = 1.11 // java 11
-targetCompatibility = 1.11
+sourceCompatibility = JavaVersion.VERSION_11 // java 11
+targetCompatibility = JavaVersion.VERSION_11
 
 java {
     withSourcesJar()
@@ -55,6 +55,6 @@ tasks.withType(JavaCompile) {
 }
 
 wrapper {
-    gradleVersion = "7.3.3"
+    gradleVersion = "8.1.1"
     distributionType = Wrapper.DistributionType.ALL
 }
