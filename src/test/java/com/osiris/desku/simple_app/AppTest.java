@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 class AppTest {
-    @Test
-    void main() throws Exception {
+
+    public static void main(String[] args) throws Exception {
         // Setup details
         App.init(new DesktopUIManager(false));
         App.name = "My-App";

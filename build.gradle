@@ -35,8 +35,8 @@ test {
 group = 'com.osiris.desku'
 version = '0.5.8'
 description = 'Desku'
-sourceCompatibility = JavaVersion.VERSION_11 // java 11
-targetCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
 
 java {
     withSourcesJar()
