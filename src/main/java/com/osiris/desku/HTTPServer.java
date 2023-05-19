@@ -29,8 +29,6 @@ public class HTTPServer {
                 if (path.equals("/") || path.isEmpty()) fileTarget = "/root";
                 if (!path.contains(".")) fileTarget += ".html";
                 AL.info("Request: \"" + path + "\" \"" + fileTarget + "\" " + session.getMethod());
-                //TODO response.setContentType("text/html");
-                //TODO response.setCharacterEncoding("UTF-8");
                 File f = new File(ui.getDir() + fileTarget);
                 if (!f.exists()) {
                     String err = "File/Content for " + path + " does not exist: " + f;
