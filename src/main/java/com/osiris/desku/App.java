@@ -1,9 +1,14 @@
 package com.osiris.desku;
 
-import com.goterl.resourceloader.FileLoader;
 import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
+import com.osiris.jlib.UtilsFiles;
 import com.osiris.jlib.logger.AL;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
+import org.cef.OS;
 
 import java.awt.*;
 import java.io.File;
@@ -14,6 +19,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.security.CodeSource;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -135,13 +143,25 @@ public class App {
         String p3 = App.workingDir + "/src/test/java" + fullPath;
         f = new File(p3); // Support JUnit tests
         if (f.exists()) return Files.newInputStream(f.toPath());
+        String classpath = System.getProperty("java.class.path");
+        Exception e = null;
         try{
-            f = FileLoader.get().load(fullPath, App.class);
-            if (f.exists()) Files.newInputStream(f.toPath());
-        } catch (URISyntaxException e) {
-            AL.warn("Failed to find resource \""+fullPath+"\", searched: "+
-                    App.class.getClassLoader()+" and "+p1+" and "+p2+" and "+p3+" and FileLoader", e);
+            if(OS.isWindows()) fullPath = fullPath.replace("/", "\\");
+            String[] dirs = OS.isWindows() ? classpath.split(";") : classpath.split(":");
+            for (String _dir : dirs) {
+                File dir = new File(_dir);
+                Iterator<File> it = FileUtils.iterateFiles(dir, null, true);
+                while (it.hasNext()){
+                    f = it.next();
+                    if(f.isFile() && f.getAbsolutePath().endsWith(fullPath)){
+                        return Files.newInputStream(f.toPath());
+                    }
+                }
+            }
+        } catch (Exception e1) {
+            e = e1;
         }
+        AL.warn("Failed to find resource \""+fullPath+"\", searched: "+p1+" and "+p2+" and "+p3+" and class paths recursively: "+classpath+".", e);
         return null;
     }
 
@@ -166,13 +186,25 @@ public class App {
         String p3 = App.workingDir + "/src/test/java" + fullPath;
         f = new File(p3); // Support JUnit tests
         if (f.exists()) return f.toURI().toURL();
+        String classpath = System.getProperty("java.class.path");
+        Exception e = null;
         try{
-            f = FileLoader.get().load(fullPath, App.class);
-            if (f.exists()) return f.toURI().toURL();
-        } catch (URISyntaxException e) {
-            AL.warn("Failed to find resource \""+fullPath+"\", searched: "+
-                    App.class.getClassLoader()+" and "+p1+" and "+p2+" and "+p3+" and FileLoader", e);
+            if(OS.isWindows()) fullPath = fullPath.replace("/", "\\");
+            String[] dirs = OS.isWindows() ? classpath.split(";") : classpath.split(":");
+            for (String _dir : dirs) {
+                File dir = new File(_dir);
+                Iterator<File> it = FileUtils.iterateFiles(dir, null, true);
+                while (it.hasNext()){
+                    f = it.next();
+                    if(f.isFile() && f.getAbsolutePath().endsWith(fullPath)){
+                        return f.toURI().toURL();
+                    }
+                }
+            }
+        } catch (Exception e1) {
+            e = e1;
         }
+        AL.warn("Failed to find resource \""+fullPath+"\", searched: "+p1+" and "+p2+" and "+p3+" and class paths recursively: "+classpath+".", e);
         return null;
     }
 
