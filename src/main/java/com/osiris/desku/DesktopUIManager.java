@@ -24,7 +24,7 @@ public class DesktopUIManager extends UIManager {
     public final CefMessageRouter cefMessageRouter;
     public final AtomicInteger cefMessageRouterRequestId = new AtomicInteger();
 
-    public DesktopUIManager(boolean isOffscreenRendering) throws UnsupportedPlatformException, CefInitializationException, IOException, InterruptedException {
+    public DesktopUIManager(boolean isOffscreenRendering) throws Exception {
         this.isOffscreenRendering = isOffscreenRendering;
         // (0) Initialize CEF using the maven loader
         CefAppBuilder builder = new CefAppBuilder();
