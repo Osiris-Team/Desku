@@ -611,7 +611,7 @@ public class Component<T> {
      * Default: 0 <br>
      */
     public T grow(int i) {
-        putStyle("grow", String.valueOf(i));
+        putStyle("flex-grow", String.valueOf(i));
         return target;
     }
 
@@ -620,7 +620,7 @@ public class Component<T> {
      * thus enforcing its default state/style.
      */
     public T growDefault() {
-        removeStyle("grow");
+        removeStyle("flex-grow");
         return target;
     }
 
@@ -630,7 +630,7 @@ public class Component<T> {
      * Default: 1 <br>
      */
     public T shrink(int i) {
-        putStyle("shrink", String.valueOf(i));
+        putStyle("flex-shrink", String.valueOf(i));
         return target;
     }
 
@@ -639,7 +639,7 @@ public class Component<T> {
      * thus enforcing its default state/style.
      */
     public T shrinkDefault() {
-        removeStyle("shrink");
+        removeStyle("flex-shrink");
         return target;
     }
 
