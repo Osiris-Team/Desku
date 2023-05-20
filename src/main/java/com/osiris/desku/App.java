@@ -208,6 +208,14 @@ public class App {
         return null;
     }
 
+    /**
+     * @param dir  {@link Class#getPackage()} to get the package/directory of a class.
+     * @param path For example "image.png" if that file is located in the provided package/directory.
+     */
+    public static InputStream getResourceInPackage(Package dir, String path) throws IOException {
+        return App.getResource(dir.getName().replace(".", "/") + path);
+    }
+
     public static void appendToGlobalStyles(String s) {
         synchronized (styles) {
             try {
@@ -223,7 +231,7 @@ public class App {
      * The css file is expected to have the same name as the class and be in the same package.
      */
     public static String getCSS(Class<?> clazz) throws IOException {
-        return Stream.toString(App.getResource(clazz.getName().replace(".", "/") + ".css"));
+        return Stream.toString(App.getResourceInPackage(clazz.getPackage(), "/" + clazz.getSimpleName() + ".css"));
     }
 
     /**
@@ -231,14 +239,6 @@ public class App {
      * The js file is expected to have the same name as the class and be in the same package.
      */
     public static String getJS(Class<?> clazz) throws IOException {
-        return Stream.toString(App.getResource(clazz.getName().replace(".", "/") + ".js"));
-    }
-
-    /**
-     * @param dir  {@link Class#getPackage()} to get the package/directory of a class.
-     * @param path For example "image.png" if that file is located in the provided package/directory.
-     */
-    public static InputStream getResourceInPackage(Package dir, String path) throws IOException {
-        return App.getResource(dir.getName().replace(".", "/") + path);
+        return Stream.toString(App.getResourceInPackage(clazz.getPackage(), "/" + clazz.getSimpleName() + ".js"));
     }
 }
