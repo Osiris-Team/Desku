@@ -492,7 +492,7 @@ public class Component<T> {
     }
 
     public T padding(boolean b) {
-        if (b) putStyle("padding", "var(--space-m)");
+        if (b) putStyle("padding", "var(--space-s)");
         else removeStyle("padding");
         return target;
     }
@@ -523,14 +523,14 @@ public class Component<T> {
     }
 
     public T margin(boolean b) {
-        if (b) putStyle("margin", "var(--space-m)");
+        if (b) putStyle("margin", "var(--space-s)");
         else removeStyle("margin");
         return target;
     }
 
     public T spacing(boolean b) {
-        if (b) putStyle("spacing", "var(--space-m)");
-        else removeStyle("spacing");
+        if (b) putStyle("gap", "var(--space-s)");
+        else removeStyle("gap");
         return target;
     }
 

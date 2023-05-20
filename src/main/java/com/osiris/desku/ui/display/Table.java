@@ -3,20 +3,16 @@ package com.osiris.desku.ui.display;
 import com.osiris.desku.App;
 import com.osiris.desku.ui.Component;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 
 public class Table extends Component<Table> {
     static {
-        App.appendToGlobalStyles("table,\n" +
-                "td {\n" +
-                "    border: 1px solid #333;\n" +
-                "}\n" +
-                "\n" +
-                "thead,\n" +
-                "tfoot {\n" +
-                "    background-color: #333;\n" +
-                "    color: #fff;\n" +
-                "}\n");
+        try {
+            App.appendToGlobalStyles(App.getCSS(Table.class));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public HeaderContainer headers = new HeaderContainer(this);
@@ -25,7 +21,7 @@ public class Table extends Component<Table> {
     public Table() {
         init(this, "table");
         add(headers, rows);
-        putStyle("display", "block"); // instead of table since that gives additional whitespace
+        //putStyle("display", "block"); // instead of table since that gives additional whitespace
     }
 
     /**
@@ -121,7 +117,6 @@ public class Table extends Component<Table> {
         public RowContainer(Table table) {
             init(this, "tbody");
             this.t = table;
-            putStyle("display", "block");
         }
     }
 

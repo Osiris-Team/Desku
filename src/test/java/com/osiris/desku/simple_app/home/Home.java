@@ -32,7 +32,7 @@ public class Home extends Route {
 
     @Override
     public Component<?> loadContent() {
-        Layout ly = new Layout();
+        Layout ly = new Layout().spacing(true);
         ly.horizontal().size("100%", "70vh").childCenter()
                 .add(new Text("Build Desktop Apps with Java, HTML and CSS today!")
                         .sizeXXL().selfCenter()
@@ -113,8 +113,8 @@ public class Home extends Route {
         // Tables
         //
         ly.add(new Table().headers("Header 1", "Header 2")
-                .row("Data 1", "Data 2")
-                .row("Data 3", "Data 4"));
+                .row("Data 1", "Data 2aaaaa")
+                .row("Data 3aa", "Data 4"));
 
         // Tables via reflection
         class Person {
@@ -129,7 +129,7 @@ public class Home extends Route {
         List<Person> list = new ArrayList<>();
         list.add(new Person("John", 34));
         list.add(new Person("Peter", 56));
-        list.add(new Person("Maria", 33));
+        list.add(new Person("Mariaaaaaa", 33));
         try {
             ly.add(new RTable(Person.class).rows(list)); // One liner ;)
         } catch (IllegalAccessException e) {
