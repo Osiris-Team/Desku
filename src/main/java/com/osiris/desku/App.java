@@ -1,5 +1,6 @@
 package com.osiris.desku;
 
+import com.goterl.resourceloader.FileLoader;
 import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
@@ -8,6 +9,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -124,12 +126,22 @@ public class App {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
         InputStream in = App.class.getResourceAsStream(fullPath);
         if (in != null) return in;
-        File f = new File(App.workingDir + fullPath);
+        String p1 = App.workingDir + fullPath;
+        File f = new File(p1);
         if (f.exists()) return Files.newInputStream(f.toPath());
-        f = new File(App.workingDir + "/src/main/java" + fullPath);
+        String p2 = App.workingDir + "/src/main/java" + fullPath;
+        f = new File(p2);
         if (f.exists()) return Files.newInputStream(f.toPath());
-        f = new File(App.workingDir + "/src/test/java" + fullPath); // Support JUnit tests
+        String p3 = App.workingDir + "/src/test/java" + fullPath;
+        f = new File(p3); // Support JUnit tests
         if (f.exists()) return Files.newInputStream(f.toPath());
+        try{
+            f = FileLoader.get().load(fullPath, App.class);
+            if (f.exists()) Files.newInputStream(f.toPath());
+        } catch (URISyntaxException e) {
+            AL.warn("Failed to find resource \""+fullPath+"\", searched: "+
+                    App.class.getClassLoader()+" and "+p1+" and "+p2+" and "+p3+" and FileLoader", e);
+        }
         return null;
     }
 
@@ -145,12 +157,22 @@ public class App {
         String fullPath = (path.startsWith("/") ? path : "/" + path);
         URL url = App.class.getResource(fullPath);
         if (url != null) return url;
-        File f = new File(App.workingDir + fullPath);
+        String p1 = App.workingDir + fullPath;
+        File f = new File(p1);
         if (f.exists()) return f.toURI().toURL();
-        f = new File(App.workingDir + "/src/main/java" + fullPath);
+        String p2 = App.workingDir + "/src/main/java" + fullPath;
+        f = new File(p2);
         if (f.exists()) return f.toURI().toURL();
-        f = new File(App.workingDir + "/src/test/java" + fullPath); // Support JUnit tests
+        String p3 = App.workingDir + "/src/test/java" + fullPath;
+        f = new File(p3); // Support JUnit tests
         if (f.exists()) return f.toURI().toURL();
+        try{
+            f = FileLoader.get().load(fullPath, App.class);
+            if (f.exists()) return f.toURI().toURL();
+        } catch (URISyntaxException e) {
+            AL.warn("Failed to find resource \""+fullPath+"\", searched: "+
+                    App.class.getClassLoader()+" and "+p1+" and "+p2+" and "+p3+" and FileLoader", e);
+        }
         return null;
     }
 
