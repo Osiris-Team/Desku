@@ -210,9 +210,11 @@ public class App {
 
     /**
      * @param dir  {@link Class#getPackage()} to get the package/directory of a class.
-     * @param path For example "/image.png" if that file is located in the provided package/directory.
+     * @param path For example "/image.png" or "image.png" if that file is located in the provided package/directory.
+     *             Also can be a file in a subdirectory "/dir/image.png" or "dir/image.png".
      */
     public static InputStream getResourceInPackage(Package dir, String path) throws IOException {
+        if(!path.startsWith("/")) path = "/" + path;
         return App.getResource(dir.getName().replace(".", "/") + path);
     }
 
