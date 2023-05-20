@@ -29,8 +29,7 @@ public class Main {
 If you only target Desktop users you can get started with the example above.
 All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app).
 
-- Latest Chromium HTML/CSS renderer via [JCEF](https://github.com/jcefmaven/jcefbuild).
-- Runs on Windows/Linux/Mac by installing platform-specific dependencies at first launch.
+- Easily develop desktop and mobile apps in one codebase!
 - Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
 - Each UIs content is provided by a tiny HTTP server and
 Java <=> JavaScript interactions are handled by a even tinier WebSocket server.
@@ -50,9 +49,10 @@ way its pretty easy to create a Desku-Extension:
 4. Create a release and use JitPack or Maven to host the assets.
 
 ### Todo
-- Serializable UI
-- Navigation between UIs/windows
-- Default components suit similar to https://vaadin.com/docs/latest/components
+- Serializable UI.
+- Navigation between UIs/windows.
+- Default components suit similar to https://vaadin.com/docs/latest/components.
+- JavaFX WebView instead of JCEF to reduce startup time and disk size of app?
 
 ### Documentation
 
