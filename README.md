@@ -25,8 +25,7 @@ public class Main {
 ```
 
 ### Features
-#### Its highly recommended to use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) to get started since it has also support for Android and iOS.
-If you only target Desktop users you can get started with the example above.
+#### Its highly recommended to use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) to get started since it has also support for Android and iOS, and everything setup correctly.
 All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app).
 
 - Easily develop desktop and mobile apps in one codebase!
@@ -57,6 +56,30 @@ way its pretty easy to create a Desku-Extension:
 ### Documentation
 
 <div>
+<details>
+<summary>App.getCSS/getJS methods return null? Resources cannot be found?</summary>
+
+By default, build tools will remove anything that is not a .java source file,
+thus your .css/.js or any other files will not be included in the final binary.
+Here is how you can fix this in Gradle, simply append the below to your `build.gradle` file:
+```groovy
+// Ensure that everything other than classes/.java files are also included in the final jar
+// This should also be included in your project if you want to easily load resources.
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/java", "src/main/resources"]
+            include '**/*' // Include everything (no .java by default)
+        }
+
+    }
+}
+// This must also be included if you want to generate the sources jar without issues
+tasks.withType(Jar).configureEach { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
+```
+</details>
+
+
 <details>
 <summary>How to change the theme?</summary>
 
