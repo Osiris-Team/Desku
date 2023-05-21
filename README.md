@@ -3,7 +3,7 @@ Java Framework for developing Desktop and Mobile Applications in one codebase wi
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
 
 <p align="center">
-  <img src="https://github.com/Osiris-Team/Desku/blob/main/docs/img.png?raw=true" alt=""/>
+  <img src="https://github.com/Osiris-Team/Desku/blob/main/docs/desku_banner.png?raw=true" alt=""/>
 </p>
 
 ```java
