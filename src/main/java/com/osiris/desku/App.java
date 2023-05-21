@@ -4,8 +4,6 @@ import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.UtilsFiles;
 import com.osiris.jlib.logger.AL;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.AbstractFileFilter;
 import org.cef.OS;
@@ -26,6 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class App {
 
@@ -153,8 +153,20 @@ public class App {
                 Iterator<File> it = FileUtils.iterateFiles(dir, null, true);
                 while (it.hasNext()){
                     f = it.next();
-                    if(f.isFile() && f.getAbsolutePath().endsWith(fullPath)){
-                        return Files.newInputStream(f.toPath());
+                    if(f.isFile() && f.getAbsolutePath().endsWith(".jar")){
+                        try (ZipFile zipFile = new ZipFile(f)) {
+                            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                            while (entries.hasMoreElements()) {
+                                ZipEntry entry = entries.nextElement();
+                                if (!entry.isDirectory() && path.endsWith(entry.getName())) {
+                                    return zipFile.getInputStream(entry);
+                                }
+                            }
+                        }
+                    } else{
+                        if(f.isFile() && f.getAbsolutePath().endsWith(fullPath)){
+                            return Files.newInputStream(f.toPath());
+                        }
                     }
                 }
             }
@@ -204,7 +216,7 @@ public class App {
         } catch (Exception e1) {
             e = e1;
         }
-        AL.warn("Failed to find resource \""+fullPath+"\", searched: "+p1+" and "+p2+" and "+p3+" and class paths recursively: "+classpath+".", e);
+        AL.warn("Failed to find resource \""+fullPath+"\", searched: "+p1+" and "+p2+" and "+p3+" and class paths (except jars) recursively: "+classpath+".", e);
         return null;
     }
 
