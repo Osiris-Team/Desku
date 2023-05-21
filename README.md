@@ -42,10 +42,9 @@ bindings, thus making simple/complex layout creation faster and easier than ever
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
 It can be a single component or a complete suite of multiple components, either
 way its pretty easy to create a Desku-Extension:
-1. Add the Desku dependency.
-2. Extend the Component class and start coding (example component [here](https://github.com/Osiris-Team/Desku/blob/main/src/test/java/com/osiris/desku/VerticalLayout.java)).
-3. Publish your repo on GitHub with the #desku-extension tag/topic (also mention the Desku version your extension supports / was built with).
-4. Create a release and use JitPack or Maven to host the assets.
+1. Start with the [Desku-Gradle-Starter-Extension](https://github.com/Osiris-Team/Desku-Gradle-Starter-Extension) template.
+2. Publish your repo on GitHub with the #desku-extension tag/topic (also mention the Desku version your extension supports / was built with).
+3. Create a release and use JitPack or Maven to host the files.
 
 ### Todo
 - Serializable UI.
