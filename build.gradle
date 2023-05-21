@@ -42,6 +42,18 @@ java {
     withSourcesJar()
 }
 
+
+// Ensure that everything other than classes/.java files are also included in the final jar
+// This should also be included in your project if you want to easily load resources.
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/java"]
+            include '**/*' // Include everything (no .java by default)
+        }
+    }
+}
+
 publishing {
     publications {
         maven(MavenPublication) {
