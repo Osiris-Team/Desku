@@ -23,7 +23,7 @@ public class LoadingWindow extends JFrame {
         Image icon = App.getIcon();
         JPanel title = Swing.transparent(new JPanel());
         getContentPane().add(title);
-        title.add(Swing.transparent(Swing.image(icon, 30, 30)));
+        title.add(Swing.image(icon, 30, 30));
         JLabel appName = new JLabel(App.name);
         title.add(appName);
         title.add(txtStatus);

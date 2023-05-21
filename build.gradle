@@ -48,11 +48,15 @@ java {
 sourceSets {
     main {
         resources {
-            srcDirs = ["src/main/java"]
+            srcDirs = ["src/main/java", "src/main/resources"]
             include '**/*' // Include everything (no .java by default)
         }
+
     }
 }
+// This must also be included if you want to generate the sources jar without issues
+tasks.withType(Jar).configureEach { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
+
 
 publishing {
     publications {
