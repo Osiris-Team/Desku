@@ -2,22 +2,18 @@ package com.osiris.desku;
 
 import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
-import com.osiris.jlib.UtilsFiles;
 import com.osiris.jlib.logger.AL;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.AbstractFileFilter;
 import org.cef.OS;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.security.CodeSource;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -145,15 +141,15 @@ public class App {
         if (f.exists()) return Files.newInputStream(f.toPath());
         String classpath = System.getProperty("java.class.path");
         Exception e = null;
-        try{
-            if(OS.isWindows()) fullPath = fullPath.replace("/", "\\");
+        try {
+            if (OS.isWindows()) fullPath = fullPath.replace("/", "\\");
             String[] dirs = OS.isWindows() ? classpath.split(";") : classpath.split(":");
             for (String _dir : dirs) {
                 File dir = new File(_dir);
                 Iterator<File> it = FileUtils.iterateFiles(dir, null, true);
-                while (it.hasNext()){
+                while (it.hasNext()) {
                     f = it.next();
-                    if(f.isFile() && f.getAbsolutePath().endsWith(".jar")){
+                    if (f.isFile() && f.getAbsolutePath().endsWith(".jar")) {
                         try (ZipFile zipFile = new ZipFile(f)) {
                             Enumeration<? extends ZipEntry> entries = zipFile.entries();
                             while (entries.hasMoreElements()) {
@@ -163,8 +159,8 @@ public class App {
                                 }
                             }
                         }
-                    } else{
-                        if(f.isFile() && f.getAbsolutePath().endsWith(fullPath)){
+                    } else {
+                        if (f.isFile() && f.getAbsolutePath().endsWith(fullPath)) {
                             return Files.newInputStream(f.toPath());
                         }
                     }
@@ -173,7 +169,7 @@ public class App {
         } catch (Exception e1) {
             e = e1;
         }
-        AL.warn("Failed to find resource \""+fullPath+"\", searched: "+p1+" and "+p2+" and "+p3+" and class paths recursively: "+classpath+".", e);
+        AL.warn("Failed to find resource \"" + fullPath + "\", searched: " + p1 + " and " + p2 + " and " + p3 + " and class paths recursively: " + classpath + ".", e);
         return null;
     }
 
@@ -200,15 +196,15 @@ public class App {
         if (f.exists()) return f.toURI().toURL();
         String classpath = System.getProperty("java.class.path");
         Exception e = null;
-        try{
-            if(OS.isWindows()) fullPath = fullPath.replace("/", "\\");
+        try {
+            if (OS.isWindows()) fullPath = fullPath.replace("/", "\\");
             String[] dirs = OS.isWindows() ? classpath.split(";") : classpath.split(":");
             for (String _dir : dirs) {
                 File dir = new File(_dir);
                 Iterator<File> it = FileUtils.iterateFiles(dir, null, true);
-                while (it.hasNext()){
+                while (it.hasNext()) {
                     f = it.next();
-                    if(f.isFile() && f.getAbsolutePath().endsWith(fullPath)){
+                    if (f.isFile() && f.getAbsolutePath().endsWith(fullPath)) {
                         return f.toURI().toURL();
                     }
                 }
@@ -216,7 +212,7 @@ public class App {
         } catch (Exception e1) {
             e = e1;
         }
-        AL.warn("Failed to find resource \""+fullPath+"\", searched: "+p1+" and "+p2+" and "+p3+" and class paths (except jars) recursively: "+classpath+".", e);
+        AL.warn("Failed to find resource \"" + fullPath + "\", searched: " + p1 + " and " + p2 + " and " + p3 + " and class paths (except jars) recursively: " + classpath + ".", e);
         return null;
     }
 
@@ -226,7 +222,7 @@ public class App {
      *             Also can be a file in a subdirectory "/dir/image.png" or "dir/image.png".
      */
     public static InputStream getResourceInPackage(Package dir, String path) throws IOException {
-        if(!path.startsWith("/")) path = "/" + path;
+        if (!path.startsWith("/")) path = "/" + path;
         return App.getResource(dir.getName().replace(".", "/") + path);
     }
 

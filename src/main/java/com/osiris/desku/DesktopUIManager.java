@@ -4,9 +4,7 @@ import com.osiris.desku.swing.LoadingWindow;
 import com.osiris.desku.swing.events.LoadStateChange;
 import com.osiris.jlib.logger.AL;
 import me.friwi.jcefmaven.CefAppBuilder;
-import me.friwi.jcefmaven.CefInitializationException;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
-import me.friwi.jcefmaven.UnsupportedPlatformException;
 import org.cef.CefApp;
 import org.cef.CefClient;
 import org.cef.browser.CefBrowser;
@@ -14,7 +12,6 @@ import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
 import org.cef.handler.CefLoadHandlerAdapter;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DesktopUIManager extends UIManager {

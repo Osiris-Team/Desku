@@ -7,6 +7,8 @@ Java Framework for developing Desktop and Mobile Applications in one codebase wi
 </p>
 
 ```java
+import static com.osiris.desku.Statics; // Low-code Java UI via static methods
+
 public class Main {
     public static void main(String[] args) throws IOException, UnsupportedPlatformException, CefInitializationException, InterruptedException {
         // Setup app details
@@ -15,7 +17,7 @@ public class Main {
 
         // Create routes
         Route home = new MRoute("/", () -> { // It's recommended to create a new class and extend Route instead (for larger UIs)
-            return new Layout().add(new Text("Hello World!")); 
+            return layout(text("Hello World!")); // Low-code Java UI via static methods
         });
 
         // Create and show windows
@@ -35,7 +37,7 @@ Java <=> JavaScript interactions are handled by a even tinier WebSocket server.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
 - You decide! Code your UI in Java or directly in HTML/CSS, or both!
-- Focus on method-chaining and low-code.
+- Focus on method-chaining and low-code (checkout the Statics class).
 - Update the UI asynchronously hassle-free.
 
 ### Extensions
@@ -51,6 +53,17 @@ way its pretty easy to create a Desku-Extension:
 - Navigation between UIs/windows.
 - Default components suit similar to https://vaadin.com/docs/latest/components.
 - JavaFX WebView instead of JCEF to reduce startup time and disk size of app?
+
+### Contributing
+Contributions are welcome! Especially HTML5 component integrations, aka
+porting a HTML5 component to a Java Desku component.
+
+When building remember to include this specific test, to also update
+the `Statics` class.
+```
+./gradlew build :test --tests "com.osiris.desku.GenerateStatics"
+```
+
 
 ### Documentation
 

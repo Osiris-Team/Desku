@@ -1,13 +1,8 @@
 package com.osiris.desku.hello_world_app;
 
 import com.osiris.desku.*;
-import com.osiris.desku.ui.display.Text;
-import com.osiris.desku.ui.layout.Layout;
-import me.friwi.jcefmaven.CefInitializationException;
-import me.friwi.jcefmaven.UnsupportedPlatformException;
 
-import java.io.IOException;
-
+import static com.osiris.desku.Statics.*;
 public class HelloWorldApp {
     public static void main(String[] args) throws Exception {
         // Setup app details
@@ -16,7 +11,7 @@ public class HelloWorldApp {
 
         // Create routes
         Route home = new MRoute("/", () -> {
-            return new Layout().add(new Text("Hello World!"));
+            return layout(text("Hello World!"));
         });
 
         // Create windows

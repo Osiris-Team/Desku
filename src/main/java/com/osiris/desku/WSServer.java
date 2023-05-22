@@ -17,6 +17,7 @@ public class WSServer extends WebSocketServer {
      */
     public final List<UI.PendingJavaScriptResult> javaScriptCallbacks = new ArrayList<>();
     public final AtomicInteger counter = new AtomicInteger();
+
     public WSServer(String domain, int port) {
         super(new InetSocketAddress(domain, port));
         start();

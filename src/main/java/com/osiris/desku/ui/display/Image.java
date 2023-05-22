@@ -10,6 +10,14 @@ import java.io.File;
 import java.nio.file.Files;
 
 public class Image extends Component<Image> {
+    /**
+     * Java integration of the HTML img tag. <br>
+     * <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img</a>
+     *
+     * @param clazz image must be in the same package as this class or in a sub-package/sub-directory of this package.
+     *              See {@link App#getResourceInPackage(Package, String)} for more details.
+     * @param src   examples: "/image.png" or "image.png" or "/sub-dir/image.png" or "sub-dir/image.png"
+     */
     public Image(Class<?> clazz, String src) {
         init(this, "img");
 
