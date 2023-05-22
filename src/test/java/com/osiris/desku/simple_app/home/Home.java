@@ -118,18 +118,20 @@ public class Home extends Route {
 
         // Tables via reflection
         class Person {
+            public String firstName;
             public String name;
             public int age;
 
-            public Person(String name, int age) {
+            public Person(String firstName, String name, int age) {
+                this.firstName = firstName;
                 this.name = name;
                 this.age = age;
             }
         }
         List<Person> list = new ArrayList<>();
-        list.add(new Person("John", 34));
-        list.add(new Person("Peter", 56));
-        list.add(new Person("Mariaaaaaa", 33));
+        list.add(new Person("John", "Stamos", 34));
+        list.add(new Person("Peter", "Rigid", 56));
+        list.add(new Person("Mariaaaaaa", "Francois", 33));
         try {
             ly.add(new RTable(Person.class).rows(list)); // One liner ;)
         } catch (IllegalAccessException e) {

@@ -1,5 +1,7 @@
 package com.osiris.desku.ui.display;
 
+import com.osiris.desku.ui.Component;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -9,7 +11,8 @@ import java.util.function.Predicate;
 /**
  * Table with additional methods for reflection.
  */
-public class RTable extends Table {
+public class RTable extends Component<RTable> {
+    public Table table = new Table();
     public Class<?> clazz;
     public Predicate<Field> fieldPredicate = field -> {
         return !Modifier.isTransient(field.getModifiers());
@@ -19,6 +22,8 @@ public class RTable extends Table {
      * @param clazz uses this classes' fields for the headers.
      */
     public RTable(Class<?> clazz) {
+        init(this, "rtable");
+        add(this.table);
         this.clazz = clazz;
         headers(clazz);
     }
@@ -28,6 +33,8 @@ public class RTable extends Table {
      * @param fieldPredicate is used to determine which fields to use.
      */
     public RTable(Class<?> clazz, Predicate<Field> fieldPredicate) {
+        init(this, "rtable");
+        add(this.table);
         this.clazz = clazz;
         this.fieldPredicate = fieldPredicate;
         headers(clazz, fieldPredicate);
@@ -38,19 +45,19 @@ public class RTable extends Table {
      * Easily set the fields of the provided class as headers. <br>
      * Transient fields are ignored.
      */
-    public Table headers(Class<?> clazz) {
+    public RTable headers(Class<?> clazz) {
         return headers(clazz, fieldPredicate);
     }
 
     /**
      * Easily set the fields of the provided class as headers. <br>
      */
-    public Table headers(Class<?> clazz, Predicate<Field> predicate) {
-        this.headers.removeAll();
+    public RTable headers(Class<?> clazz, Predicate<Field> predicate) {
+        table.headers.removeAll();
         for (Field f : clazz.getFields()) {
             if (predicate.test(f)) {
                 String name = f.getName();
-                this.headers.add(new Header().add(new Text(name)));
+                table.headers.add(new Table.Header().add(new Text(name)));
             }
         }
         return this;
@@ -59,7 +66,7 @@ public class RTable extends Table {
     /**
      * @see #rows(Iterable, Predicate)
      */
-    public <T> Table rows(Iterable<T> rows) throws IllegalAccessException {
+    public <T> RTable rows(Iterable<T> rows) throws IllegalAccessException {
         return rows(rows, fieldPredicate);
     }
 
@@ -74,7 +81,7 @@ public class RTable extends Table {
      *             to ensure that the data matches the headers.
      *             Also note that the {@link #fieldPredicate} must be the same one that was used for the headers.
      */
-    public <T> Table rows(Iterable<T> rows, Predicate<Field> predicate) throws IllegalAccessException {
+    public <T> RTable rows(Iterable<T> rows, Predicate<Field> predicate) throws IllegalAccessException {
         List<Field> fields = new ArrayList<>();
         for (Field f : clazz.getFields()) {
             if (predicate.test(f)) {
@@ -82,15 +89,15 @@ public class RTable extends Table {
                 fields.add(f);
             }
         }
-        this.rows.removeAll();
+        table.rows.removeAll();
         for (Object obj : rows) {
-            Row row = new Row();
+            Table.Row row = new Table.Row();
             for (Field f : fields) {
                 Object fieldValue = f.get(obj);
                 String val = fieldValue == null ? "" : fieldValue.toString();
                 row.add(new Text(val));
             }
-            this.rows.add(row);
+            table.rows.add(row);
         }
         return this;
     }

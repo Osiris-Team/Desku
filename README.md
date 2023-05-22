@@ -160,3 +160,55 @@ want to support even more platforms make a pull-request with your implementation
 
 
 </div>
+
+#### Extensions
+
+<div>
+<details>
+<summary>Method chaining not possible / fallback to super class. What to do?</summary>
+
+The problem in more detail:
+```java
+public class A extends Component<A>{
+    // ...
+    public A methodInA(){
+        return this;
+    }
+}
+
+public class B extends A{
+    // ...
+    public B methodInB(){
+        return this;
+    }
+}
+
+public class Main{
+  public void main(){
+    new B().methodInA(); // If we want to do method chaining, aka access
+    // another method of class B, its not possible anymore
+    // due to Java language limits, since now the returned value is of type A.
+  }
+}
+```
+Instead of extending classes we are forced (if we want to provide method chaining)
+to add the super class as field of our current class and wrap around important methods, like so:
+
+```java
+public class B extends Component<B>{ // Instead of extending A
+    public final A a = new A(); 
+    public B(){
+        init(this, "b");
+        add(a); // Add as child
+    }
+    // ...
+    public B methodInA(){
+        a.methodInA();
+        return this;
+    }
+}
+```
+
+</details>
+
+</div>

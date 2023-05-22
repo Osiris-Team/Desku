@@ -32,7 +32,7 @@ public class Table extends Component<Table> {
         for (String header : headers) {
             this.headers.add(new Header().add(new Text(header)));
         }
-        return this;
+        return target;
     }
 
     /**
@@ -43,7 +43,7 @@ public class Table extends Component<Table> {
         for (Header header : headers) {
             this.headers.add(header);
         }
-        return this;
+        return target;
     }
 
     /**
