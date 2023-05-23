@@ -20,8 +20,15 @@ public class Theme {
     public Attribute fontXL = new Attribute("--font-size-xl", "1.375rem");
     public Attribute fontXXL = new Attribute("--font-size-xxl", "1.75rem");
     public Attribute fontXXXL = new Attribute("--font-size-xxxl", "2.5rem");
+    // Colors
+    public Attribute colorPrimary = new Attribute("--color-primary", "#1a81fa");
+    public Attribute colorPrimay50 = new Attribute("--color-primary-50", "#1a81fa80");
+    public Attribute colorPrimary10 = new Attribute("--color-primary-10", "#1a81fa1a");
+    public Attribute colorText = new Attribute("--color-text", "#308fff");
+    public Attribute colorBase = new Attribute("--color-base", "#f5f5f5");
+    public Attribute colorContrast = new Attribute("--color-contrast", "#ffffff");
 
-    public String toCss() {
+    public String toCSS() {
         StringBuilder sb = new StringBuilder();
         sb.append("html{\n");
         for (Attribute attr : attributes) {
@@ -35,6 +42,9 @@ public class Theme {
         public Attribute(String key, String value) {
             super(key, value);
             attributes.add(this);
+        }
+        public String toCSS(){
+            return getKey()+": "+getValue()+"; ";
         }
     }
 }

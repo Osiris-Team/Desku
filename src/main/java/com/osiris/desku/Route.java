@@ -28,7 +28,7 @@ public abstract class Route {
                 "  <meta charset=\"UTF-8\" />\n" +
                 "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n" +
                 "  <style>\n" +
-                App.theme.toCss() +
+                App.theme.toCSS() +
                 "    body, #outlet {\n" +
                 "      height: 100vh;\n" +
                 "      width: 100%;\n" +

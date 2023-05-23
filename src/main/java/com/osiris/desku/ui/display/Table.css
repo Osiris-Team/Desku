@@ -17,13 +17,13 @@ td, th {
 
 tr:nth-child(even){background-color: #f2f2f2;}
 
-tr:hover {background-color: #ddd;}
+tr:hover {background-color: var(--color-primary-10);}
 
 th {
   padding-top: 6px;
   padding-bottom: 6px;
   text-align: left;
-  background-color: gray;
+  background-color: #000000a1;
   color: white;
 }
 
