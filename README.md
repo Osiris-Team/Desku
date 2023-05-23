@@ -33,17 +33,17 @@ All features/components are tested [here](https://github.com/Osiris-Team/Desku/t
 - Easily develop desktop and mobile apps in one codebase!
 - Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
 - Each UIs content is provided by a tiny HTTP server and
-Java <=> JavaScript interactions are handled by a even tinier WebSocket server.
+Java <=> JavaScript interactions are handled by an even tinier WebSocket server.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
 - You decide! Code your UI in Java or directly in HTML/CSS, or both!
-- Focus on method-chaining and low-code (checkout the Statics class).
+- Focus on method-chaining and low-code (check out the Statics class).
 - Update the UI asynchronously hassle-free.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
 It can be a single component or a complete suite of multiple components, either
-way its pretty easy to create a Desku-Extension:
+way, its pretty easy to create a Desku-Extension:
 1. Start with the [Desku-Gradle-Starter-Extension](https://github.com/Osiris-Team/Desku-Gradle-Starter-Extension) template.
 2. Publish your repo on GitHub with the #desku-extension tag/topic (also mention the Desku version your extension supports / was built with).
 3. Create a release and use JitPack or Maven to host the files.
@@ -52,11 +52,11 @@ way its pretty easy to create a Desku-Extension:
 - Serializable UI.
 - Navigation between UIs/windows.
 - Default components suit similar to https://vaadin.com/docs/latest/components.
-- JavaFX WebView instead of JCEF to reduce startup time and disk size of app?
+- JavaFX WebView instead of JCEF to reduce startup time and disk size of the app?
 
 ### Contributing
 Contributions are welcome! Especially HTML5 component integrations, aka
-porting a HTML5 component to a Java Desku component.
+porting an HTML5 component to a Java Desku component.
 
 When building remember to include this specific test, to also update
 the `Statics` class.
