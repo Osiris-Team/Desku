@@ -26,12 +26,11 @@ public class HTTPServer {
                 String path = session.getUri();
                 //super.doHandle(target, baseRequest, request, response);
                 String fileTarget = path;
-                if (path.equals("/") || path.isEmpty()) fileTarget = "/root";
                 if (!path.contains(".")) fileTarget += ".html";
-                AL.info("Request: \"" + path + "\" \"" + fileTarget + "\" " + session.getMethod());
-                File f = new File(ui.getDir() + fileTarget);
+                AL.debug(this.getClass(), "Request: \"" + path + "\" aka file: \"" + fileTarget + "\" " + session.getMethod());
+                File f = new File(App.htmlDir + fileTarget);
                 if (!f.exists()) {
-                    String err = "File/Content for " + path + " does not exist: " + f;
+                    String err = "File/Content for " + path + " does not exist, checked dirs: " + App.htmlDir;
                     String msg = "<html><body><h1>Error!</h1>\n";
                     msg += "<p>" + err + "</p>";
                     AL.warn(err);

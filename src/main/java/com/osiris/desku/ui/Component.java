@@ -9,9 +9,7 @@ import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
-import org.jsoup.parser.Tag;
 
 import java.util.ArrayList;
 import java.util.Objects;

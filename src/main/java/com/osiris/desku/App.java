@@ -56,7 +56,9 @@ public class App {
      * C:\Users\UserName\AppData\Local\Temp\AppName
      */
     public static File tempDir = new File(System.getProperty("java.io.tmpdir") + "/" + name);
-    public static File styles = new File(tempDir + "/global-styles.css");
+    public static File htmlDir = new File(workingDir + "/html");
+    public static File styles = new File(htmlDir + "/global-styles.css");
+    public static File javascript = new File(htmlDir + "/global-javascript.js");
     /**
      * Can be used to store user-specific data. <br>
      * Example on Windows: <br>
@@ -89,11 +91,24 @@ public class App {
             AL.info("workingDir = " + workingDir);
             AL.info("tempDir = " + tempDir);
             AL.info("userDir = " + userDir);
+            AL.info("htmlDir = " + htmlDir);
             AL.info("Java = " + System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
+
+            // Clear the directory at each app startup, since
+            // its aim is to provide a cache to load pages faster
+            // while switching between pages or reloading pages at runtime.
+            if (App.htmlDir.exists()) FileUtils.deleteDirectory(App.htmlDir);
+            App.htmlDir.mkdirs();
+
             // Create styles file
             styles.getParentFile().mkdirs();
             if (styles.exists()) styles.delete();
             styles.createNewFile();
+
+            // Create javascript file
+            javascript.getParentFile().mkdirs();
+            if (javascript.exists()) javascript.delete();
+            javascript.createNewFile();
 
             AL.info("Started application successfully!");
         } catch (Exception e) {
@@ -226,10 +241,31 @@ public class App {
         return App.getResource(dir.getName().replace(".", "/") + path);
     }
 
+    /**
+     * Append CSS to the global CSS stylesheet file that gets loaded for all {@link UI}s.
+     *
+     * @param s CSS code.
+     */
     public static void appendToGlobalStyles(String s) {
         synchronized (styles) {
             try {
                 Files.write(styles.toPath(), s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    /**
+     * Append JavaScript (JS) to the global JS file that gets loaded for all {@link UI}s. <br>
+     * The JS code gets executed once the HTML for the page finished loading.
+     *
+     * @param s JS code.
+     */
+    public static void appendToGlobalJS(String s) {
+        synchronized (javascript) {
+            try {
+                Files.write(javascript.toPath(), s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -43,8 +43,9 @@ public class Theme {
             super(key, value);
             attributes.add(this);
         }
-        public String toCSS(){
-            return getKey()+": "+getValue()+"; ";
+
+        public String toCSS() {
+            return getKey() + ": " + getValue() + "; ";
         }
     }
 }

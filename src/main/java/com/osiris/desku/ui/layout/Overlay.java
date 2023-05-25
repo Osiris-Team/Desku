@@ -7,7 +7,7 @@ public class Overlay extends Component<Overlay> {
 
     /**
      * @param parent if null, this overlay will be placed over the complete page,
-     *              otherwise only over the provided parent component.
+     *               otherwise only over the provided parent component.
      */
     public Overlay(Component<?> parent) {
         super("overlay");

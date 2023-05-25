@@ -21,6 +21,7 @@ public class Home extends Route {
     static {
         try {
             App.appendToGlobalStyles(App.getCSS(Home.class));
+            App.appendToGlobalJS(App.getJS(Home.class));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

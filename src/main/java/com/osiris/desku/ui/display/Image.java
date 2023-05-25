@@ -2,7 +2,6 @@ package com.osiris.desku.ui.display;
 
 
 import com.osiris.desku.App;
-import com.osiris.desku.UI;
 import com.osiris.desku.ui.Component;
 import com.osiris.jlib.logger.AL;
 
@@ -25,7 +24,7 @@ public class Image extends Component<Image> {
         String packagePath = "/" + clazz.getPackage().getName().replace(".", "/");
         String imgNewPath = (packagePath.equals("/") ? "" : packagePath)
                 + (src.startsWith("/") ? src : ("/" + src));
-        File img = new File(UI.get().getDir() + imgNewPath);
+        File img = new File(App.htmlDir + imgNewPath);
 
         // Set src of image
         String attrSrc = imgNewPath;

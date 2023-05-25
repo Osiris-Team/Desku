@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -177,14 +176,6 @@ public abstract class UI {
         return html;
     }
 
-    public File getDir() {
-        // TODO in testing this resolves to the same directory after restarting even though it should be a new one
-        // this results in cached files in that directory like images not getting updated, if changed.
-        File dir = new File(App.tempDir + "/" + Integer.toHexString(hashCode()));
-        dir.mkdirs();
-        return dir;
-    }
-
     /**
      * @see #snapshotToTempFile(Document)
      */
@@ -204,21 +195,14 @@ public abstract class UI {
         File file = getSnapshotTempFile();
         if (snapshot == null) snapshot = getSnapshot();
 
-        // Create symbolic link in current folder to global-styles.css
-        // Symbolic links can't be created in temp folder?
-        File link = new File(file.getParentFile() + "/" + App.styles.getName());
-        AL.info("Copy of global styles: " + link);
-        synchronized (App.styles) {
-            if (!link.exists()) {
-                link.getParentFile().mkdirs();
-                link.createNewFile();
-            }
-            Files.copy(App.styles.toPath(), link.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
-        Element elLink = new Element("link");
-        elLink.attr("rel", "stylesheet");
-        elLink.attr("href", App.styles.getName());
-        snapshot.getElementsByTag("head").get(0).appendChild(elLink);
+        Element elGlobalCSSLink = new Element("link");
+        elGlobalCSSLink.attr("rel", "stylesheet");
+        elGlobalCSSLink.attr("href", App.styles.getName());
+        snapshot.getElementsByTag("head").get(0).appendChild(elGlobalCSSLink);
+
+        Element elGlobalJSLink = new Element("script");
+        elGlobalJSLink.attr("src", App.javascript.getName());
+        snapshot.getElementsByTag("head").get(0).appendChild(elGlobalJSLink);
 
         // Write html to temp file
         AL.info("Generate: " + file);
@@ -229,8 +213,8 @@ public abstract class UI {
     }
 
     public File getSnapshotTempFile() {
-        return new File(getDir()
-                + (route.path.equals("/") || route.path.equals("") ? "/root.html" : (route.path + ".html")));
+        return new File(App.htmlDir
+                + (route.path.equals("/") || route.path.equals("") ? "/.html" : (route.path + ".html")));
     }
 
     /**
