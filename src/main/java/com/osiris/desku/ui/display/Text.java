@@ -17,13 +17,8 @@ public class Text extends Component<Text> {
     public final Event<Void> onRemovedAllStrings = new Event<>();
 
     public Text(String s) {
-        init(this, "txt");
+        super("txt");
         append(s);
-    }
-
-    @Override
-    public void init(Text target, String tag) {
-        super.init(target, tag);
         // Attach Java event listeners
         UI win = UI.get();
         Runnable registration = () -> {

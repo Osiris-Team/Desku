@@ -68,7 +68,7 @@ public class Component<T> {
      * Is returned in pretty much all methods, to allow method chaining by returning
      * the extending class instead of {@link Component}.
      */
-    public T target;
+    public T _this = (T) this;
     /**
      * Jsoup {@link Element} that can be used to convert this
      * {@link Component} into an actual HTML string.
@@ -102,7 +102,10 @@ public class Component<T> {
         }
     };
 
-    public Component() {
+    public Component(String tag, Component<?>... comps) {
+        this.element = new Element(tag);
+        element.attr("java-id", String.valueOf(id));
+        add(comps);
         // Attach Java event listeners
         UI win = UI.get();
         Runnable registration = () -> {
@@ -187,57 +190,13 @@ public class Component<T> {
     }
 
     /**
-     * <p style="color: red">Must be called before any other method in this class!</p>
-     *
-     * @param target the object to be styled.
-     */
-    public void init(T target, String tag) {
-        this.target = target;
-        this.element = new Element(tag);
-        element.attr("java-id", String.valueOf(id));
-    }
-
-    /**
-     * <p style="color: red">Must be called before any other method in this class!</p>
-     *
-     * @param target the object to be styled.
-     */
-    public void init(T target, Tag tag, String baseUri, Attributes attributes) {
-        this.target = target;
-        this.element = new Element(tag, baseUri, attributes);
-        element.attr("java-id", String.valueOf(id));
-    }
-
-    /**
-     * <p style="color: red">Must be called before any other method in this class!</p>
-     *
-     * @param target the object to be styled.
-     */
-    public void init(T target, Tag tag, String baseUri) {
-        this.target = target;
-        this.element = new Element(tag, baseUri);
-        element.attr("java-id", String.valueOf(id));
-    }
-
-    /**
-     * <p style="color: red">Must be called before any other method in this class!</p>
-     *
-     * @param target the object to be styled.
-     */
-    public void init(T target, Element element) {
-        this.target = target;
-        this.element = element;
-        element.attr("java-id", String.valueOf(id));
-    }
-
-    /**
      * Executes the provided code synchronously in the current thread. <br>
      *
      * @param code the code to be executed now, contains this component as parameter.
      */
     public T now(Consumer<T> code) {
-        code.accept(target);
-        return target;
+        code.accept(_this);
+        return _this;
     }
 
     /**
@@ -258,13 +217,13 @@ public class Component<T> {
         Thread t = new Thread() {
             @Override
             public void run() {
-                code.accept(target);
+                code.accept(_this);
                 UI.remove(this);
             }
         };
         UI.set(ui, t);
         t.start();
-        return target;
+        return _this;
     }
 
     /**
@@ -283,46 +242,46 @@ public class Component<T> {
                     .putStyle("color", "white").sizeXL().selfCenter());
             overlay.add(new Text("This might take a while, please be patient.")
                     .putStyle("color", "white").sizeS().selfCenter());
-            code.accept(target, overlay);
+            code.accept(this._this, overlay);
             remove(overlay);
         });
-        return target;
+        return _this;
     }
 
     public T add(Iterable<Component<?>> comps) {
-        if (comps == null) return target;
+        if (comps == null) return _this;
         GodIterator.forEach(comps, c -> {
             _add.accept(new AddedChildEvent(c, null, false, false));
         });
-        return target;
+        return _this;
     }
 
     public T add(Component<?>... comps) {
-        if (comps == null) return target;
+        if (comps == null) return _this;
         GodIterator.forEach(comps, c -> {
             _add.accept(new AddedChildEvent(c, null, false, false));
         });
-        return target;
+        return _this;
     }
 
     /**
      * @throws IndexOutOfBoundsException
      */
     public T addAt(int index, Component<?> comp) {
-        if (comp == null) return target;
+        if (comp == null) return _this;
         Component<?> otherChildComp = children.get(index);
         _add.accept(new AddedChildEvent(comp, otherChildComp, true, false));
-        return target;
+        return _this;
     }
 
     /**
      * @throws IndexOutOfBoundsException
      */
     public T replaceAt(int index, Component<?> comp) {
-        if (comp == null) return target;
+        if (comp == null) return _this;
         Component<?> otherChildComp = children.get(index);
         _add.accept(new AddedChildEvent(comp, otherChildComp, false, true));
-        return target;
+        return _this;
     }
 
     /**
@@ -331,30 +290,30 @@ public class Component<T> {
      * @throws IndexOutOfBoundsException if oldComp does not exist in {@link #children}.
      */
     public T replace(Component<?> oldComp, Component<?> newComp) {
-        if (oldComp == null || newComp == null) return target;
+        if (oldComp == null || newComp == null) return _this;
         if (!children.contains(oldComp))
             throw new IndexOutOfBoundsException("Provided old component to be replaced does not exist in children!");
         _add.accept(new AddedChildEvent(newComp, oldComp, false, true));
-        return target;
+        return _this;
     }
 
     public T removeAll() {
         for (Component<?> child : children) {
             _remove.accept(child);
         }
-        return target;
+        return _this;
     }
 
     public T remove(Component<?>... comps) {
-        if (comps == null) return target;
+        if (comps == null) return _this;
         GodIterator.forEach(comps, _remove);
-        return target;
+        return _this;
     }
 
     public T remove(Iterable<Component<?>> comps) {
-        if (comps == null) return target;
+        if (comps == null) return _this;
         GodIterator.forEach(comps, _remove);
-        return target;
+        return _this;
     }
 
     /**
@@ -367,19 +326,19 @@ public class Component<T> {
     public T removeAt(int index) {
         Component<?> child = children.get(index);
         _remove.accept(child);
-        return target;
+        return _this;
     }
 
     public T putStyle(String key, String val) {
         style.put(key, val);
         onStyleChanged.execute(new Attribute(key, val));
-        return target;
+        return _this;
     }
 
     public T removeStyle(String key) {
         style.remove(key);
         onStyleChanged.execute(new Attribute(key, ""));
-        return target;
+        return _this;
     }
 
     /**
@@ -402,7 +361,7 @@ public class Component<T> {
         for (Component<?> childComp : children) { // Set "new" children elements, from child components
             element.appendChild(childComp.element);
         }
-        return target;
+        return _this;
     }
 
     /**
@@ -419,7 +378,7 @@ public class Component<T> {
             childComp.updateAll();
         }
 
-        return target;
+        return _this;
     }
 
     /**
@@ -449,7 +408,7 @@ public class Component<T> {
     public T innerHTML(String text) {
         remove(children);
         add(new Text(text));
-        return target;
+        return _this;
     }
 
     /**
@@ -458,12 +417,12 @@ public class Component<T> {
     public T innerHTML(Component<?> comp) {
         remove(children);
         add(comp);
-        return target;
+        return _this;
     }
 
     public T sizeFull() {
         size("100%", "100%");
-        return target;
+        return _this;
     }
 
     /**
@@ -472,7 +431,7 @@ public class Component<T> {
     public T size(String width, String height) {
         putStyle("width", width);
         putStyle("height", height);
-        return target;
+        return _this;
     }
 
     /**
@@ -480,7 +439,7 @@ public class Component<T> {
      */
     public T width(String s) {
         putStyle("width", s);
-        return target;
+        return _this;
     }
 
     /**
@@ -488,50 +447,50 @@ public class Component<T> {
      */
     public T height(String s) {
         putStyle("height", s);
-        return target;
+        return _this;
     }
 
     public T padding(boolean b) {
         if (b) putStyle("padding", "var(--space-s)");
         else removeStyle("padding");
-        return target;
+        return _this;
     }
 
     public T padding(String s) {
         putStyle("padding", s);
-        return target;
+        return _this;
     }
 
     public T paddingLeft(String s) {
         putStyle("padding-left", s);
-        return target;
+        return _this;
     }
 
     public T paddingRight(String s) {
         putStyle("padding-right", s);
-        return target;
+        return _this;
     }
 
     public T paddingTop(String s) {
         putStyle("padding-top", s);
-        return target;
+        return _this;
     }
 
     public T paddingBottom(String s) {
         putStyle("padding-bottom", s);
-        return target;
+        return _this;
     }
 
     public T margin(boolean b) {
         if (b) putStyle("margin", "var(--space-s)");
         else removeStyle("margin");
-        return target;
+        return _this;
     }
 
     public T spacing(boolean b) {
         if (b) putStyle("gap", "var(--space-s)");
         else removeStyle("gap");
-        return target;
+        return _this;
     }
 
     /**
@@ -540,7 +499,7 @@ public class Component<T> {
      */
     public T overflowDefault() {
         removeStyle("overflow");
-        return target;
+        return _this;
     }
 
     /**
@@ -548,7 +507,7 @@ public class Component<T> {
      */
     public T overflowVisible() {
         putStyle("overflow", "visible");
-        return target;
+        return _this;
     }
 
     /**
@@ -556,7 +515,7 @@ public class Component<T> {
      */
     public T overflowHidden() {
         putStyle("overflow", "hidden");
-        return target;
+        return _this;
     }
 
     /**
@@ -566,7 +525,7 @@ public class Component<T> {
      */
     public T overflowScroll() {
         putStyle("overflow", "scroll");
-        return target;
+        return _this;
     }
 
     /**
@@ -574,7 +533,7 @@ public class Component<T> {
      */
     public T overflowAuto() {
         putStyle("overflow", "auto");
-        return target;
+        return _this;
     }
 
     /**
@@ -585,7 +544,7 @@ public class Component<T> {
      */
     public T order(int i) {
         putStyle("order", String.valueOf(i));
-        return target;
+        return _this;
     }
 
     /**
@@ -594,7 +553,7 @@ public class Component<T> {
      */
     public T orderDefault() {
         removeStyle("order");
-        return target;
+        return _this;
     }
 
     /**
@@ -612,7 +571,7 @@ public class Component<T> {
      */
     public T grow(int i) {
         putStyle("flex-grow", String.valueOf(i));
-        return target;
+        return _this;
     }
 
     /**
@@ -621,7 +580,7 @@ public class Component<T> {
      */
     public T growDefault() {
         removeStyle("flex-grow");
-        return target;
+        return _this;
     }
 
     /**
@@ -631,7 +590,7 @@ public class Component<T> {
      */
     public T shrink(int i) {
         putStyle("flex-shrink", String.valueOf(i));
-        return target;
+        return _this;
     }
 
     /**
@@ -640,7 +599,7 @@ public class Component<T> {
      */
     public T shrinkDefault() {
         removeStyle("flex-shrink");
-        return target;
+        return _this;
     }
 
     /**
@@ -652,7 +611,7 @@ public class Component<T> {
     public T wrap(boolean b) {
         if (b) putStyle("flex-wrap", "wrap");
         else putStyle("flex-wrap", "nowrap");
-        return target;
+        return _this;
     }
 
     /**
@@ -664,7 +623,7 @@ public class Component<T> {
      */
     public T selfStart() {
         putStyle("align-self", "flex-start");
-        return target;
+        return _this;
     }
 
     /**
@@ -674,7 +633,7 @@ public class Component<T> {
      */
     public T selfEnd() {
         putStyle("align-self", "flex-end");
-        return target;
+        return _this;
     }
 
     /**
@@ -684,7 +643,7 @@ public class Component<T> {
      */
     public T selfCenter() {
         putStyle("align-self", "center");
-        return target;
+        return _this;
     }
 
     /**
@@ -695,7 +654,7 @@ public class Component<T> {
      */
     public T selfAuto() {
         putStyle("align-self", "auto");
-        return target;
+        return _this;
     }
 
     /**
@@ -705,7 +664,7 @@ public class Component<T> {
      */
     public T selfStretch() {
         putStyle("align-self", "stretch");
-        return target;
+        return _this;
     }
 
     /**
@@ -713,7 +672,7 @@ public class Component<T> {
      */
     public T childVertical() {
         putStyle("flex-direction", "column");
-        return target;
+        return _this;
     }
 
     /**
@@ -721,7 +680,7 @@ public class Component<T> {
      */
     public T childHorizontal() {
         putStyle("flex-direction", "row");
-        return target;
+        return _this;
     }
 
     /**
@@ -730,7 +689,7 @@ public class Component<T> {
      */
     public T childStart() {
         putStyle("justify-content", "flex-start");
-        return target;
+        return _this;
     }
 
     /**
@@ -739,7 +698,7 @@ public class Component<T> {
      */
     public T childEnd() {
         putStyle("justify-content", "flex-end");
-        return target;
+        return _this;
     }
 
     /**
@@ -748,7 +707,7 @@ public class Component<T> {
      */
     public T childCenter() {
         putStyle("justify-content", "center");
-        return target;
+        return _this;
     }
 
     /**
@@ -757,7 +716,7 @@ public class Component<T> {
      */
     public T childSpaceBetween() {
         putStyle("justify-content", "space-between");
-        return target;
+        return _this;
     }
 
     /**
@@ -770,7 +729,7 @@ public class Component<T> {
      */
     public T childSpaceAround() {
         putStyle("justify-content", "space-around");
-        return target;
+        return _this;
     }
 
     /**
@@ -780,7 +739,7 @@ public class Component<T> {
      */
     public T childSpaceEvenly() {
         putStyle("justify-content", "space-around");
-        return target;
+        return _this;
     }
 
     /**
@@ -789,7 +748,7 @@ public class Component<T> {
      */
     public T childStretch() {
         putStyle("align-items", "stretch");
-        return target;
+        return _this;
     }
 
     /**
@@ -798,7 +757,7 @@ public class Component<T> {
      */
     public T childGap(String s) {
         putStyle("gap", s);
-        return target;
+        return _this;
     }
 
     /**
@@ -808,7 +767,7 @@ public class Component<T> {
      */
     public T childGapY(String s) {
         putStyle("row-gap", s);
-        return target;
+        return _this;
     }
 
     /**
@@ -818,7 +777,7 @@ public class Component<T> {
      */
     public T childGapX(String s) {
         putStyle("column-gap", s);
-        return target;
+        return _this;
     }
 
     /**
@@ -833,7 +792,7 @@ public class Component<T> {
         UI.get().registerJSListener("click", _this, (msg) -> {
             _onClick.execute(new ClickEvent<T>(msg, (T) _this)); // Executes all listeners
         });
-        return target;
+        return this._this;
     }
 
     //

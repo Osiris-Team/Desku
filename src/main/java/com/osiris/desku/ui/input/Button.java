@@ -7,7 +7,7 @@ public class Button extends Component<Button> {
     public final Text text = new Text("Button");
 
     public Button(String txt) {
-        init(this, "button");
+        super("button");
         add(text);
         text.set(txt);
     }

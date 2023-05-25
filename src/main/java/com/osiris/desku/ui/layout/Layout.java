@@ -19,7 +19,7 @@ public class Layout extends Component<Layout> {
     }
 
     public Layout(boolean isHorizontal, Component<?>... children) {
-        init(this, "ly");
+        super("ly");
         if (children != null) {
             add(children);
         }

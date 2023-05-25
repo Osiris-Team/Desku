@@ -19,7 +19,7 @@ public class Table extends Component<Table> {
     public RowContainer rows = new RowContainer(this);
 
     public Table() {
-        init(this, "table");
+        super("table");
         add(headers, rows);
         //putStyle("display", "block"); // instead of table since that gives additional whitespace
     }
@@ -32,7 +32,7 @@ public class Table extends Component<Table> {
         for (String header : headers) {
             this.headers.add(new Header().add(new Text(header)));
         }
-        return target;
+        return _this;
     }
 
     /**
@@ -43,7 +43,7 @@ public class Table extends Component<Table> {
         for (Header header : headers) {
             this.headers.add(header);
         }
-        return target;
+        return _this;
     }
 
     /**
@@ -100,7 +100,7 @@ public class Table extends Component<Table> {
         public final Row row = new Row();
 
         public HeaderContainer(Table table) {
-            init(this, "thead");
+            super("thead");
             this.t = table;
             add(row);
             _add = row._add; // Add directly to this row
@@ -115,7 +115,7 @@ public class Table extends Component<Table> {
         public final Table t;
 
         public RowContainer(Table table) {
-            init(this, "tbody");
+            super("tbody");
             this.t = table;
         }
     }
@@ -124,7 +124,7 @@ public class Table extends Component<Table> {
         Consumer<AddedChildEvent> superAdd = _add;
 
         public Row() {
-            init(this, "tr");
+            super("tr");
             _add = (e) -> { // event
                 // Headers get added directly,
                 // however other components first get wrapped into Table.Data
@@ -137,13 +137,13 @@ public class Table extends Component<Table> {
 
     public static class Data extends Component<Data> {
         public Data() {
-            init(this, "td");
+            super("td");
         }
     }
 
     public static class Header extends Component<Header> {
         public Header() {
-            init(this, "th");
+            super("th");
         }
     }
 }

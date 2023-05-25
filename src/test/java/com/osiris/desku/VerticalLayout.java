@@ -24,7 +24,7 @@ public class VerticalLayout extends Component<VerticalLayout> {
     }
 
     public VerticalLayout() {
-        init(this, "vl");
+        super("vl");
         // Make sure to call init before anything else!
 
         // You can get the window this component is loaded in, like so:

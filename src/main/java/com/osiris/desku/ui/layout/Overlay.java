@@ -2,13 +2,19 @@ package com.osiris.desku.ui.layout;
 
 import com.osiris.desku.ui.Component;
 
-public class Overlay extends Layout {
+public class Overlay extends Component<Overlay> {
+    public Layout layout = new Layout();
 
     /**
-     * @param parent if null, page is used as parent.
+     * @param parent if null, this overlay will be placed over the complete page,
+     *              otherwise only over the provided parent component.
      */
     public Overlay(Component<?> parent) {
-        init(this, "overlay");
+        super("overlay");
+        add(layout);
+        layout.sizeFull();
+        _add = layout._add;
+        _remove = layout._remove;
         if (parent == null)
             this.putStyle("position", "fixed"); // Sit on top of page
         else {

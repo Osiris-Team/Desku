@@ -22,7 +22,7 @@ public class RTable extends Component<RTable> {
      * @param clazz uses this classes' fields for the headers.
      */
     public RTable(Class<?> clazz) {
-        init(this, "rtable");
+        super("rtable");
         add(this.table);
         this.clazz = clazz;
         headers(clazz);
@@ -33,7 +33,7 @@ public class RTable extends Component<RTable> {
      * @param fieldPredicate is used to determine which fields to use.
      */
     public RTable(Class<?> clazz, Predicate<Field> fieldPredicate) {
-        init(this, "rtable");
+        super("rtable");
         add(this.table);
         this.clazz = clazz;
         this.fieldPredicate = fieldPredicate;

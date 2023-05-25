@@ -19,7 +19,7 @@ public class Image extends Component<Image> {
      * @param src   examples: "/image.png" or "image.png" or "/sub-dir/image.png" or "sub-dir/image.png"
      */
     public Image(Class<?> clazz, String src) {
-        init(this, "img");
+        super("img");
 
         // Paths
         String packagePath = "/" + clazz.getPackage().getName().replace(".", "/");

@@ -128,7 +128,7 @@ public class MyComp extends Component<MyComp>{
      */
     public final Event<ClickEvent> _onClick = new Event<>();
     public MyComp(){
-        init(this, "my-comp");
+        super("my-comp");
     }
     /**
      * Adds a listener that gets executed when this component was clicked.
@@ -211,7 +211,7 @@ to add the super class as field of our current class and wrap around important m
 public class B extends Component<B>{ // Instead of extending A
     public final A a = new A(); 
     public B(){
-        init(this, "b");
+        super("b");
         add(a); // Add as child
     }
     // ...
