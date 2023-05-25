@@ -10,19 +10,15 @@ public class Layout extends Component<Layout> {
         this(false);
     }
 
+    // Do not accept children in constructor
+    // to make sure that styling comes directly after the constructor call,
+    // and not after adding children, to enhance code readability.
+    // This for example is good:
+    // layout().padding(true).add(child1, child2, etc...)
+    // This not so much:
+    // layout(child1, child2, etc...).padding(true)
     public Layout(boolean isHorizontal) {
-        this(isHorizontal, (Component<?>[]) null);
-    }
-
-    public Layout(Component<?>... children) {
-        this(false, children);
-    }
-
-    public Layout(boolean isHorizontal, Component<?>... children) {
         super("ly");
-        if (children != null) {
-            add(children);
-        }
         align(isHorizontal);
     }
 

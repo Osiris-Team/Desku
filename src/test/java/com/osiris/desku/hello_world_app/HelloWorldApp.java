@@ -11,7 +11,7 @@ public class HelloWorldApp {
 
         // Create routes
         Route home = new MRoute("/", () -> {
-            return layout(text("Hello World!"));
+            return layout().add(text("Hello World!"));
         });
 
         // Create windows
