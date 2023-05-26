@@ -67,6 +67,8 @@ the `Statics` class.
 
 ### Documentation
 
+#### Frequently asked
+
 <div>
 <details>
 <summary>App.getCSS/getJS methods return null? Resources cannot be found?</summary>
@@ -178,7 +180,7 @@ want to support even more platforms make a pull-request with your implementation
 
 <div>
 <details>
-<summary>Method chaining not possible / fallback to super class. What to do?</summary>
+<summary>Extending another component? Method chaining not possible / fallback to super class. What to do?</summary>
 
 The problem in more detail:
 ```java
@@ -221,6 +223,30 @@ public class B extends Component<B>{ // Instead of extending A
     }
 }
 ```
+
+</details>
+
+</div>
+
+#### Other
+
+<div>
+<details>
+<summary>Persistent storage/data? Databases/SQL?</summary>
+
+I find it easiest to use [jSQL-Gen](https://github.com/Osiris-Team/jSQL-Gen)
+(also developed by me),
+which generates the Java source code that is needed to interact
+with your database and solve this issue in a low-code fashion.
+Note that your database can be integrated in your app / exist on the client directly
+(via [mariaBD4J](https://github.com/MariaDB4j/MariaDB4j) for example)
+or hosted by yourself on your server.
+
+(TODO) If you want to store data in the local storage of the clients' browser/webview,
+you can use ui.localStorage which 
+is the Java implementation of [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+Note that the data here is specific to a window/UI/Route, which means that its not shared
+across them.
 
 </details>
 
