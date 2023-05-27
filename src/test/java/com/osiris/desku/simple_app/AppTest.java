@@ -8,7 +8,7 @@ class AppTest {
 
     public static void main(String[] args) throws Exception {
         // Setup details
-        App.init(new DesktopUIManager(false));
+        App.init(new DesktopUIManager());
         App.name = "My-App";
         // before loading the page
 
@@ -18,7 +18,6 @@ class AppTest {
 
         // Create windows
         DesktopUI winHome = (DesktopUI) App.uis.create(home);
-        winHome.openDevTools();
         //new NativeWindow(about).plusX(20).plusY(20);
 
         // Exit main thread once all windows closed

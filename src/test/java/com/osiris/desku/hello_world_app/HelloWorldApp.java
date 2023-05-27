@@ -6,7 +6,7 @@ import static com.osiris.desku.Statics.*;
 public class HelloWorldApp {
     public static void main(String[] args) throws Exception {
         // Setup app details
-        App.init(new DesktopUIManager(false));
+        App.init(new DesktopUIManager());
         App.name = "My-App";
 
         // Create routes

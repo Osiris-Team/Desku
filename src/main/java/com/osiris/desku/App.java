@@ -4,7 +4,7 @@ import com.osiris.desku.ui.Theme;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
 import org.apache.commons.io.FileUtils;
-import org.cef.OS;
+import org.jline.utils.OSUtils;
 
 import java.awt.*;
 import java.io.File;
@@ -86,8 +86,6 @@ public class App {
                 AL.mirrorSystemStreams(new File(workingDir + "/mirror-out.log"), new File(workingDir + "/mirror-err.log"));
             }
             AL.info("Starting application...");
-            if (uiManager instanceof DesktopUIManager)
-                AL.info("isOffscreenRendering = " + ((DesktopUIManager) uiManager).isOffscreenRendering);
             AL.info("workingDir = " + workingDir);
             AL.info("tempDir = " + tempDir);
             AL.info("userDir = " + userDir);
@@ -157,8 +155,8 @@ public class App {
         String classpath = System.getProperty("java.class.path");
         Exception e = null;
         try {
-            if (OS.isWindows()) fullPath = fullPath.replace("/", "\\");
-            String[] dirs = OS.isWindows() ? classpath.split(";") : classpath.split(":");
+            if (OSUtils.IS_WINDOWS) fullPath = fullPath.replace("/", "\\");
+            String[] dirs = OSUtils.IS_WINDOWS ? classpath.split(";") : classpath.split(":");
             for (String _dir : dirs) {
                 File dir = new File(_dir);
                 Iterator<File> it = FileUtils.iterateFiles(dir, null, true);
@@ -212,8 +210,8 @@ public class App {
         String classpath = System.getProperty("java.class.path");
         Exception e = null;
         try {
-            if (OS.isWindows()) fullPath = fullPath.replace("/", "\\");
-            String[] dirs = OS.isWindows() ? classpath.split(";") : classpath.split(":");
+            if (OSUtils.IS_WINDOWS) fullPath = fullPath.replace("/", "\\");
+            String[] dirs = OSUtils.IS_WINDOWS ? classpath.split(";") : classpath.split(":");
             for (String _dir : dirs) {
                 File dir = new File(_dir);
                 Iterator<File> it = FileUtils.iterateFiles(dir, null, true);

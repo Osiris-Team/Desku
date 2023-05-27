@@ -1,6 +1,6 @@
 # Desku [![](https://jitpack.io/v/Osiris-Team/Desku.svg)](https://jitpack.io/#Osiris-Team/Desku)
 Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
-[Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
+[Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
 ```java
 import static com.osiris.desku.Statics; // Low-code Java UI via static methods
@@ -35,6 +35,7 @@ bindings, thus making simple/complex layout creation faster and easier than ever
 - You decide! Code your UI in Java or directly in HTML/CSS, or both!
 - Focus on method-chaining and low-code (check out the Statics class).
 - Update the UI asynchronously hassle-free.
+- Contains cross-platform desktop WebView implementation.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
@@ -48,7 +49,6 @@ way, its pretty easy to create a Desku-Extension:
 - Serializable UI.
 - Navigation between UIs/windows.
 - Default components suit similar to https://vaadin.com/docs/latest/components.
-- JavaFX WebView instead of JCEF to reduce startup time and disk size of the app?
 
 ### Contributing
 Contributions are welcome! Especially HTML5 component integrations, aka
@@ -162,7 +162,7 @@ call `component.updateAll()` before retrieving the HTML.
 
 UI and UIManager are both abstract classes that can be extended.
 Desku already provides implementations (DesktopUI and DesktopUIManager)
-via JCEF to be able to run on Desktop platforms like Windows, Linux and Mac.
+via WebView to be able to run on Desktop platforms like Windows, Linux and Mac.
 
 The Desku-Starter-App contains implementations for Android and iOS. If you
 want to support even more platforms make a pull-request with your implementation!

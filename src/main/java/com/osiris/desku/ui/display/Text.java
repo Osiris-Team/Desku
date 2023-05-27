@@ -35,8 +35,8 @@ public class Text extends Component<Text> {
             });
         };
         if (!win.isLoading.get()) registration.run();
-        else win.onLoadStateChanged.addAction((action, event) -> {
-            if (event.isLoading) return;
+        else win.onLoadStateChanged.addAction((action, isLoading) -> {
+            if (isLoading) return;
             action.remove();
             registration.run();
         }, AL::warn);

@@ -171,8 +171,8 @@ public class Component<T> {
             });
         };
         if (!win.isLoading.get()) registration.run();
-        else win.onLoadStateChanged.addAction((action, event) -> {
-            if (event.isLoading) return;
+        else win.onLoadStateChanged.addAction((action, isLoading) -> {
+            if (isLoading) return;
             action.remove();
             registration.run();
         }, AL::warn);
@@ -231,7 +231,7 @@ public class Component<T> {
      */
     public T laterWithOverlay(BiConsumer<T, Overlay> code) {
         later(_this -> {
-            Overlay overlay = (Overlay) new Overlay(this)
+            Overlay overlay = new Overlay(this)
                     .childCenter().putStyle("background", "rgba(0,0,0,0.3)")
                     .sizeFull();
             add(overlay);

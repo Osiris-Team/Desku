@@ -1,6 +1,5 @@
 package com.osiris.desku;
 
-import com.osiris.desku.swing.events.LoadStateChange;
 import com.osiris.desku.ui.Component;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
@@ -32,7 +31,7 @@ public abstract class UI {
     /**
      * Relevant when wanting HTML load state, since we cant run JavaScript before the page is fully loaded.
      */
-    public final Event<LoadStateChange> onLoadStateChanged = new Event<>();
+    public final Event<Boolean> onLoadStateChanged = new Event<>();
     /**
      * Last loaded html.
      */
@@ -58,9 +57,9 @@ public abstract class UI {
 
         this.route = route;
         this.content = route.loadContent();
-        onLoadStateChanged.addAction((e) -> {
-            if (e.isLoading) return;
-            isLoading.set(false);
+        onLoadStateChanged.addAction((isLoading) -> {
+            if (isLoading) return;
+            this.isLoading.set(false);
         });
 
         current = null;
@@ -339,8 +338,8 @@ public abstract class UI {
                 "});\n";
 
         if (!isLoading.get()) executeJavaScript(jsNow, "internal", 0);
-        else onLoadStateChanged.addAction((action, event) -> {
-            if (event.isLoading) return;
+        else onLoadStateChanged.addAction((action, isLoading) -> {
+            if (isLoading) return;
             action.remove();
             executeJavaScript(jsNow, "internal", 0);
         }, AL::warn);

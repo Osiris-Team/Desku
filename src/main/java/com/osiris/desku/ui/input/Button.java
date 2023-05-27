@@ -6,8 +6,8 @@ import com.osiris.desku.ui.display.Text;
 
 public class Button extends Component<Button> {
 
-    static{
-        try{
+    static {
+        try {
             App.appendToGlobalStyles(App.getCSS(Button.class));
         } catch (Exception e) {
             throw new RuntimeException(e);
