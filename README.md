@@ -17,7 +17,7 @@ public class Main {
         });
 
         // Create and show windows
-        new DesktopUI(home);
+        UIManager.create(home);
     }
 }
 ```
