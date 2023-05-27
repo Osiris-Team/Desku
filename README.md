@@ -35,7 +35,8 @@ bindings, thus making simple/complex layout creation faster and easier than ever
 - You decide! Code your UI in Java or directly in HTML/CSS, or both!
 - Focus on method-chaining and low-code (check out the Statics class).
 - Update the UI asynchronously hassle-free.
-- Contains cross-platform desktop WebView implementation.
+- Contains cross-platform desktop WebView implementation already. 
+Android and iOS implementations are provided in the starter repo.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
