@@ -107,12 +107,10 @@ public class DesktopUI extends UI {
             // (7) To take care of shutting down CEF accordingly, it's important to call
             //     the method "dispose()" of the CefApp instance if the Java
             //     application will be closed. Otherwise you'll get asserts from CEF.
-            DesktopUI _this = this;
             onscreenFrame.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    UIManager.all.remove(_this);
-                    onscreenFrame.dispose();
+                    close();
                 }
             });
         }
@@ -123,7 +121,9 @@ public class DesktopUI extends UI {
     @Override
     public void close() {
         browser.doClose();
+        onscreenFrame.dispose();
         super.close();
+        if(UIManager.all.isEmpty()) System.exit(0);
     }
 
     /**
