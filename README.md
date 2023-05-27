@@ -8,7 +8,7 @@ import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 public class Main {
     public static void main(String[] args) throws IOException, UnsupportedPlatformException, CefInitializationException, InterruptedException {
         // Setup app details
-        App.init(new DesktopUIManager(false));
+        App.init(new DesktopUIManager());
         App.name = "My-App";
 
         // Create routes
