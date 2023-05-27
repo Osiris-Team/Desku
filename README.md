@@ -2,10 +2,6 @@
 Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 8 or higher required).
 
-<p align="center">
-  <img src="https://github.com/Osiris-Team/Desku/blob/main/docs/desku_banner.png?raw=true" alt=""/>
-</p>
-
 ```java
 import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 
@@ -251,3 +247,9 @@ across them.
 </details>
 
 </div>
+
+  
+  
+<p align="center">
+  <img src="https://github.com/Osiris-Team/Desku/blob/main/docs/desku_banner.png?raw=true" alt=""/>
+</p>
