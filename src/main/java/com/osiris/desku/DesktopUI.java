@@ -65,7 +65,6 @@ public class DesktopUI extends UI {
                     "      });\n" +
                     "    });");
             wv.bind("tellJavaThatIsLoaded", e -> {
-                System.err.println("AAAAAAAA");
                 onLoadStateChanged.execute(false); // stopped loading
                 return null;
             });

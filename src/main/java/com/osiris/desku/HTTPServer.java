@@ -64,7 +64,14 @@ public class HTTPServer {
         try {
             String mimeType = Files.probeContentType(file.toPath());
             if (mimeType.contains("text")) {
-                r = newFixedLengthResponse(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8));
+                String txt = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+                if(file.getName().equals(App.javascript.getName())){
+                    // Make sure script is only ran when document finished loading
+                    txt = "document.addEventListener(\"DOMContentLoaded\", () => {\n" +
+                            txt+
+                            "});";
+                }
+                r = newFixedLengthResponse(txt);
                 r.setMimeType(mimeType);
             } else {
                 byte[] bytes = Files.readAllBytes(file.toPath());
