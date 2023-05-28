@@ -64,32 +64,9 @@ the `Statics` class.
 
 ### Documentation
 
-#### Frequently asked
+#### User interface
 
 <div>
-<details>
-<summary>App.getCSS/getJS methods return null? Resources cannot be found?</summary>
-
-By default, build tools will remove anything that is not a .java source file,
-thus your .css/.js or any other files will not be included in the final binary.
-Here is how you can fix this in Gradle, simply append the below to your `build.gradle` file:
-```groovy
-// Ensure that everything other than classes/.java files are also included in the final jar
-// This should also be included in your project if you want to easily load resources.
-sourceSets {
-    main {
-        resources {
-            srcDirs = ["src/main/java", "src/main/resources"]
-            include '**/*' // Include everything (no .java by default)
-        }
-
-    }
-}
-// This must also be included if you want to generate the sources jar without issues
-tasks.withType(Jar).configureEach { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
-```
-</details>
-
 
 <details>
 <summary>How to change the theme?</summary>
@@ -158,18 +135,6 @@ To make sure it equals the actual in memory representation
 call `component.updateAll()` before retrieving the HTML.
 </details>
 
-<details>
-<summary>How do I implement my own UI and UIManager? Why would I?</summary>
-
-UI and UIManager are both abstract classes that can be extended.
-Desku already provides implementations (DesktopUI and DesktopUIManager)
-via WebView to be able to run on Desktop platforms like Windows, Linux and Mac.
-
-The Desku-Starter-App contains implementations for Android and iOS. If you
-want to support even more platforms make a pull-request with your implementation!
-
-</details>
-
 
 </div>
 
@@ -228,6 +193,8 @@ public class B extends Component<B>{ // Instead of extending A
 #### Other
 
 <div>
+
+
 <details>
 <summary>Persistent storage/data? Databases/SQL?</summary>
 
@@ -246,6 +213,69 @@ Note that the data here is specific to a window/UI/Route, which means that its n
 across them.
 
 </details>
+
+
+<details>
+<summary>App.getCSS/getJS methods return null? Resources cannot be found?</summary>
+
+By default, build tools will remove anything that is not a .java source file,
+thus your .css/.js or any other files will not be included in the final binary.
+Here is how you can fix this in Gradle, simply append the below to your `build.gradle` file:
+```groovy
+// Ensure that everything other than classes/.java files are also included in the final jar
+// This should also be included in your project if you want to easily load resources.
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/java", "src/main/resources"]
+            include '**/*' // Include everything (no .java by default)
+        }
+
+    }
+}
+// This must also be included if you want to generate the sources jar without issues
+tasks.withType(Jar).configureEach { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
+```
+</details>
+
+
+
+
+<details>
+<summary>How do I implement my own UI and UIManager? Why would I?</summary>
+
+UI and UIManager are both abstract classes that can be extended.
+Desku already provides implementations (DesktopUI and DesktopUIManager)
+via WebView to be able to run on Desktop platforms like Windows, Linux and Mac.
+
+The Desku-Starter-App contains implementations for Android and iOS. If you
+want to support even more platforms make a pull-request with your implementation!
+
+</details>
+
+
+
+<details>
+<summary>Logging? Log cleanup?</summary>
+
+For logging, you can use the `AL` class and its static methods info/debug, warn and error.
+These are pre-formatted with ANSI colors, info is white, debug dark gray, warn yellow
+and error red. Colors are stripped when writing to files and the formatting is slightly different.
+
+You can pass Exceptions to warn and error. The stacktrace (plus all the causes) will then
+be displayed. Note that warn only shows the Exceptions' message in the console.
+The full stacktrace can only be seen in the log file, by default.
+
+When using error your app will exit in the next 10 seconds, thus you should 
+use it only if the occurred Exception is critical and hinders your app from
+running.
+
+This is part of the [jlib](https://github.com/Osiris-Team/jlib) library,
+which contains some more useful things you might want to check out.
+
+TODO: Remove older logs to save space on the users' device.
+</details>
+
 
 </div>
 
