@@ -32,12 +32,12 @@ public abstract class UI {
     /**
      * Last loaded html.
      */
-    public final Route route;
-    public final Component<?> content;
+    public Route route;
+    public Component<?> content;
     /**
      * Not thread safe, access inside synchronized block.
      */
-    public final HashMap<String, List<Component<?>>> listenersAndComps = new HashMap<>();
+    public HashMap<String, List<Component<?>>> listenersAndComps = new HashMap<>();
     public WSServer webSocketServer = null;
     public HTTPServer httpServer;
 
@@ -49,16 +49,8 @@ public abstract class UI {
         startHTTPServer();
         startWebSocketServer();
 
-        UI.set(this, Thread.currentThread());
-        this.route = route;
-        this.content = route.loadContent();
-        onLoadStateChanged.addAction((isLoading) -> {
-            if (isLoading) return;
-            this.isLoading.set(false);
-        });
-        UI.remove(Thread.currentThread());
+        //load(route.getClass()); // Done in HTTPServer
 
-        snapshotToTempFile();
         priv_init("http://" + App.domainName + ":" + httpServer.serverPort + (route.path.startsWith("/") ? "" : "/") + route.path, isTransparent, widthPercent, heightPercent);
         startWebSocketClient(webSocketServer.domain, webSocketServer.port);
     }
@@ -117,6 +109,41 @@ public abstract class UI {
      */
     public abstract void init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) throws Exception;
 
+    public void navigate(Class<? extends Route> routeClass){
+        // TODO
+    }
+
+    /**
+     * Note that this method is meant to be used internally. <br>
+     * Use {@link #navigate(Class)} instead if you want to send the
+     * user to another page.
+     */
+    public void load(Class<? extends Route> routeClass) throws IOException {
+        Route route = null;
+        for (Route r : App.routes) {
+            if (r.getClass().equals(routeClass)) {
+                route = r;
+                break;
+            }
+        }
+        if (route == null) { // Route was not registered
+            AL.warn("Failed to load page, since provided route '" + routeClass
+                    + "' was not registered, aka not added to App.routes!", new Exception());
+            return;
+        }
+        UI.set(this, Thread.currentThread());
+        this.isLoading.set(true);
+        this.route = route;
+        this.listenersAndComps.clear();
+        this.content = route.loadContent();
+        onLoadStateChanged.addAction((isLoading) -> {
+            if (isLoading) return;
+            this.isLoading.set(false);
+        });
+        snapshotToTempFile();
+        UI.remove(Thread.currentThread());
+    }
+
     private void priv_init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) {
         try {
             AL.info("Starting new window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
@@ -138,7 +165,7 @@ public abstract class UI {
         } catch (Exception e) {
         }
         try {
-            //TODOhttpServer.server.stop();
+            httpServer.server.stop();
             AL.info("Closed HTTPServer " + httpServer.serverDomain + ":" + httpServer.serverPort + " for UI: " + this);
         } catch (Exception e) {
         }
@@ -151,14 +178,22 @@ public abstract class UI {
      * Note that changes to it won't be reflected in the actual UI.
      */
     public Document getSnapshot() {
-        Document html = route.getDocument();
-        Element outlet = html.getElementById("outlet");
-        content.updateAll();
-        for (Node n : outlet.childNodes()) {
-            n.remove();
+        if(content.element.parent() == null){
+            // First load
+            Document html = route.getDocument();
+            Element outlet = html.getElementById("outlet");
+            content.updateAll();
+            for (Node n : outlet.childNodes()) {
+                n.remove();
+            }
+            outlet.appendChild(content.element);
+            return html;
+        } else{
+            content.updateAll();
+            Element html = content.element;
+            while((html = html.parent()) != null);
+            return (Document) html;
         }
-        outlet.appendChild(content.element);
-        return html;
     }
 
     /**

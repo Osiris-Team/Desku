@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Objects;
 
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
 
@@ -26,7 +27,23 @@ public class HTTPServer {
                 String path = session.getUri();
                 //super.doHandle(target, baseRequest, request, response);
                 String fileTarget = path;
-                if (!path.contains(".")) fileTarget += ".html";
+                if (!path.contains(".")) {
+                    fileTarget += ".html";
+                    for (Route route : App.routes) {
+                        if(Objects.equals(route.path, path)){
+                            try {
+                                ui.load(route.getClass());
+                            } catch (IOException e) {
+                                String err = "Critical error while loading content for " + path + ", error message: " + e.getMessage();
+                                String msg = "<html><body><h1>Error!</h1>\n";
+                                msg += "<p>" + err + "</p>";
+                                AL.warn(err);
+                                return sendHTMLString(msg + "</body></html>\n");
+                            }
+                            break;
+                        }
+                    }
+                }
                 AL.debug(this.getClass(), "Request: \"" + path + "\" aka file: \"" + fileTarget + "\" " + session.getMethod());
                 File f = new File(App.htmlDir + fileTarget);
                 if (!f.exists()) {

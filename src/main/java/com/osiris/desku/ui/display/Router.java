@@ -25,11 +25,11 @@ public class Router extends Component<Router> {
             }
         }
         if (route == null) { // Route was not registered
-            AL.warn("Route '" + routeClass + "' was not registered, aka not added to App.routes!", new Exception());
+            AL.warn("Failed to set href/link for this router, since provided route '" + routeClass
+                    + "' was not registered, aka not added to App.routes!", new Exception());
             return this;
         }
         putAttribute("href", route.path);
-        putAttribute("urmom", "cool");
         return this;
     }
 }
