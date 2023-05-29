@@ -32,7 +32,7 @@ public class HTTPServer {
                     for (Route route : App.routes) {
                         if(Objects.equals(route.path, path)){
                             try {
-                                ui.load(route.getClass());
+                                ui.z_internal_load(route.getClass());
                             } catch (IOException e) {
                                 String err = "Critical error while loading content for " + path + ", error message: " + e.getMessage();
                                 String msg = "<html><body><h1>Error!</h1>\n";

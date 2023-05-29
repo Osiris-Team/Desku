@@ -109,8 +109,25 @@ public abstract class UI {
      */
     public abstract void init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) throws Exception;
 
+    /**
+     * Executes JavaScript to navigate to another route. <br>
+     * Note that {@link #z_internal_load(Class)} will be called by {@link #httpServer}
+     * and thus the content of this UI modified.
+     */
     public void navigate(Class<? extends Route> routeClass){
-        // TODO
+        Route route = null;
+        for (Route r : App.routes) {
+            if (r.getClass().equals(routeClass)) {
+                route = r;
+                break;
+            }
+        }
+        if (route == null) { // Route was not registered
+            AL.warn("Failed to navigate to page, since provided route '" + routeClass
+                    + "' was not registered, aka not added to App.routes!", new Exception());
+            return;
+        }
+        executeJavaScript("window.location.href = `"+route.path+"`;", "internal", 0);
     }
 
     /**
@@ -118,7 +135,7 @@ public abstract class UI {
      * Use {@link #navigate(Class)} instead if you want to send the
      * user to another page.
      */
-    public void load(Class<? extends Route> routeClass) throws IOException {
+    public void z_internal_load(Class<? extends Route> routeClass) throws IOException {
         Route route = null;
         for (Route r : App.routes) {
             if (r.getClass().equals(routeClass)) {
