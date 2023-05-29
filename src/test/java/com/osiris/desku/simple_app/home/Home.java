@@ -2,6 +2,7 @@ package com.osiris.desku.simple_app.home;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
+import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.display.RTable;
@@ -70,7 +71,7 @@ public class Home extends Route {
         }));
 
         //
-        // Layouts
+        // Layouts and Text
         //
         ly.vertical()
                 .add(text("Child vertical layout. Items: "))
@@ -92,6 +93,13 @@ public class Home extends Route {
                 .add(text("XLarge").sizeXL())
                 .add(text("XXLarge").sizeXXL())
                 .add(text("XXXLarge").sizeXXXL());
+
+        //
+        // Navigate between routes
+        //
+        ly.add(router().set(About.class).add(text("Go to About page!")));
+        ly.add(router().set("/about").add(text("Go to About page!")));
+        ly.add(router().set("https://google.com").add(text("Go to Google page!")));
 
         //
         // Overlays

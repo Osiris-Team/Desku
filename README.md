@@ -47,9 +47,10 @@ way, its pretty easy to create a Desku-Extension:
 3. Create a release and use JitPack or Maven to host the files.
 
 ### Todo
-- Serializable UI.
 - Navigation between UIs/windows.
 - Default components suit similar to https://vaadin.com/docs/latest/components.
+- Serializable UI, to restore state (on ice right now, since it seems
+to be more complicated than expected)
 
 ### Contributing
 Contributions are welcome! Especially HTML5 component integrations, aka

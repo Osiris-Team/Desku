@@ -65,10 +65,10 @@ public class HTTPServer {
             String mimeType = Files.probeContentType(file.toPath());
             if (mimeType.contains("text")) {
                 String txt = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
-                if(file.getName().equals(App.javascript.getName())){
+                if (file.getName().equals(App.javascript.getName())) {
                     // Make sure script is only ran when document finished loading
                     txt = "document.addEventListener(\"DOMContentLoaded\", () => {\n" +
-                            txt+
+                            txt +
                             "});";
                 }
                 r = newFixedLengthResponse(txt);

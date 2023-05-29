@@ -60,10 +60,27 @@ public class DesktopUI extends UI {
         browserDesktopUI = Webview.createAWT(true, (wv) -> {
             browser = wv;
 
-            wv.setInitScript("  document.addEventListener(\"DOMContentLoaded\", () => {\n" +
-                    "      window.tellJavaThatIsLoaded().then(result => {\n" +
+            wv.setInitScript("function waitForPageLoad() {\n" +
+                    "  return new Promise(function(resolve, reject) {\n" +
+                    "    if (document.readyState === 'complete') {\n" +
+                    "      // Page has already finished loading\n" +
+                    "      resolve();\n" +
+                    "    } else {\n" +
+                    "      // Page is still loading, listen for the readystatechange event\n" +
+                    "      document.addEventListener('readystatechange', function() {\n" +
+                    "        if (document.readyState === 'complete') {\n" +
+                    "          // Page has finished loading\n" +
+                    "          resolve();\n" +
+                    "        }\n" +
                     "      });\n" +
-                    "    });");
+                    "    }\n" +
+                    "  });\n" +
+                    "}\n" +
+                    "\n" +
+                    "waitForPageLoad().then(function() {\n" +
+                    "  console.log('Page finished loading.');\n" +
+                    "  window.tellJavaThatIsLoaded().then(result => {});\n" +
+                    "});\n");
             wv.bind("tellJavaThatIsLoaded", e -> {
                 onLoadStateChanged.execute(false); // stopped loading
                 return null;
@@ -103,7 +120,9 @@ public class DesktopUI extends UI {
         frame.setTitle(App.name);
         Swing.center(frame);
         frame.revalidate();
+        frame.setFocusable(true);
         frame.setVisible(true);
+        frame.requestFocus();
 
         // JavaScript cannot be executed before the page is loaded
         while (!isLoaded.get()) Thread.yield();

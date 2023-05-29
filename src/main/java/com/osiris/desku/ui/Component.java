@@ -7,7 +7,6 @@ import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
-import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Element;
 
@@ -57,6 +56,11 @@ public class Component<T> {
      */
     public final Event<Attribute> onStyleChanged = new Event<>();
     /**
+     * Executed when a attribute change was made on the Java side. <br>
+     * Note that style changes are handled by {@link #onStyleChanged}. <br>
+     */
+    public final Event<Attribute> onAttributeChanged = new Event<>();
+    /**
      * Do not add actions via this variable, use {@link #onClick(Consumer)} instead.
      */
     public final Event<ClickEvent> _onClick = new Event<>();
@@ -80,102 +84,107 @@ public class Component<T> {
      */
     public Element element;
     public Consumer<AddedChildEvent> _add = (e) -> {
-        if (e.otherChildComp == null) {
+        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
+        if (e.otherChildComp == null) { // add
             children.add(e.childComp);
+            e.childComp.update();
+            element.appendChild(e.childComp.element);
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("parentComp", id) +
+                                "var tempDiv = document.createElement('div');\n" +
+                                "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
+                                "parentComp.appendChild(tempDiv.firstChild);\n",
+                        "internal", 0);
             onAddedChild.execute(e);
         } else if (e.isInsert) {
             int iOtherComp = children.indexOf(e.otherChildComp);
             children.set(iOtherComp, e.childComp);
+            e.childComp.update();
+            element.insertChildren(iOtherComp, e.childComp.element);
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("parentComp", id) +
+                                ui.jsGetComp("otherChildComp", e.otherChildComp.id) +
+                                "var tempDiv = document.createElement('div');\n" +
+                                "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
+                                "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
+                        "internal", 0);
             onAddedChild.execute(e);
         } else if (e.isReplace) {
             int iOtherComp = children.indexOf(e.otherChildComp);
             children.set(iOtherComp, e.childComp);
+            e.childComp.update();
+            element.insertChildren(iOtherComp, e.childComp.element);
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("parentComp", id) +
+                                ui.jsGetComp("otherChildComp", e.otherChildComp.id) +
+                                "var tempDiv = document.createElement('div');\n" +
+                                "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
+                                "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
+                        "internal", 0);
             onAddedChild.execute(e);
             onRemovedChild.execute(e.otherChildComp); // Removes from children, (node) children, and actual UI
         }
     };
     public Consumer<Component<?>> _remove = child -> {
+        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (children.contains(child)) {
+            children.remove(child);
+            child.update();
+            child.element.remove();
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("comp", id) +
+                                ui.jsGetComp("childComp", child.id) +
+                                "comp.removeChild(childComp);\n",
+                        "internal", 0);
             onRemovedChild.execute(child);
         }
+    };
+    public Consumer<Attribute> _styleChange = attribute -> {
+        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
+        if (attribute.getValue().isEmpty()) { // Remove style
+            style.remove(attribute.getKey());
+            String style = element.hasAttr("style") ? element.attributes().get("style") : "";
+            int iKeyFirstChar = style.indexOf(attribute.getKey());
+            if (iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
+            style = style.substring(0, iKeyFirstChar) + style.substring(style.indexOf(";", iKeyFirstChar) + 1);
+            element.attr("style", style); // Change in-memory representation
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                "comp.style." + attribute.getKey() + " = ``;\n",
+                        "internal", 0);
+        } else { // Add or change style
+            style.put(attribute.getKey(), attribute.getValue());
+            String style = element.hasAttr("style") ? element.attributes().get("style") : "";
+            style += attribute.getKey() + ": " + attribute.getValue() + ";";
+            element.attr("style", style); // Change in-memory representation
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                "comp.style." + attribute.getKey() + " = `" + attribute.getValue() + "`;\n",
+                        "internal", 0);
+        }
+        onStyleChanged.execute(attribute);
+    };
+    public Consumer<Attribute> _attributeChange = attribute -> {
+        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
+        if (attribute.getValue().isEmpty()) { // Remove attribute
+            element.removeAttr(attribute.getKey()); // Change in-memory representation
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                "comp." + attribute.getKey() + " = ``;\n",
+                        "internal", 0);
+        } else { // Add or change attribute
+            element.attr(attribute.getKey(), attribute.getValue()); // Change in-memory representation
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                "comp." + attribute.getKey() + " = `" + attribute.getValue() + "`;\n",
+                        "internal", 0);
+        }
+        onAttributeChanged.execute(attribute);
     };
 
     public Component(String tag) {
         this.element = new Element(tag);
         element.attr("java-id", String.valueOf(id));
-        // Attach Java event listeners
-        UI win = UI.get();
-        Runnable registration = () -> {
-            onAddedChild.addAction((e) -> { // event
-                if (e.otherChildComp == null) {
-                    children.add(e.childComp);
-                    e.childComp.update();
-                    element.appendChild(e.childComp.element);
-                    win.executeJavaScript(win.jsGetComp("parentComp", id) +
-                                    "var tempDiv = document.createElement('div');\n" +
-                                    "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
-                                    "parentComp.appendChild(tempDiv.firstChild);\n",
-                            "internal", 0);
-                } else if (e.isInsert) {
-                    int iOtherComp = children.indexOf(e.otherChildComp);
-                    children.set(iOtherComp, e.childComp);
-                    e.childComp.update();
-                    element.insertChildren(iOtherComp, e.childComp.element);
-                    win.executeJavaScript(win.jsGetComp("parentComp", id) +
-                                    win.jsGetComp("otherChildComp", e.otherChildComp.id) +
-                                    "var tempDiv = document.createElement('div');\n" +
-                                    "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
-                                    "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
-                            "internal", 0);
-                } else if (e.isReplace) {
-                    int iOtherComp = children.indexOf(e.otherChildComp);
-                    children.set(iOtherComp, e.childComp);
-                    e.childComp.update();
-                    element.insertChildren(iOtherComp, e.childComp.element);
-                    win.executeJavaScript(win.jsGetComp("parentComp", id) +
-                                    win.jsGetComp("otherChildComp", e.otherChildComp.id) +
-                                    "var tempDiv = document.createElement('div');\n" +
-                                    "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
-                                    "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
-                            "internal", 0);
-                    onRemovedChild.execute(e.otherChildComp); // Removes from children, (node) children, and actual UI
-                }
-            });
-            onRemovedChild.addAction((childComp) -> {
-                children.remove(childComp);
-                childComp.update();
-                childComp.element.remove();
-                win.executeJavaScript(win.jsGetComp("comp", id) +
-                                win.jsGetComp("childComp", childComp.id) +
-                                "comp.removeChild(childComp);\n",
-                        "internal", 0);
-            });
-            onStyleChanged.addAction((attribute) -> {
-                if (attribute.getValue().isEmpty()) { // Remove style
-                    String style = element.hasAttr("style") ? element.attributes().get("style") : "";
-                    int iKeyFirstChar = style.indexOf(attribute.getKey());
-                    if (iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
-                    style = style.substring(0, iKeyFirstChar) + style.substring(style.indexOf(";", iKeyFirstChar) + 1);
-                    element.attr("style", style); // Change in-memory representation
-                    win.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.style." + attribute.getKey() + " = ``;\n",
-                            "internal", 0);
-                } else { // Add style
-                    String style = element.hasAttr("style") ? element.attributes().get("style") : "";
-                    style += attribute.getKey() + ": " + attribute.getValue() + ";";
-                    element.attr("style", style); // Change in-memory representation
-                    win.executeJavaScript(win.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.style." + attribute.getKey() + " = `" + attribute.getValue() + "`;\n",
-                            "internal", 0);
-                }
-            });
-        };
-        if (!win.isLoading.get()) registration.run();
-        else win.onLoadStateChanged.addAction((action, isLoading) -> {
-            if (isLoading) return;
-            action.remove();
-            registration.run();
-        }, AL::warn);
     }
 
     private static ArrayList<Component<?>> toList(Iterable<Component<?>> comps) {
@@ -327,14 +336,22 @@ public class Component<T> {
     }
 
     public T putStyle(String key, String val) {
-        style.put(key, val);
-        onStyleChanged.execute(new Attribute(key, val));
+        _styleChange.accept(new Attribute(key, val));
         return _this;
     }
 
     public T removeStyle(String key) {
-        style.remove(key);
-        onStyleChanged.execute(new Attribute(key, ""));
+        _styleChange.accept(new Attribute(key, ""));
+        return _this;
+    }
+
+    public T putAttribute(String key, String val) {
+        _attributeChange.accept(new Attribute(key, val));
+        return _this;
+    }
+
+    public T removeAttribute(String key) {
+        _attributeChange.accept(new Attribute(key, ""));
         return _this;
     }
 
