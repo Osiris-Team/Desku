@@ -41,6 +41,14 @@ public class TextField extends Component<TextField> {
     }
 
     /**
+     * Triggers {@link #_onValueChange} event.
+     */
+    public TextField setValue(String s){
+        this.input.putAttribute("value", s);
+        return this;
+    }
+
+    /**
      * Adds a listener that gets executed when this component <br>
      * was clicked by the user (a JavaScript click event was thrown). <br>
      *
