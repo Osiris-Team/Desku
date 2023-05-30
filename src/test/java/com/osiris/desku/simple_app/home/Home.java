@@ -127,8 +127,8 @@ public class Home extends Route {
             System.out.println(s);
             e.comp.text.set(s);
         }));
-        ly.add(textfield().onValueChange(e -> {
-            System.out.println("Input of textfield changed: "+e.txt);
+        ly.add(textfield("Label", "Def").onValueChange(e -> {
+            System.out.println("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
         }));
 
         //
