@@ -114,7 +114,7 @@ public abstract class UI {
      * Note that {@link #z_internal_load(Class)} will be called by {@link #httpServer}
      * and thus the content of this UI modified.
      */
-    public void navigate(Class<? extends Route> routeClass){
+    public void navigate(Class<? extends Route> routeClass) {
         Route route = null;
         for (Route r : App.routes) {
             if (r.getClass().equals(routeClass)) {
@@ -127,7 +127,7 @@ public abstract class UI {
                     + "' was not registered, aka not added to App.routes!", new Exception());
             return;
         }
-        executeJavaScript("window.location.href = `"+route.path+"`;", "internal", 0);
+        executeJavaScript("window.location.href = `" + route.path + "`;", "internal", 0);
     }
 
     /**
@@ -195,7 +195,7 @@ public abstract class UI {
      * Note that changes to it won't be reflected in the actual UI.
      */
     public Document getSnapshot() {
-        if(content.element.parent() == null){
+        if (content.element.parent() == null) {
             // First load
             Document html = route.getDocument();
             Element outlet = html.getElementById("outlet");
@@ -205,10 +205,10 @@ public abstract class UI {
             }
             outlet.appendChild(content.element);
             return html;
-        } else{
+        } else {
             content.updateAll();
             Element html = content.element;
-            while((html = html.parent()) != null);
+            while ((html = html.parent()) != null) ;
             return (Document) html;
         }
     }
@@ -313,7 +313,7 @@ public abstract class UI {
      * @param onJSFunctionExecuted executed when the provided jsCode executes successfully. String contains the message variable that can be set in your jsCode.
      * @param onJSFunctionFailed   executed when the provided jsCode threw an exception. String contains details about the exception/error.
      */
-    public String addPermanentCallback(String jsCode, Consumer<String> onJSFunctionExecuted, Consumer<String> onJSFunctionFailed) {
+    public String jsAddPermanentCallback(String jsCode, Consumer<String> onJSFunctionExecuted, Consumer<String> onJSFunctionFailed) {
         // 1. execute js code
         // 2. execute callback in java with params from js code
         // 3. return success to js code and execute it
@@ -333,14 +333,25 @@ public abstract class UI {
     }
 
     /**
+     * @see #registerJSListener(String, Component, String, Consumer)
+     */
+    public <T extends Component> UI registerJSListener(String eventName, Component<T> comp, Consumer<String> onEvent) {
+        return registerJSListener(eventName, comp, "", onEvent);
+    }
+
+    /**
      * Registers this listener directly only if the page was loaded,
      * otherwise adds an action to {@link #onLoadStateChanged} to register the listener later.
      *
      * @param eventName name of the JavaScript event to listen for.
      * @param comp      component to register the listener on.
+     * @param jsOnEvent additional JavaScript code that is run when the event is triggered and has access
+     *                  to the variables:  <br>
+     *                  message: which is the string that is returned to Java and contains the event as json object. <br>
+     *                  event: which is the event object. <br>
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
-    public <T> UI registerJSListener(String eventName, Component<T> comp, Consumer<String> onEvent) {
+    public <T extends Component> UI registerJSListener(String eventName, Component<T> comp, String jsOnEvent, Consumer<String> onEvent) {
         synchronized (listenersAndComps) {
             List<Component<?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
@@ -353,21 +364,26 @@ public abstract class UI {
         }
         String jsNow = jsGetComp("comp", comp.id) +
                 "comp.addEventListener(\"" + eventName + "\", (event) => {\n" +
-                addPermanentCallback("function getObjProps(obj) {\n" +
-                                "  var s = '{';\n" +
+                jsAddPermanentCallback("function getObjProps(obj) {\n" +
+                                "  var json = '{';\n" +
                                 "  for (const key in obj) {\n" +
                                 "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
-                                "      s += (`\"${key}\": \"${obj[key]}\",`);\n" +
+                                "      json += (`\"${key}\": \"${obj[key]}\",`);\n" +
                                 "    }\n" +
                                 "  }\n" +
-                                "  if(s[s.length-1] == ',') s = s.slice(0, s.length-1);" + // Remove last ,
-                                "  s += '}';\n" +
-                                "  return s;\n" +
+                                "  if(json[json.length-1] == ',') json = json.slice(0, json.length-1);" + // Remove last ,
+                                "  json += '}';\n" +
+                                "  return json;\n" +
                                 "}" +
-                                "message = getObjProps(event)\n",
+                                "message = getObjProps(event)\n" +
+                                jsOnEvent,
                         (message) -> {
                             access(() -> {
-                                onEvent.accept(message); // Should execute all listeners
+                                try {
+                                    onEvent.accept(message); // Should execute all listeners
+                                } catch (Exception e) {
+                                    AL.warn(e);
+                                }
                             });
                         },
                         (error) -> {

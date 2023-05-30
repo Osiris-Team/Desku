@@ -3,6 +3,7 @@ package com.osiris.desku;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.*;
 import com.osiris.desku.ui.input.Button;
+import com.osiris.desku.ui.input.TextField;
 import com.osiris.desku.ui.layout.Layout;
 import com.osiris.desku.ui.layout.Overlay;
 
@@ -68,6 +69,13 @@ public class Statics {
      */
     static public Button button(String txt) {
         return new Button(txt);
+    }
+
+    /**
+     *
+     */
+    static public TextField textfield() {
+        return new TextField();
     }
 
     /**

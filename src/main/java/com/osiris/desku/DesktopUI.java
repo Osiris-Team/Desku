@@ -60,32 +60,25 @@ public class DesktopUI extends UI {
         browserDesktopUI = Webview.createAWT(true, (wv) -> {
             browser = wv;
 
-            wv.setInitScript("function waitForPageLoad() {\n" +
-                    "  return new Promise(function(resolve, reject) {\n" +
-                    "    if (document.readyState === 'complete') {\n" +
-                    "      // Page has already finished loading\n" +
-                    "      resolve();\n" +
-                    "    } else {\n" +
-                    "      // Page is still loading, listen for the readystatechange event\n" +
-                    "      document.addEventListener('readystatechange', function() {\n" +
-                    "        if (document.readyState === 'complete') {\n" +
-                    "          // Page has finished loading\n" +
-                    "          resolve();\n" +
-                    "        }\n" +
-                    "      });\n" +
-                    "    }\n" +
-                    "  });\n" +
-                    "}\n" +
-                    "\n" +
-                    "waitForPageLoad().then(function() {\n" +
-                    "  console.log('Page finished loading.');\n" +
-                    "  window.tellJavaThatIsLoaded().then(result => {});\n" +
-                    "});\n");
             wv.bind("tellJavaThatIsLoaded", e -> {
                 onLoadStateChanged.execute(false); // stopped loading
                 return null;
             });
             wv.loadURL(startURL);
+            wv.eval("const event = new Event(\"pageloaded\");\n" +
+                    "async function notifyOnPageLoad() {\n" +
+                    "  setTimeout(function() {  \n" +
+                    "    if (document.readyState === 'complete') {\n" +
+                    "        console.log('Page finished loading.');\n" +
+                    "        window.tellJavaThatIsLoaded().then(result => {});\n" +
+                    "        document.dispatchEvent(event);\n" +
+                    "    } else {\n" +
+                    "      notifyOnPageLoad();\n" +
+                    "    }\n" +
+                    "  }, 100) // 100ms\n" +
+                    "}\n" +
+                    "console.log('Waiting for page to finish loading...')\n" +
+                    "notifyOnPageLoad()\n");
 
             // Resize browser window too
             frame.addComponentListener(new ComponentAdapter() {

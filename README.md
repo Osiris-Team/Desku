@@ -215,6 +215,37 @@ across them.
 </details>
 
 
+
+
+<details>
+<summary>Logging? Log cleanup?</summary>
+
+For logging, you can use the `AL` class and its static methods info/debug, warn and error.
+These are pre-formatted with ANSI colors, info is white, debug dark gray,
+warn yellow and error red. Colors are stripped when writing to files and the formatting is slightly different.
+
+You can pass Exceptions to warn and error. The stacktrace (plus all the causes) will then
+be displayed. Note that warn only shows the Exceptions' message in the console.
+The full stacktrace can only be seen in the log file, by default.
+
+When using error your app will exit in the next 10 seconds, thus you should
+use it only if the occurred Exception is critical and hinders your app from
+running.
+
+Note that debug will only be shown in the log file by default, not the console.
+
+This is part of the [jlib](https://github.com/Osiris-Team/jlib) library,
+which contains some more useful things you might want to check out.
+
+TODO: Remove older logs to save space on the users' device.
+</details>
+
+
+</div>
+
+
+
+
 <details>
 <summary>App.getCSS/getJS methods return null? Resources cannot be found?</summary>
 
@@ -252,32 +283,6 @@ The Desku-Starter-App contains implementations for Android and iOS. If you
 want to support even more platforms make a pull-request with your implementation!
 
 </details>
-
-
-
-<details>
-<summary>Logging? Log cleanup?</summary>
-
-For logging, you can use the `AL` class and its static methods info/debug, warn and error.
-These are pre-formatted with ANSI colors, info is white, debug dark gray, warn yellow
-and error red. Colors are stripped when writing to files and the formatting is slightly different.
-
-You can pass Exceptions to warn and error. The stacktrace (plus all the causes) will then
-be displayed. Note that warn only shows the Exceptions' message in the console.
-The full stacktrace can only be seen in the log file, by default.
-
-When using error your app will exit in the next 10 seconds, thus you should 
-use it only if the occurred Exception is critical and hinders your app from
-running.
-
-This is part of the [jlib](https://github.com/Osiris-Team/jlib) library,
-which contains some more useful things you might want to check out.
-
-TODO: Remove older logs to save space on the users' device.
-</details>
-
-
-</div>
 
   
   

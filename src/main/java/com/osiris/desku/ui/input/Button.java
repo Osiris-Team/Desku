@@ -20,6 +20,6 @@ public class Button extends Component<Button> {
         super("button");
         add(text);
         text.set(txt);
-        element.addClass("btn");
+        putAttribute("class", "btn");
     }
 }

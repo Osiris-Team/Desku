@@ -30,7 +30,7 @@ public class HTTPServer {
                 if (!path.contains(".")) {
                     fileTarget += ".html";
                     for (Route route : App.routes) {
-                        if(Objects.equals(route.path, path)){
+                        if (Objects.equals(route.path, path)) {
                             try {
                                 ui.z_internal_load(route.getClass());
                             } catch (IOException e) {
@@ -84,9 +84,9 @@ public class HTTPServer {
                 String txt = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
                 if (file.getName().equals(App.javascript.getName())) {
                     // Make sure script is only ran when document finished loading
-                    txt = "document.addEventListener(\"DOMContentLoaded\", () => {\n" +
+                    txt = "document.addEventListener(\"pageloaded\", () => {\n" +
                             txt +
-                            "});";
+                            "});\n";
                 }
                 r = newFixedLengthResponse(txt);
                 r.setMimeType(mimeType);

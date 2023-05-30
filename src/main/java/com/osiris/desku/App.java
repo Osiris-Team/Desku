@@ -39,14 +39,14 @@ public class App {
      * Port for the WebSocket server which is used for fast communication between Java and JavaScript. <br>
      * If -1 port is determined automatically. <br>
      *
-     * @see UI#addPermanentCallback(String, Consumer, Consumer)
+     * @see UI#jsAddPermanentCallback(String, Consumer, Consumer)
      */
     public static int webSocketServerPort = -1;
     /**
      * Port for the HTTP server which is used to provide HTML and its assets. <br>
      * If -1 port is determined automatically. <br>
      *
-     * @see UI#addPermanentCallback(String, Consumer, Consumer)
+     * @see UI#jsAddPermanentCallback(String, Consumer, Consumer)
      */
     public static int httpServerPort = -1;
 

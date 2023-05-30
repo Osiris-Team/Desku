@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class Component<T> {
+public class Component<T extends Component> {
     private static final AtomicInteger idCounter = new AtomicInteger();
 
     static {
