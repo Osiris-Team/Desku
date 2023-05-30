@@ -89,6 +89,12 @@ public class Statics {
 
     /**
      */
+    static public TextField textfield(String label) {
+        return new TextField(label);
+    }
+
+    /**
+     */
     static public TextField textfield(String label, String defaultValue) {
         return new TextField(label, defaultValue);
     }
