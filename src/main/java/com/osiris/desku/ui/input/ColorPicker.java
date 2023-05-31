@@ -8,29 +8,29 @@ import com.osiris.events.Event;
 
 import java.util.function.Consumer;
 
-public class TextField extends Component<TextField> {
+public class ColorPicker extends Component<ColorPicker> {
 
     // Layout
     public Text label;
-    public Input input = new Input("text");
+    public Input input = new Input("color");
 
     // Events
-    public Event<TextChangeEvent<TextField>> _onValueChange = new Event<>();
+    public Event<TextChangeEvent<ColorPicker>> _onValueChange = new Event<>();
 
-    public TextField() {
-        this("", "");
+    public ColorPicker() {
+        this("", "#000000");
     }
 
-    public TextField(String label) {
-        this(label, "");
+    public ColorPicker(String label) {
+        this(label, "#000000");
     }
 
-    public TextField(String label, String defaultValue) {
+    public ColorPicker(String label, String defaultValue) {
         this(new Text(label).sizeXS(), defaultValue);
     }
 
-    public TextField(Text label, String defaultValue) {
-        addClass("textfield");
+    public ColorPicker(Text label, String defaultValue) {
+        addClass("colorpicker");
         this.label = label;
         add(this.label, this.input);
         this.input.putAttribute("value", defaultValue);
@@ -43,8 +43,8 @@ public class TextField extends Component<TextField> {
     /**
      * Triggers {@link #_onValueChange} event.
      */
-    public TextField setValue(String s) {
-        this.input.putAttribute("value", s);
+    public ColorPicker setValue(String val) {
+        this.input.putAttribute("value", val);
         return this;
     }
 
@@ -54,11 +54,11 @@ public class TextField extends Component<TextField> {
      *
      * @see UI#registerJSListener(String, Component, String, Consumer)
      */
-    public TextField onValueChange(Consumer<TextChangeEvent<TextField>> code) {
+    public ColorPicker onValueChange(Consumer<TextChangeEvent<ColorPicker>> code) {
         _onValueChange.addAction((event) -> code.accept(event));
         UI.get().registerJSListener("input", input, "message = `{\"newValue\": \"` + event.target.value + `\", \"eventAsJson\":` + message + `}`;\n",
                 (msg) -> {
-                    TextChangeEvent<TextField> e = new TextChangeEvent<>(msg, this, input.element.attr("value"));
+                    TextChangeEvent<ColorPicker> e = new TextChangeEvent<>(msg, this, input.element.attr("value"));
                     input.element.attr("value", e.value); // Change in memory value, without triggering another change event
                     _onValueChange.execute(e); // Executes all listeners
                 });

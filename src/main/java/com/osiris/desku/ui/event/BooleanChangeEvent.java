@@ -1,18 +1,18 @@
 package com.osiris.desku.ui.event;
 
 
-public class TextChangeEvent<T> extends JavaScriptEvent<T> {
-    public final String value;
-    public final String valueBefore;
+public class BooleanChangeEvent<T> extends JavaScriptEvent<T> {
+    public final boolean value;
+    public final boolean valueBefore;
 
     /**
      * @param rawJSMessage expected in this format: <br>
      *                     {"newValue": "...", "eventAsJson": {...}}
      * @param comp
      */
-    public TextChangeEvent(String rawJSMessage, T comp, String valueBefore) {
+    public BooleanChangeEvent(String rawJSMessage, T comp, boolean valueBefore) {
         super(rawJSMessage, comp);
-        this.value = jsMessage.get("newValue").getAsString();
+        this.value = jsMessage.get("newValue").getAsBoolean();
         this.valueBefore = valueBefore;
     }
 

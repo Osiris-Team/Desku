@@ -182,6 +182,10 @@ public class Component<T extends Component> {
         onAttributeChanged.execute(attribute);
     };
 
+    public Component() {
+        this("c");
+    }
+
     public Component(String tag) {
         this.element = new Element(tag);
         element.attr("java-id", String.valueOf(id));
@@ -791,6 +795,16 @@ public class Component<T extends Component> {
      */
     public T childGapX(String s) {
         putStyle("column-gap", s);
+        return _this;
+    }
+
+    /**
+     * Adds a CSS class to this component.
+     */
+    public T addClass(String s){
+        String classes = element.attr("class");
+        classes += " "+s;
+        putAttribute("class", classes);
         return _this;
     }
 

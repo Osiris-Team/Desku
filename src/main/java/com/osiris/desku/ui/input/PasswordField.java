@@ -8,29 +8,29 @@ import com.osiris.events.Event;
 
 import java.util.function.Consumer;
 
-public class TextField extends Component<TextField> {
+public class PasswordField extends Component<PasswordField> {
 
     // Layout
     public Text label;
-    public Input input = new Input("text");
+    public Input input = new Input("password");
 
     // Events
-    public Event<TextChangeEvent<TextField>> _onValueChange = new Event<>();
+    public Event<TextChangeEvent<PasswordField>> _onValueChange = new Event<>();
 
-    public TextField() {
+    public PasswordField() {
         this("", "");
     }
 
-    public TextField(String label) {
+    public PasswordField(String label) {
         this(label, "");
     }
 
-    public TextField(String label, String defaultValue) {
+    public PasswordField(String label, String defaultValue) {
         this(new Text(label).sizeXS(), defaultValue);
     }
 
-    public TextField(Text label, String defaultValue) {
-        addClass("textfield");
+    public PasswordField(Text label, String defaultValue) {
+        addClass("passwordfield");
         this.label = label;
         add(this.label, this.input);
         this.input.putAttribute("value", defaultValue);
@@ -43,8 +43,8 @@ public class TextField extends Component<TextField> {
     /**
      * Triggers {@link #_onValueChange} event.
      */
-    public TextField setValue(String s) {
-        this.input.putAttribute("value", s);
+    public PasswordField setValue(String val) {
+        this.input.putAttribute("value", val);
         return this;
     }
 
@@ -54,11 +54,11 @@ public class TextField extends Component<TextField> {
      *
      * @see UI#registerJSListener(String, Component, String, Consumer)
      */
-    public TextField onValueChange(Consumer<TextChangeEvent<TextField>> code) {
+    public PasswordField onValueChange(Consumer<TextChangeEvent<PasswordField>> code) {
         _onValueChange.addAction((event) -> code.accept(event));
         UI.get().registerJSListener("input", input, "message = `{\"newValue\": \"` + event.target.value + `\", \"eventAsJson\":` + message + `}`;\n",
                 (msg) -> {
-                    TextChangeEvent<TextField> e = new TextChangeEvent<>(msg, this, input.element.attr("value"));
+                    TextChangeEvent<PasswordField> e = new TextChangeEvent<>(msg, this, input.element.attr("value"));
                     input.element.attr("value", e.value); // Change in memory value, without triggering another change event
                     _onValueChange.execute(e); // Executes all listeners
                 });

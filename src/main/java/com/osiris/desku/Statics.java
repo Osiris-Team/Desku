@@ -19,8 +19,15 @@ import com.osiris.desku.ui.display.Text;
 import com.osiris.events.Event;
 import org.jsoup.nodes.TextNode;
 import com.osiris.desku.ui.input.Button;
-import com.osiris.desku.ui.input.TextField;
+import com.osiris.desku.ui.input.CheckBox;
+import com.osiris.desku.ui.event.BooleanChangeEvent;
 import com.osiris.desku.ui.event.TextChangeEvent;
+import com.osiris.desku.ui.input.ColorPicker;
+import com.osiris.desku.ui.input.Input;
+import com.osiris.desku.ui.input.PasswordField;
+import com.osiris.desku.ui.input.Slider;
+import com.osiris.desku.ui.event.DoubleChangeEvent;
+import com.osiris.desku.ui.input.TextField;
 import com.osiris.desku.ui.layout.Layout;
 import com.osiris.desku.ui.layout.Overlay;
 
@@ -79,6 +86,108 @@ public class Statics {
      */
     static public Button button(String txt) {
         return new Button(txt);
+    }
+
+    /**
+     */
+    static public CheckBox checkbox() {
+        return new CheckBox();
+    }
+
+    /**
+     */
+    static public CheckBox checkbox(String label) {
+        return new CheckBox(label);
+    }
+
+    /**
+     */
+    static public CheckBox checkbox(String label, boolean defaultValue) {
+        return new CheckBox(label, defaultValue);
+    }
+
+    /**
+     */
+    static public CheckBox checkbox(Text label, boolean defaultValue) {
+        return new CheckBox(label, defaultValue);
+    }
+
+    /**
+     */
+    static public ColorPicker colorpicker() {
+        return new ColorPicker();
+    }
+
+    /**
+     */
+    static public ColorPicker colorpicker(String label) {
+        return new ColorPicker(label);
+    }
+
+    /**
+     */
+    static public ColorPicker colorpicker(String label, String defaultValue) {
+        return new ColorPicker(label, defaultValue);
+    }
+
+    /**
+     */
+    static public ColorPicker colorpicker(Text label, String defaultValue) {
+        return new ColorPicker(label, defaultValue);
+    }
+
+    /**
+     */
+    static public Input input(String type) {
+        return new Input(type);
+    }
+
+    /**
+     */
+    static public PasswordField passwordfield() {
+        return new PasswordField();
+    }
+
+    /**
+     */
+    static public PasswordField passwordfield(String label) {
+        return new PasswordField(label);
+    }
+
+    /**
+     */
+    static public PasswordField passwordfield(String label, String defaultValue) {
+        return new PasswordField(label, defaultValue);
+    }
+
+    /**
+     */
+    static public PasswordField passwordfield(Text label, String defaultValue) {
+        return new PasswordField(label, defaultValue);
+    }
+
+    /**
+     */
+    static public Slider slider() {
+        return new Slider();
+    }
+
+    /**
+     */
+    static public Slider slider(String label) {
+        return new Slider(label);
+    }
+
+    /**
+     */
+    static public Slider slider(String label, double defaultValue) {
+        return new Slider(label, defaultValue);
+    }
+
+    /**
+     */
+    static public Slider slider(Text label, double defaultValue, double minValue, double maxValue, double stepValue) {
+        return new Slider(label, defaultValue, minValue, maxValue, stepValue);
     }
 
     /**

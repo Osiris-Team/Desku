@@ -127,8 +127,20 @@ public class Home extends Route {
             System.out.println(s);
             e.comp.text.set(s);
         }));
-        ly.add(textfield("Label", "Def").onValueChange(e -> {
+        ly.add(textfield("TextField:", "Def").onValueChange(e -> {
             System.out.println("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
+        }));
+        ly.add(passwordfield("PasswordField:").onValueChange(e -> {
+            System.out.println("Input of passwordfield changed: "+e.value+" before: "+e.valueBefore);
+        }));
+        ly.add(checkbox("CheckBox:").onValueChange(e -> {
+            System.out.println("Input of checkbox changed: "+e.value+" before: "+e.valueBefore);
+        }));
+        ly.add(colorpicker("ColorPicker:").onValueChange(e -> {
+            System.out.println("Input of colorpicker changed: "+e.value+" before: "+e.valueBefore);
+        }));
+        ly.add(slider("Slider:").onValueChange(e -> {
+            System.out.println("Input of slider changed: "+e.value+" before: "+e.valueBefore);
         }));
 
         //
