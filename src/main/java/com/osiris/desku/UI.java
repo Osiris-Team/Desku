@@ -157,7 +157,6 @@ public abstract class UI {
             if (isLoading) return;
             this.isLoading.set(false);
         });
-        snapshotToTempFile();
         UI.remove(Thread.currentThread());
     }
 
@@ -198,11 +197,19 @@ public abstract class UI {
         if (content.element.parent() == null) {
             // First load
             Document html = route.getDocument();
+            // Append styles
+            Element elGlobalCSSLink = new Element("link");
+            elGlobalCSSLink.attr("rel", "stylesheet");
+            elGlobalCSSLink.attr("href", App.styles.getName());
+            html.getElementsByTag("head").get(0).appendChild(elGlobalCSSLink);
+
+            Element elGlobalJSLink = new Element("script");
+            elGlobalJSLink.attr("src", App.javascript.getName());
+            html.getElementsByTag("head").get(0).appendChild(elGlobalJSLink);
+
+            // Append actual content
             Element outlet = html.getElementById("outlet");
             content.updateAll();
-            for (Node n : outlet.childNodes()) {
-                n.remove();
-            }
             outlet.appendChild(content.element);
             return html;
         } else {
@@ -231,15 +238,6 @@ public abstract class UI {
     public File snapshotToTempFile(Document snapshot) throws IOException {
         File file = getSnapshotTempFile();
         if (snapshot == null) snapshot = getSnapshot();
-
-        Element elGlobalCSSLink = new Element("link");
-        elGlobalCSSLink.attr("rel", "stylesheet");
-        elGlobalCSSLink.attr("href", App.styles.getName());
-        snapshot.getElementsByTag("head").get(0).appendChild(elGlobalCSSLink);
-
-        Element elGlobalJSLink = new Element("script");
-        elGlobalJSLink.attr("src", App.javascript.getName());
-        snapshot.getElementsByTag("head").get(0).appendChild(elGlobalJSLink);
 
         // Write html to temp file
         AL.info("Generate: " + file);

@@ -17,7 +17,7 @@ public class VerticalLayout extends Component<VerticalLayout> {
             // You can also add a css file to the current classes' package/folder.
             // The file below is at "com/osiris/desku/VerticalLayout.css"
             //styles = App.getCSS(VerticalLayout.class);
-            App.appendToGlobalStyles(styles);
+            App.appendToGlobalCSS(styles);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

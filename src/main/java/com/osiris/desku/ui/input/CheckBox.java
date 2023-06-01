@@ -32,7 +32,8 @@ public class CheckBox extends Component<CheckBox> {
     public CheckBox(Text label, boolean defaultValue) {
         addClass("checkbox");
         this.label = label;
-        add(this.label, this.input);
+        add(this.input, this.label);
+        childGap(true);
         this.input.element.attr("checked", defaultValue); // TODO not sure if this also works in async
     }
 

@@ -29,10 +29,12 @@ public class HTTPServer {
                 String fileTarget = path;
                 if (!path.contains(".")) {
                     fileTarget += ".html";
+                    AL.debug(this.getClass(), "Request: \"" + path + "\"" + session.getMethod());
                     for (Route route : App.routes) {
                         if (Objects.equals(route.path, path)) {
                             try {
                                 ui.z_internal_load(route.getClass());
+                                return sendHTMLString(ui.getSnapshot().outerHtml());
                             } catch (IOException e) {
                                 String err = "Critical error while loading content for " + path + ", error message: " + e.getMessage();
                                 String msg = "<html><body><h1>Error!</h1>\n";
@@ -40,7 +42,6 @@ public class HTTPServer {
                                 AL.warn(err);
                                 return sendHTMLString(msg + "</body></html>\n");
                             }
-                            break;
                         }
                     }
                 }

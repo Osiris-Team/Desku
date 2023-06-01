@@ -26,7 +26,7 @@ public class Component<T extends Component> {
             String styles = "#outlet * {\n" +
                     "  display: flex;\n" +  // All children of outlet will be flex
                     "}\n";
-            App.appendToGlobalStyles(styles);
+            App.appendToGlobalCSS(styles);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -59,7 +59,7 @@ public class Component<T extends Component> {
      * Executed when a attribute change was made on the Java side. <br>
      * Note that style changes are handled by {@link #onStyleChanged}. <br>
      */
-    public final Event<Attribute> onAttributeChanged = new Event<>();
+    public final Event<AttributeChangeEvent> onAttributeChanged = new Event<>();
     /**
      * Do not add actions via this variable, use {@link #onClick(Consumer)} instead.
      */
@@ -164,22 +164,23 @@ public class Component<T extends Component> {
         }
         onStyleChanged.execute(attribute);
     };
-    public Consumer<Attribute> _attributeChange = attribute -> {
+    public Consumer<AttributeChangeEvent> _attributeChange = e -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
-        if (attribute.getValue().isEmpty()) { // Remove attribute
-            element.removeAttr(attribute.getKey()); // Change in-memory representation
+        if(e.isInsert){ // Add or change attribute
+            element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
             if (!ui.isLoading.get())
                 ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                "comp." + attribute.getKey() + " = ``;\n",
+                                "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`;\n",
                         "internal", 0);
-        } else { // Add or change attribute
-            element.attr(attribute.getKey(), attribute.getValue()); // Change in-memory representation
+
+        } else{// Remove attribute
+            element.removeAttr(e.attribute.getKey()); // Change in-memory representation
             if (!ui.isLoading.get())
                 ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                "comp." + attribute.getKey() + " = `" + attribute.getValue() + "`;\n",
+                                "comp.removeAttribute(`" + e.attribute.getKey() + "`);\n",
                         "internal", 0);
         }
-        onAttributeChanged.execute(attribute);
+        onAttributeChanged.execute(e);
     };
 
     public Component() {
@@ -349,13 +350,21 @@ public class Component<T extends Component> {
         return _this;
     }
 
+    /**
+     * Adds the attribute/key without its value.
+     */
+    public T putAttribute(String key) {
+        _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), true));
+        return _this;
+    }
+
     public T putAttribute(String key, String val) {
-        _attributeChange.accept(new Attribute(key, val));
+        _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, val), true));
         return _this;
     }
 
     public T removeAttribute(String key) {
-        _attributeChange.accept(new Attribute(key, ""));
+        _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), false));
         return _this;
     }
 
@@ -502,12 +511,6 @@ public class Component<T extends Component> {
     public T margin(boolean b) {
         if (b) putStyle("margin", "var(--space-s)");
         else removeStyle("margin");
-        return _this;
-    }
-
-    public T spacing(boolean b) {
-        if (b) putStyle("gap", "var(--space-s)");
-        else removeStyle("gap");
         return _this;
     }
 
@@ -773,6 +776,16 @@ public class Component<T extends Component> {
      * The gap property explicitly controls the space between flex items.
      * It applies that spacing only between items not on the outer edges.
      */
+    public T childGap(boolean b) {
+        if (b) putStyle("gap", "var(--space-s)");
+        else removeStyle("gap");
+        return _this;
+    }
+
+    /**
+     * The gap property explicitly controls the space between flex items.
+     * It applies that spacing only between items not on the outer edges.
+     */
     public T childGap(String s) {
         putStyle("gap", s);
         return _this;
@@ -809,6 +822,16 @@ public class Component<T extends Component> {
     }
 
     /**
+     * Removes a CSS class from this component.
+     */
+    public T removeClass(String s){
+        String classes = element.attr("class");
+        classes.replace(s, "");
+        putAttribute("class", classes);
+        return _this;
+    }
+
+    /**
      * Adds a listener that gets executed when this component <br>
      * was clicked by the user (a JavaScript click event was thrown). <br>
      *
@@ -826,6 +849,15 @@ public class Component<T extends Component> {
     //
     // Listeners
     //
+    public static class AttributeChangeEvent{
+        public final Attribute attribute;
+        public final boolean isInsert;
+
+        public AttributeChangeEvent(Attribute attribute, boolean isInsert) {
+            this.attribute = attribute;
+            this.isInsert = isInsert;
+        }
+    }
 
     public static class AddedChildEvent {
         /**

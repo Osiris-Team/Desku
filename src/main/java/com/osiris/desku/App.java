@@ -108,6 +108,10 @@ public class App {
             if (javascript.exists()) javascript.delete();
             javascript.createNewFile();
 
+            // Append Bootstrap v5.3.0
+            appendToGlobalCSS(getCSS(Bootstrap.class));
+            appendToGlobalJS(getJS(Bootstrap.class));
+
             AL.info("Started application successfully!");
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -244,7 +248,7 @@ public class App {
      *
      * @param s CSS code.
      */
-    public static void appendToGlobalStyles(String s) {
+    public static void appendToGlobalCSS(String s) {
         synchronized (styles) {
             try {
                 Files.write(styles.toPath(), s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);

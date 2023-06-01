@@ -33,6 +33,7 @@ public class ColorPicker extends Component<ColorPicker> {
         addClass("colorpicker");
         this.label = label;
         add(this.label, this.input);
+        childVertical();
         this.input.putAttribute("value", defaultValue);
     }
 

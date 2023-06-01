@@ -33,6 +33,7 @@ public class Slider extends Component<Slider> {
         addClass("slider");
         this.label = label;
         add(this.label, this.input);
+        childVertical();
         this.input.putAttribute("value", String.valueOf(defaultValue));
         this.input.putAttribute("min", String.valueOf(minValue));
         this.input.putAttribute("max", String.valueOf(maxValue));

@@ -33,6 +33,7 @@ public class TextField extends Component<TextField> {
         addClass("textfield");
         this.label = label;
         add(this.label, this.input);
+        childVertical();
         this.input.putAttribute("value", defaultValue);
     }
 

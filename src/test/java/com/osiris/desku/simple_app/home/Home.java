@@ -4,13 +4,11 @@ import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.ui.Component;
-import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.display.RTable;
 import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.input.Button;
 import com.osiris.desku.ui.layout.Layout;
-import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.jlib.logger.AL;
 
 import java.io.IOException;
@@ -22,7 +20,7 @@ import static com.osiris.desku.Statics.*;
 public class Home extends Route {
     static {
         try {
-            App.appendToGlobalStyles(App.getCSS(Home.class));
+            App.appendToGlobalCSS(App.getCSS(Home.class));
             App.appendToGlobalJS(App.getJS(Home.class));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -35,7 +33,7 @@ public class Home extends Route {
 
     @Override
     public Component<?> loadContent() {
-        Layout ly = layout().spacing(true).padding(true);
+        Layout ly = layout().childGap(true).padding(true);
         ly.horizontal().size("100%", "70vh").childCenter()
                 .add(text("Build Desktop Apps with Java, HTML and CSS today!")
                         .sizeXXL().selfCenter()
@@ -107,39 +105,44 @@ public class Home extends Route {
         ly.add(overlay(null).add(text("Overlay over the page")));
         ly.vertical().putStyle("background-color", "blue").size("100px", "100px").add(
                 overlay(ly.lastAdded).putStyle("background-color", "red")
-                        .add(text("Overlay over parent.")));
+                        .add(text("Overlay over another component.")));
 
         //
         // Inputs
         //
         AtomicInteger i = new AtomicInteger();
-        ly.horizontal().spacing(true).width("100%")
-                .add(button("This is a button!").grow(1).onClick(e -> {
+        ly.horizontal().childGap(true).width("100%")
+                .add(button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
             System.out.println(s);
             e.comp.text.set(s);
-        }), button("This is a button!").grow(1).onClick(e -> {
+        }), button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
             System.out.println(s);
             e.comp.text.set(s);
-        }), button("This is a button!").grow(1).onClick(e -> {
+        }), button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
             System.out.println(s);
             e.comp.text.set(s);
         }));
-        ly.add(textfield("TextField:", "Def").onValueChange(e -> {
+        // Button variants
+        ly.horizontal().childGap(true).add(button("Primary").primary(), button("Secondary").secondary(), button("Success").success(),
+                button("Danger").danger(), button("Warning").warning(), button("Info").info(),
+                button("Light").light(), button("Dark").dark());
+        // Fields
+        ly.add(textfield("Text field label", "Def").onValueChange(e -> {
             System.out.println("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
         }));
-        ly.add(passwordfield("PasswordField:").onValueChange(e -> {
+        ly.add(passwordfield("Password field label").onValueChange(e -> {
             System.out.println("Input of passwordfield changed: "+e.value+" before: "+e.valueBefore);
         }));
-        ly.add(checkbox("CheckBox:").onValueChange(e -> {
+        ly.add(checkbox("Checkbox label").onValueChange(e -> {
             System.out.println("Input of checkbox changed: "+e.value+" before: "+e.valueBefore);
         }));
-        ly.add(colorpicker("ColorPicker:").onValueChange(e -> {
+        ly.add(colorpicker("Color picker label").onValueChange(e -> {
             System.out.println("Input of colorpicker changed: "+e.value+" before: "+e.valueBefore);
         }));
-        ly.add(slider("Slider:").onValueChange(e -> {
+        ly.add(slider("Slider label").onValueChange(e -> {
             System.out.println("Input of slider changed: "+e.value+" before: "+e.valueBefore);
         }));
 

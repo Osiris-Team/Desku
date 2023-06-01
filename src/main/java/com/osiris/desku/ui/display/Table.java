@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 public class Table extends Component<Table> {
     static {
         try {
-            App.appendToGlobalStyles(App.getCSS(Table.class));
+            App.appendToGlobalCSS(App.getCSS(Table.class));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

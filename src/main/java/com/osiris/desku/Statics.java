@@ -21,8 +21,8 @@ import org.jsoup.nodes.TextNode;
 import com.osiris.desku.ui.input.Button;
 import com.osiris.desku.ui.input.CheckBox;
 import com.osiris.desku.ui.event.BooleanChangeEvent;
-import com.osiris.desku.ui.event.TextChangeEvent;
 import com.osiris.desku.ui.input.ColorPicker;
+import com.osiris.desku.ui.event.TextChangeEvent;
 import com.osiris.desku.ui.input.Input;
 import com.osiris.desku.ui.input.PasswordField;
 import com.osiris.desku.ui.input.Slider;
@@ -83,6 +83,7 @@ public class Statics {
     }
 
     /**
+     * https://getbootstrap.com/docs/5.3/components/buttons/
      */
     static public Button button(String txt) {
         return new Button(txt);

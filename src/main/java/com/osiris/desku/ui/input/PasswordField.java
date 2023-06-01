@@ -33,6 +33,7 @@ public class PasswordField extends Component<PasswordField> {
         addClass("passwordfield");
         this.label = label;
         add(this.label, this.input);
+        childVertical();
         this.input.putAttribute("value", defaultValue);
     }
 
