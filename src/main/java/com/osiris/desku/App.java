@@ -251,6 +251,12 @@ public class App {
     public static void appendToGlobalCSS(String s) {
         synchronized (styles) {
             try {
+                String info = "\n\n/* Content from: ";
+                for (StackTraceElement el : new Exception().getStackTrace()) {
+                    info += el.toString()+" ";
+                }
+                info += "*/\n\n";
+                s = info + s;
                 Files.write(styles.toPath(), s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -267,6 +273,12 @@ public class App {
     public static void appendToGlobalJS(String s) {
         synchronized (javascript) {
             try {
+                String info = "\n\n// Content from: ";
+                for (StackTraceElement el : new Exception().getStackTrace()) {
+                    info += el.toString()+" ";
+                }
+                info += "\n\n";
+                s = info + s;
                 Files.write(javascript.toPath(), s.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
             } catch (Exception e) {
                 throw new RuntimeException(e);

@@ -4,6 +4,7 @@ import com.osiris.desku.App;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
+import com.osiris.desku.ui.event.ScrollEvent;
 import com.osiris.desku.ui.layout.Horizontal;
 import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.desku.ui.layout.SmartLayout;
@@ -67,6 +68,10 @@ public class Component<T extends Component> {
      * Do not add actions via this variable, use {@link #onClick(Consumer)} instead.
      */
     public final Event<ClickEvent> _onClick = new Event<>();
+    /**
+     * Do not add actions via this variable, use {@link #onScroll(Consumer)} instead.
+     */
+    public final Event<ScrollEvent> _onScroll = new Event<>();
     protected final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     /**
      * The instance of the extending class. <br>
@@ -132,8 +137,9 @@ public class Component<T extends Component> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (children.contains(child)) {
             children.remove(child);
+            if(child.element.parent() != null)
+                child.element.remove();
             child.update();
-            child.element.remove();
             if (!ui.isLoading.get())
                 ui.executeJavaScript(ui.jsGetComp("comp", id) +
                                 ui.jsGetComp("childComp", child.id) +
@@ -173,7 +179,7 @@ public class Component<T extends Component> {
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
             if (!ui.isLoading.get())
                 ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`;\n",
+                                "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`);\n",
                         "internal", 0);
 
         } else{// Remove attribute
@@ -514,6 +520,43 @@ public class Component<T extends Component> {
     public T margin(boolean b) {
         if (b) putStyle("margin", "var(--space-s)");
         else removeStyle("margin");
+        return _this;
+    }
+
+    boolean changedAddToSupportScroll = false;
+    /**
+     * Makes this component scrollable. <br>
+     * Note that you must also set the width and height for this to work, <br>
+     * and the min width and height for the child components.
+     * @param b if true this component will be scrollable, otherwise not.
+     */
+    public T scrollable(boolean b, String width, String height, String minChildWidth, String minChildHeight){
+        // If we want to continue using flex display
+        // together with scroll, items will be shrunk to 0pixel height
+        // and thus making them invisible to the user and the scroll
+        // bar not appearing. The official workaround: https://stackoverflow.com/a/21541021
+        // is not optimal in our case, since the child containers style will not be inherited.
+        // Thus, we do the following:
+        if(width != null && !width.isEmpty()) width(width);
+        if(height != null && !height.isEmpty()) height(height);
+        if(b){
+            if(!changedAddToSupportScroll){
+                changedAddToSupportScroll = true;
+                for (Component<?> c : children) {
+                    c.putStyle("min-width", minChildWidth);
+                    c.putStyle("min-height", minChildHeight);
+                }
+                Consumer<AddedChildEvent> superAdd = _add;
+                _add = e -> {
+                  e.childComp.putStyle("min-width", minChildWidth);
+                  e.childComp.putStyle("min-height", minChildHeight);
+                  superAdd.accept(e);
+                };
+            }
+            overflowAuto();
+        } else{
+            removeStyle("overflow");
+        }
         return _this;
     }
 
@@ -875,6 +918,27 @@ public class Component<T extends Component> {
         Component<T> _this = this;
         UI.get().registerJSListener("click", _this, (msg) -> {
             _onClick.execute(new ClickEvent<T>(msg, (T) _this)); // Executes all listeners
+        });
+        return this._this;
+    }
+
+    /**
+     * Adds a listener that gets executed when this component <br>
+     * was clicked by the user (a JavaScript click event was thrown). <br>
+     *
+     * @see UI#registerJSListener(String, Component, Consumer)
+     */
+    public T onScroll(Consumer<ScrollEvent<T>> code) {
+        _onScroll.addAction((event) -> code.accept(event));
+        Component<T> _this = this;
+        UI.get().registerJSListener("scroll", _this,
+                "message = `{\"isReachedEnd\": \"` + (Math.abs(event.target.scrollHeight - event.target.scrollTop - event.target.clientHeight) < 1) + `\"," +
+                " \"scrollHeight\": \"` + event.target.scrollHeight + `\"," +
+                        " \"scrollTop\": \"` + event.target.scrollTop + `\"," +
+                        " \"clientHeight\": \"` + event.target.clientHeight + `\"," +
+                        " \"eventAsJson\":` + message + `}`;\n",
+                (msg) -> {
+            _onScroll.execute(new ScrollEvent<T>(msg, (T) _this)); // Executes all listeners
         });
         return this._this;
     }

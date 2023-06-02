@@ -322,7 +322,7 @@ public abstract class UI {
         }
         return "var message = '';\n" + // Separated by space
                 "var error = null;\n" +
-                "try{" + jsCode + "} catch (e) { error = e; }\n" +
+                "try{" + jsCode + "} catch (e) { error = e; console.error(e);}\n" +
                 jsClientSendWebSocketMessage("(error == null ? ('" + id + " '+message) : ('!" + id + " '+error))");
     }
 

@@ -30,6 +30,9 @@ import com.osiris.desku.ui.event.DoubleChangeEvent;
 import com.osiris.desku.ui.input.TextField;
 import com.osiris.desku.ui.layout.Horizontal;
 import com.osiris.desku.ui.layout.Overlay;
+import com.osiris.desku.ui.layout.PageLayout;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import com.osiris.desku.ui.layout.SmartLayout;
 import com.osiris.desku.ui.layout.Vertical;
 
@@ -232,6 +235,12 @@ public class Statics {
     }
 
     /**
+     */
+    static public PageLayout pagelayout() {
+        return new PageLayout();
+    }
+
+    /**
      * Smart, mobile optimized layout, that aligns items horizontally if there is space
      * or goes to the next line.
      * Items will have at least 400px width, or go beyond that (since flex-grow is set to 1).
@@ -244,7 +253,8 @@ public class Statics {
     /**
      * Smart, mobile optimized layout, that aligns items horizontally if there is space
      * or goes to the next line.
-     * @param childGrow if true child components will try to fill out the complete available space.
+     *
+     * @param childGrow     if true child components will try to fill out the complete available space.
      * @param minChildWidth the min width of a child component.
      */
     static public SmartLayout smartlayout(boolean childGrow, String minChildWidth) {

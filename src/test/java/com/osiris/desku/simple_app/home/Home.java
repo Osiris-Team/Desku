@@ -7,6 +7,7 @@ import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.RTable;
 import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Text;
+import com.osiris.desku.ui.layout.PageLayout;
 import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.jlib.logger.AL;
 
@@ -71,7 +72,7 @@ public class Home extends Route {
         // Layouts and Text
         //
         ly.verticalCL()
-                .add(text("Child vertical layout. Items: "))
+                .add(text("Vertical child layout. Items: "))
                 .add(text("XSmall").sizeXS())
                 .add(text("Small").sizeS())
                 .add(text("Medium").sizeM())
@@ -82,7 +83,7 @@ public class Home extends Route {
                 .add(text("XXXLarge").sizeXXXL());
 
         ly.horizontalCL()
-                .add(text("Child horizontal layout. Items: "))
+                .add(text("Horizontal child layout. Items: "))
                 .add(text("XSmall").sizeXS())
                 .add(text("Small").sizeS())
                 .add(text("Medium").sizeM())
@@ -91,16 +92,46 @@ public class Home extends Route {
                 .add(text("XXLarge").sizeXXL())
                 .add(text("XXXLarge").sizeXXXL());
         // Smart, mobile friendly layout
+        ly.add(text("Smart, mobile friendly layout").sizeXXL());
         ly.add(smartlayout().add(
-                text("1").putStyle("background-color", "var(--color-primary-10)"),
-                text("2").putStyle("background-color", "var(--color-primary-10)"),
-                text("3").putStyle("background-color", "var(--color-primary-10)"),
-                text("4").putStyle("background-color", "var(--color-primary-10)"),
-                text("5").putStyle("background-color", "var(--color-primary-10)")));
+                text("1").putStyle("background-color", "var(--color-primary-50)"),
+                text("2").putStyle("background-color", "var(--color-primary-50)"),
+                text("3").putStyle("background-color", "var(--color-primary-50)"),
+                text("4").putStyle("background-color", "var(--color-primary-50)"),
+                text("5").putStyle("background-color", "var(--color-primary-50)")));
+        // Scroll layout
+        ly.add(text("Scroll layout").sizeXXL());
+        ly.add(
+                vertical().childGap(true).scrollable(true, "100%", "100px", // Size for scroll layout
+                        "100%", "5px") // Min sizes for children
+                        .onScroll(e -> {
+                            System.out.println("SCROLL: "+e.rawJSMessage);
+                        })
+        );
+        for (int i = 0; i < 20; i++) {
+            ly.lastChild().add(vertical().putStyle("background-color", "gray"));
+        }
+        // Page layout
+        ly.add(text("Page layout").sizeXXL());
+        int[] data = new int[10];
+        for (int i = 0; i < 10; i++) {
+            data[i] = i;
+        }
+        ly.add(
+                new PageLayout().childGap(true).setDataProvider(0, 3, (details) -> {
+                    List<Component<?>> comps = new ArrayList<>();
+                    for (int i = Math.max(details.iStart, 0); i < Math.min(details.iEnd, data.length - 1); i++) {
+                        comps.add(text("Index: "+data[i]).width("100%").putStyle("background-color", "lightgray"));
+                    }
+                    try{Thread.sleep(1000);} catch (Exception e) {}
+                    return comps;
+                })
+        );
 
         //
         // Navigate between routes
         //
+        ly.add(text("Navigate between routes").sizeXXL());
         ly.add(router().set(About.class).add(text("Go to About page!")));
         ly.add(router().set("/about").add(text("Go to About page!")));
         ly.add(router().set("https://google.com").add(text("Go to Google page!")));
