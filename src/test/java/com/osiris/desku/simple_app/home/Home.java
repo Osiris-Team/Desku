@@ -46,6 +46,7 @@ public class Home extends Route {
         //
         // Async
         //
+        ly.add(text("Async").sizeXXL());
         ly.add(text("Asynchronously update a component: Loading...").padding(true).later(txt -> {
             try {
                 for (int i = 1; i <= 100; i++) {
@@ -71,6 +72,7 @@ public class Home extends Route {
         //
         // Layouts and Text
         //
+        ly.add(text("Simple layouts and text").sizeXXL());
         ly.verticalCL()
                 .add(text("Vertical child layout. Items: "))
                 .add(text("XSmall").sizeXS())
@@ -139,6 +141,7 @@ public class Home extends Route {
         //
         // Overlays
         //
+        ly.add(text("Overlays").sizeXXL());
         ly.add(overlay(null).add(text("Overlay over the page")));
         ly.verticalCL().putStyle("background-color", "blue").size("100px", "100px").add(
                 overlay(ly.lastChild()).putStyle("background-color", "red")
@@ -147,6 +150,7 @@ public class Home extends Route {
         //
         // Inputs
         //
+        ly.add(text("Inputs").sizeXXL());
         AtomicInteger i = new AtomicInteger();
         ly.horizontalCL().childGap(true).width("100%")
                 .add(button("Click me!").grow(1).onClick(e -> {
@@ -186,6 +190,7 @@ public class Home extends Route {
         //
         // Tables
         //
+        ly.add(text("Tables").sizeXXL());
         ly.add(new Table().headers("Header 1", "Header 2")
                 .row("Data 1", "Data 2aaaaa")
                 .row("Data 3aa", "Data 4"));
