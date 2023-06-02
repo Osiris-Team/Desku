@@ -26,7 +26,7 @@ public class PasswordField extends Component<PasswordField> {
     }
 
     public PasswordField(String label, String defaultValue) {
-        this(new Text(label).sizeXS(), defaultValue);
+        this(new Text(label).sizeS(), defaultValue);
     }
 
     public PasswordField(Text label, String defaultValue) {

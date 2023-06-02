@@ -26,7 +26,7 @@ public class ColorPicker extends Component<ColorPicker> {
     }
 
     public ColorPicker(String label, String defaultValue) {
-        this(new Text(label).sizeXS(), defaultValue);
+        this(new Text(label).sizeS(), defaultValue);
     }
 
     public ColorPicker(Text label, String defaultValue) {

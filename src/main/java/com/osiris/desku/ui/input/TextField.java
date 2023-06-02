@@ -26,7 +26,7 @@ public class TextField extends Component<TextField> {
     }
 
     public TextField(String label, String defaultValue) {
-        this(new Text(label).sizeXS(), defaultValue);
+        this(new Text(label).sizeS(), defaultValue);
     }
 
     public TextField(Text label, String defaultValue) {

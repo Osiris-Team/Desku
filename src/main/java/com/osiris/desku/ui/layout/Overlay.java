@@ -3,7 +3,7 @@ package com.osiris.desku.ui.layout;
 import com.osiris.desku.ui.Component;
 
 public class Overlay extends Component<Overlay> {
-    public Layout layout = new Layout();
+    public Vertical layout = new Vertical();
 
     /**
      * @param parent if null, this overlay will be placed over the complete page,

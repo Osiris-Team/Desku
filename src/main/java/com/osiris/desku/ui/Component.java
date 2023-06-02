@@ -4,7 +4,10 @@ import com.osiris.desku.App;
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
+import com.osiris.desku.ui.layout.Horizontal;
 import com.osiris.desku.ui.layout.Overlay;
+import com.osiris.desku.ui.layout.SmartLayout;
+import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import org.jsoup.nodes.Attribute;
@@ -705,6 +708,36 @@ public class Component<T extends Component> {
     }
 
     /**
+     * Vertical child layout. <br>
+     * Creates, adds and returns a new child layout with vertical component alignment.
+     */
+    public Vertical verticalCL() {
+        Vertical layout = new Vertical();
+        add(layout);
+        return layout;
+    }
+
+    /**
+     * Horizontal child layout. <br>
+     * Creates, adds and returns a new child layout with horizontal component alignment.
+     */
+    public Horizontal horizontalCL() {
+        Horizontal layout = new Horizontal();
+        add(layout);
+        return layout;
+    }
+
+    /**
+     * Smart child layout. <br>
+     * Creates, adds and returns a new smart child layout.
+     */
+    public SmartLayout smartCL(){
+        SmartLayout layout = new SmartLayout();
+        add(layout);
+        return layout;
+    }
+
+    /**
      * justify-content <br>
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
@@ -844,6 +877,14 @@ public class Component<T extends Component> {
             _onClick.execute(new ClickEvent<T>(msg, (T) _this)); // Executes all listeners
         });
         return this._this;
+    }
+
+    public Component<?> firstChild() {
+        return children.get(0);
+    }
+
+    public Component<?> lastChild() {
+        return children.get(children.size() - 1);
     }
 
     //

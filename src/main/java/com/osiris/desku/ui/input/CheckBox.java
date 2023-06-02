@@ -26,7 +26,7 @@ public class CheckBox extends Component<CheckBox> {
     }
 
     public CheckBox(String label, boolean defaultValue) {
-        this(new Text(label).sizeXS(), defaultValue);
+        this(new Text(label).sizeS(), defaultValue);
     }
 
     public CheckBox(Text label, boolean defaultValue) {

@@ -1,0 +1,5 @@
+@media (max-width: 400px) {
+  .smart-layout > * {
+    min-width: 100vw; /* 100% of the viewport width */
+  }
+}

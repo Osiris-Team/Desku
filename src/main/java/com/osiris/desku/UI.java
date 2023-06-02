@@ -471,6 +471,10 @@ public abstract class UI {
         return "webSocketServer.send(" + message + ");\n";
     }
 
+    public boolean isOpen() {
+        return httpServer != null && httpServer.server.isAlive();
+    }
+
     public class PendingJavaScriptResult {
         public final int id;
         public final Consumer<String> onSuccess;

@@ -26,7 +26,7 @@ public class Slider extends Component<Slider> {
     }
 
     public Slider(String label, double defaultValue) {
-        this(new Text(label).sizeXS(), defaultValue, 0.0, 100.0, 1.0);
+        this(new Text(label).sizeS(), defaultValue, 0.0, 100.0, 1.0);
     }
 
     public Slider(Text label, double defaultValue, double minValue, double maxValue, double stepValue) {

@@ -1,6 +1,7 @@
 package com.osiris.desku.hello_world_app;
 
 import com.osiris.desku.*;
+import com.osiris.desku.ui.layout.Vertical;
 
 import static com.osiris.desku.Statics.*;
 public class HelloWorldApp {
@@ -11,7 +12,7 @@ public class HelloWorldApp {
 
         // Create routes
         Route home = new MRoute("/", () -> {
-            return layout().add(text("Hello World!"));
+            return vertical().add(text("Hello World!"));
         });
 
         // Create windows

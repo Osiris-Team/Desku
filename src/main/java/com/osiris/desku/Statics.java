@@ -28,8 +28,10 @@ import com.osiris.desku.ui.input.PasswordField;
 import com.osiris.desku.ui.input.Slider;
 import com.osiris.desku.ui.event.DoubleChangeEvent;
 import com.osiris.desku.ui.input.TextField;
-import com.osiris.desku.ui.layout.Layout;
+import com.osiris.desku.ui.layout.Horizontal;
 import com.osiris.desku.ui.layout.Overlay;
+import com.osiris.desku.ui.layout.SmartLayout;
+import com.osiris.desku.ui.layout.Vertical;
 
 /**
  * Automatically generated class. To re-generate/update <br>
@@ -217,14 +219,8 @@ public class Statics {
 
     /**
      */
-    static public Layout layout() {
-        return new Layout();
-    }
-
-    /**
-     */
-    static public Layout layout(boolean isHorizontal) {
-        return new Layout(isHorizontal);
+    static public Horizontal horizontal() {
+        return new Horizontal();
     }
 
     /**
@@ -233,5 +229,31 @@ public class Statics {
      */
     static public Overlay overlay(Component<?> parent) {
         return new Overlay(parent);
+    }
+
+    /**
+     * Smart, mobile optimized layout, that aligns items horizontally if there is space
+     * or goes to the next line.
+     * Items will have at least 400px width, or go beyond that (since flex-grow is set to 1).
+     * If the device width is smaller than 400px, the width is set to the device width.
+     */
+    static public SmartLayout smartlayout() {
+        return new SmartLayout();
+    }
+
+    /**
+     * Smart, mobile optimized layout, that aligns items horizontally if there is space
+     * or goes to the next line.
+     * @param childGrow if true child components will try to fill out the complete available space.
+     * @param minChildWidth the min width of a child component.
+     */
+    static public SmartLayout smartlayout(boolean childGrow, String minChildWidth) {
+        return new SmartLayout(childGrow, minChildWidth);
+    }
+
+    /**
+     */
+    static public Vertical vertical() {
+        return new Vertical();
     }
 }

@@ -7,8 +7,7 @@ import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.RTable;
 import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Text;
-import com.osiris.desku.ui.input.Button;
-import com.osiris.desku.ui.layout.Layout;
+import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.jlib.logger.AL;
 
 import java.io.IOException;
@@ -33,8 +32,8 @@ public class Home extends Route {
 
     @Override
     public Component<?> loadContent() {
-        Layout ly = layout().childGap(true).padding(true);
-        ly.horizontal().size("100%", "70vh").childCenter()
+        Vertical ly = vertical().childGap(true).padding(true);
+        ly.horizontalCL().size("100%", "70vh").childCenter()
                 .add(text("Build Desktop Apps with Java, HTML and CSS today!")
                         .sizeXXL().selfCenter()
                         .size("40vh", "20vh").bold())
@@ -56,7 +55,7 @@ public class Home extends Route {
                 AL.warn(e);
             }
         }));
-        ly.add(layout().size("300px", "100px").laterWithOverlay((comp, overlay) -> {
+        ly.add(vertical().size("300px", "100px").laterWithOverlay((comp, overlay) -> {
             try {
                 Text txt = text("Waiting 10 seconds...");
                 comp.add(txt);
@@ -71,7 +70,7 @@ public class Home extends Route {
         //
         // Layouts and Text
         //
-        ly.vertical()
+        ly.verticalCL()
                 .add(text("Child vertical layout. Items: "))
                 .add(text("XSmall").sizeXS())
                 .add(text("Small").sizeS())
@@ -82,7 +81,7 @@ public class Home extends Route {
                 .add(text("XXLarge").sizeXXL())
                 .add(text("XXXLarge").sizeXXXL());
 
-        ly.horizontal()
+        ly.horizontalCL()
                 .add(text("Child horizontal layout. Items: "))
                 .add(text("XSmall").sizeXS())
                 .add(text("Small").sizeS())
@@ -91,6 +90,13 @@ public class Home extends Route {
                 .add(text("XLarge").sizeXL())
                 .add(text("XXLarge").sizeXXL())
                 .add(text("XXXLarge").sizeXXXL());
+        // Smart, mobile friendly layout
+        ly.add(smartlayout().add(
+                text("1").putStyle("background-color", "var(--color-primary-10)"),
+                text("2").putStyle("background-color", "var(--color-primary-10)"),
+                text("3").putStyle("background-color", "var(--color-primary-10)"),
+                text("4").putStyle("background-color", "var(--color-primary-10)"),
+                text("5").putStyle("background-color", "var(--color-primary-10)")));
 
         //
         // Navigate between routes
@@ -103,15 +109,15 @@ public class Home extends Route {
         // Overlays
         //
         ly.add(overlay(null).add(text("Overlay over the page")));
-        ly.vertical().putStyle("background-color", "blue").size("100px", "100px").add(
-                overlay(ly.lastAdded).putStyle("background-color", "red")
+        ly.verticalCL().putStyle("background-color", "blue").size("100px", "100px").add(
+                overlay(ly.lastChild()).putStyle("background-color", "red")
                         .add(text("Overlay over another component.")));
 
         //
         // Inputs
         //
         AtomicInteger i = new AtomicInteger();
-        ly.horizontal().childGap(true).width("100%")
+        ly.horizontalCL().childGap(true).width("100%")
                 .add(button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
             System.out.println(s);
@@ -126,7 +132,7 @@ public class Home extends Route {
             e.comp.text.set(s);
         }));
         // Button variants
-        ly.horizontal().childGap(true).add(button("Primary").primary(), button("Secondary").secondary(), button("Success").success(),
+        ly.horizontalCL().childGap(true).add(button("Primary").primary(), button("Secondary").secondary(), button("Success").success(),
                 button("Danger").danger(), button("Warning").warning(), button("Info").info(),
                 button("Light").light(), button("Dark").dark());
         // Fields
