@@ -37,6 +37,7 @@ bindings, thus making simple/complex layout creation faster and easier than ever
 - Update the UI asynchronously hassle-free.
 - Contains cross-platform desktop WebView implementation already. 
 Android and iOS implementations are provided in the starter repo.
+- Uses [Bootstrap v5.3.0 components](https://getbootstrap.com/docs/5.3/components) and styles.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
