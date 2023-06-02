@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import com.osiris.desku.ui.display.Spinner;
 import com.osiris.desku.ui.display.Table;
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -73,6 +74,12 @@ public class Statics {
      */
     static public RTable rtable(Class<?> clazz, Predicate<Field> fieldPredicate) {
         return new RTable(clazz, fieldPredicate);
+    }
+
+    /**
+     */
+    static public Spinner spinner() {
+        return new Spinner();
     }
 
     /**

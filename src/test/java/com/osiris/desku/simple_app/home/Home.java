@@ -5,6 +5,7 @@ import com.osiris.desku.Route;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.RTable;
+import com.osiris.desku.ui.display.Spinner;
 import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.layout.PageLayout;
@@ -217,6 +218,16 @@ public class Home extends Route {
             throw new RuntimeException(e);
         }
 
+        //
+        // Loading animations
+        //
+        ly.add(text("Loading animations").sizeXXL());
+        ly.horizontalCL().childGap(true).add(spinner().primary(), spinner().secondary(), spinner().success(),
+                spinner().danger(), spinner().warning(), spinner().info(),
+                spinner().light(), spinner().dark());
+        ly.horizontalCL().childGap(true).add(spinner().typeGrow().primary(), spinner().typeGrow().secondary(), spinner().typeGrow().success(),
+                spinner().typeGrow().danger(), spinner().typeGrow().warning(), spinner().typeGrow().info(),
+                spinner().typeGrow().light(), spinner().typeGrow().dark());
 
         return ly;
     }
