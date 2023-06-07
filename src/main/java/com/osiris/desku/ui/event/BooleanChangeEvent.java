@@ -1,7 +1,9 @@
 package com.osiris.desku.ui.event;
 
 
-public class BooleanChangeEvent<T> extends JavaScriptEvent<T> {
+import com.osiris.desku.ui.Component;
+
+public class BooleanChangeEvent<T extends Component<?>> extends JavaScriptEvent<T> {
     public final boolean value;
     public final boolean valueBefore;
 

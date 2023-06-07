@@ -121,7 +121,7 @@ public class Home extends Route {
             data[i] = i;
         }
         ly.add(
-                new PageLayout().childGap(true).setDataProvider(0, 3, (details) -> {
+                pagelayout().childGap(true).setDataProvider(0, 3, (details) -> {
                     List<Component<?>> comps = new ArrayList<>();
                     for (int i = Math.max(details.iStart, 0); i < Math.min(details.iEnd, data.length - 1); i++) {
                         comps.add(text("Index: "+data[i]).width("100%").putStyle("background-color", "lightgray"));
@@ -187,12 +187,17 @@ public class Home extends Route {
         ly.add(slider("Slider label").onValueChange(e -> {
             System.out.println("Input of slider changed: "+e.value+" before: "+e.valueBefore);
         }));
+        // Selector
+        ly.add(selector("Selector label").add(text("Option 1"), text("Option 2"), text("Option 3"))
+                .onValueChange(e -> {
+            System.out.println("Input of selector changed: "+e.value+" before: "+e.valueBefore);
+        }));
 
         //
         // Tables
         //
         ly.add(text("Tables").sizeXXL());
-        ly.add(new Table().headers("Header 1", "Header 2")
+        ly.add(table().headers("Header 1", "Header 2")
                 .row("Data 1", "Data 2aaaaa")
                 .row("Data 3aa", "Data 4"));
 
@@ -213,7 +218,7 @@ public class Home extends Route {
         list.add(new Person("Peter", "Rigid", 56));
         list.add(new Person("Mariaaaaaa", "Francois", 33));
         try {
-            ly.add(new RTable(Person.class).rows(list)); // One liner ;)
+            ly.add(rtable(Person.class).rows(list)); // One liner ;)
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }

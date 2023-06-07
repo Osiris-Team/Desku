@@ -1,7 +1,9 @@
 package com.osiris.desku.ui.event;
 
 
-public class DoubleChangeEvent<T> extends JavaScriptEvent<T> {
+import com.osiris.desku.ui.Component;
+
+public class DoubleChangeEvent<T extends Component<?>> extends JavaScriptEvent<T> {
     public final double value;
     public final double valueBefore;
 

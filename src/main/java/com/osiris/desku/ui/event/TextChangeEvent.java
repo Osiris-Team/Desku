@@ -1,7 +1,9 @@
 package com.osiris.desku.ui.event;
 
 
-public class TextChangeEvent<T> extends JavaScriptEvent<T> {
+import com.osiris.desku.ui.Component;
+
+public class TextChangeEvent<T extends Component<?>> extends JavaScriptEvent<T> {
     public final String value;
     public final String valueBefore;
 

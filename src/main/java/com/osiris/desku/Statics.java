@@ -26,6 +26,8 @@ import com.osiris.desku.ui.input.ColorPicker;
 import com.osiris.desku.ui.event.TextChangeEvent;
 import com.osiris.desku.ui.input.Input;
 import com.osiris.desku.ui.input.PasswordField;
+import com.osiris.desku.ui.input.Selector;
+import com.osiris.desku.ui.layout.ListLayout;
 import com.osiris.desku.ui.input.Slider;
 import com.osiris.desku.ui.event.DoubleChangeEvent;
 import com.osiris.desku.ui.input.TextField;
@@ -181,6 +183,30 @@ public class Statics {
 
     /**
      */
+    static public Selector selector() {
+        return new Selector();
+    }
+
+    /**
+     */
+    static public Selector selector(String label) {
+        return new Selector(label);
+    }
+
+    /**
+     */
+    static public Selector selector(String label, String defaultValue) {
+        return new Selector(label, defaultValue);
+    }
+
+    /**
+     */
+    static public Selector selector(Text label, String defaultValue) {
+        return new Selector(label, defaultValue);
+    }
+
+    /**
+     */
     static public Slider slider() {
         return new Slider();
     }
@@ -231,6 +257,12 @@ public class Statics {
      */
     static public Horizontal horizontal() {
         return new Horizontal();
+    }
+
+    /**
+     */
+    static public ListLayout listlayout() {
+        return new ListLayout();
     }
 
     /**

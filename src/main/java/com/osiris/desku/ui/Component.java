@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class Component<T extends Component> {
+public class Component<T extends Component<?>> {
     private static final AtomicInteger idCounter = new AtomicInteger();
 
     static {
@@ -523,6 +523,16 @@ public class Component<T extends Component> {
         return _this;
     }
 
+    public boolean isVisible(){
+        return !style.containsKey("visibility");
+    }
+
+    public T visible(boolean b) {
+        if (b) removeStyle("visibility");
+        else putStyle("visibility", "hidden");
+        return _this;
+    }
+
     boolean changedAddToSupportScroll = false;
     /**
      * Makes this component scrollable. <br>
@@ -781,7 +791,7 @@ public class Component<T extends Component> {
     }
 
     /**
-     * justify-content <br>
+     * justify-content (along primary axis) <br>
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
     public T childStart() {
@@ -790,7 +800,7 @@ public class Component<T extends Component> {
     }
 
     /**
-     * justify-content <br>
+     * justify-content (along primary axis) <br>
      * flex-end: items are packed toward the end of the flex-direction.
      */
     public T childEnd() {
@@ -799,7 +809,7 @@ public class Component<T extends Component> {
     }
 
     /**
-     * justify-content <br>
+     * justify-content (along primary axis) <br>
      * center: items are centered along the line
      */
     public T childCenter() {
@@ -808,7 +818,7 @@ public class Component<T extends Component> {
     }
 
     /**
-     * justify-content <br>
+     * justify-content (along primary axis) <br>
      * space-between: items are evenly distributed in the line; first item is on the start line, last item on the end line
      */
     public T childSpaceBetween() {
@@ -817,7 +827,7 @@ public class Component<T extends Component> {
     }
 
     /**
-     * justify-content <br>
+     * justify-content (along primary axis) <br>
      * space-around: items are evenly distributed in the line with equal space around them.
      * Note that visually the spaces aren't equal, since all the items
      * have equal space on both sides. The first item will have one unit of space
@@ -830,7 +840,7 @@ public class Component<T extends Component> {
     }
 
     /**
-     * justify-content <br>
+     * justify-content (along primary axis) <br>
      * space-evenly: items are distributed so that the spacing
      * between any two items (and the space to the edges) is equal.
      */
@@ -840,10 +850,37 @@ public class Component<T extends Component> {
     }
 
     /**
-     * align-items <br>
+     * align-items (along secondary axis) <br>
+     * flex-start (default): items are packed toward the start of the flex-direction.
+     */
+    public T childStart2() {
+        putStyle("align-items", "flex-start");
+        return _this;
+    }
+
+    /**
+     * align-items (along secondary axis) <br>
+     * flex-end: items are packed toward the end of the flex-direction.
+     */
+    public T childEnd2() {
+        putStyle("align-items", "flex-end");
+        return _this;
+    }
+
+    /**
+     * align-items (along secondary axis) <br>
+     * center: items are centered along the line
+     */
+    public T childCenter2() {
+        putStyle("align-items", "center");
+        return _this;
+    }
+
+    /**
+     * align-items (along secondary axis) <br>
      * stretch: stretch to fill the container (still respect min-width/max-width)
      */
-    public T childStretch() {
+    public T childStretch2() {
         putStyle("align-items", "stretch");
         return _this;
     }
@@ -968,20 +1005,20 @@ public class Component<T extends Component> {
         /**
          * Component that got added.
          */
-        public final Component<?> childComp;
+        public Component<?> childComp;
         /**
          * Should only be relevant and not null when either
          * {@link #isInsert} or {@link #isReplace} is true.
          */
-        public final Component<?> otherChildComp;
+        public Component<?> otherChildComp;
         /**
          * If true, then {@link #otherChildComp} should now be the next child in the list after {@link #childComp}.
          */
-        public final boolean isInsert;
+        public boolean isInsert;
         /**
          * If true, then {@link #otherChildComp} should NOT exist in the list anymore.
          */
-        public final boolean isReplace;
+        public boolean isReplace;
 
         public AddedChildEvent(Component<?> childComp, Component<?> otherChildComp, boolean isInsert, boolean isReplace) {
             this.childComp = childComp;

@@ -333,7 +333,7 @@ public abstract class UI {
     /**
      * @see #registerJSListener(String, Component, String, Consumer)
      */
-    public <T extends Component> UI registerJSListener(String eventName, Component<T> comp, Consumer<String> onEvent) {
+    public <T extends Component<?>> UI registerJSListener(String eventName, Component<T> comp, Consumer<String> onEvent) {
         return registerJSListener(eventName, comp, "", onEvent);
     }
 
@@ -349,7 +349,7 @@ public abstract class UI {
      *                  event: which is the event object. <br>
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
-    public <T extends Component> UI registerJSListener(String eventName, Component<T> comp, String jsOnEvent, Consumer<String> onEvent) {
+    public <T extends Component<?>> UI registerJSListener(String eventName, Component<T> comp, String jsOnEvent, Consumer<String> onEvent) {
         synchronized (listenersAndComps) {
             List<Component<?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
