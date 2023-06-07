@@ -4,11 +4,7 @@ import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.ui.Component;
-import com.osiris.desku.ui.display.RTable;
-import com.osiris.desku.ui.display.Spinner;
-import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Text;
-import com.osiris.desku.ui.layout.PageLayout;
 import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.jlib.logger.AL;
 
@@ -16,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import static com.osiris.desku.Statics.*;
 
 public class Home extends Route {
@@ -130,6 +127,11 @@ public class Home extends Route {
                     return comps;
                 })
         );
+        // Tab layout
+        ly.add(text("Tab layout").sizeXXL());
+        ly.add(tablayout().addTabAndPage("First", text("First page content"))
+                .addTabAndPage("Second", text("Second page content"))
+                .addTabAndPage("Third", text("Third page content")));
 
         //
         // Navigate between routes
@@ -203,9 +205,9 @@ public class Home extends Route {
 
         // Tables via reflection
         class Person {
-            public String firstName;
-            public String name;
-            public int age;
+            public final String firstName;
+            public final String name;
+            public final int age;
 
             public Person(String firstName, String name, int age) {
                 this.firstName = firstName;

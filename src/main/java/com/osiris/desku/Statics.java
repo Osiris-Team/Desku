@@ -1,43 +1,12 @@
 package com.osiris.desku;
 
-import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.Component;
-import com.osiris.jlib.logger.AL;
-import java.io.File;
-import java.nio.file.Files;
-import com.osiris.desku.ui.display.Router;
-import com.osiris.desku.ui.display.RTable;
+import com.osiris.desku.ui.display.*;
+import com.osiris.desku.ui.input.*;
+import com.osiris.desku.ui.layout.*;
+
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Predicate;
-import com.osiris.desku.ui.display.Spinner;
-import com.osiris.desku.ui.display.Table;
-import java.io.IOException;
-import java.util.function.Consumer;
-import com.osiris.desku.ui.display.Text;
-import com.osiris.events.Event;
-import org.jsoup.nodes.TextNode;
-import com.osiris.desku.ui.input.Button;
-import com.osiris.desku.ui.input.CheckBox;
-import com.osiris.desku.ui.event.BooleanChangeEvent;
-import com.osiris.desku.ui.input.ColorPicker;
-import com.osiris.desku.ui.event.TextChangeEvent;
-import com.osiris.desku.ui.input.Input;
-import com.osiris.desku.ui.input.PasswordField;
-import com.osiris.desku.ui.input.Selector;
-import com.osiris.desku.ui.layout.ListLayout;
-import com.osiris.desku.ui.input.Slider;
-import com.osiris.desku.ui.event.DoubleChangeEvent;
-import com.osiris.desku.ui.input.TextField;
-import com.osiris.desku.ui.layout.Horizontal;
-import com.osiris.desku.ui.layout.Overlay;
-import com.osiris.desku.ui.layout.PageLayout;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import com.osiris.desku.ui.layout.SmartLayout;
-import com.osiris.desku.ui.layout.Vertical;
 
 /**
  * Automatically generated class. To re-generate/update <br>
@@ -298,6 +267,12 @@ public class Statics {
      */
     static public SmartLayout smartlayout(boolean childGrow, String minChildWidth) {
         return new SmartLayout(childGrow, minChildWidth);
+    }
+
+    /**
+     */
+    static public TabLayout tablayout() {
+        return new TabLayout();
     }
 
     /**

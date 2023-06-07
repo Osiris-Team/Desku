@@ -10,14 +10,8 @@ public class ListLayout extends Component<ListLayout> {
         super("ul");
         Consumer<AddedChildEvent> superAdd = _add;
         _add = e -> {
-            e.childComp = new Element().add(e.childComp); // Wrap around list element before adding child
+            e.childComp.element.tagName("li"); // Set tag name before adding child
             superAdd.accept(e);
         };
-    }
-
-    public static class Element extends Component<Element>{
-        public Element() {
-            super("li");
-        }
     }
 }

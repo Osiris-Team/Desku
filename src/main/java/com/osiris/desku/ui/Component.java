@@ -528,8 +528,13 @@ public class Component<T extends Component<?>> {
     }
 
     public T visible(boolean b) {
-        if (b) removeStyle("visibility");
-        else putStyle("visibility", "hidden");
+        if (b) {
+            removeStyle("display");
+            removeStyle("visibility");
+        } else{
+            putStyle("display", "none");
+            putStyle("visibility", "hidden");
+        }
         return _this;
     }
 
@@ -939,7 +944,7 @@ public class Component<T extends Component<?>> {
      */
     public T removeClass(String s){
         String classes = element.attr("class");
-        classes.replace(s, "");
+        classes = classes.replace(s, "");
         putAttribute("class", classes);
         return _this;
     }
