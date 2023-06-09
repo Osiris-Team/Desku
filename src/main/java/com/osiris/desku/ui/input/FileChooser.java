@@ -94,7 +94,7 @@ public class FileChooser extends Component<FileChooser> {
                     if (msg.equals("null")) return;
                     msg = msg.replace("\\", "/");
                     FileChangeEvent<FileChooser> e = new FileChangeEvent<>(msg, this, input.element.attr("value"));
-                    input.element.attr("value", e.name); // Change in memory value, without triggering another change event
+                    input.element.attr("value", e.value); // Change in memory value, without triggering another change event
                     _onValueChange.execute(e); // Executes all listeners
                 });
         return _this;

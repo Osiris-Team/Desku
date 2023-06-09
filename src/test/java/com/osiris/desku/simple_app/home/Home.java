@@ -196,7 +196,7 @@ public class Home extends Route {
         }));
         // File chooser
         ly.add(filechooser("File chooser label").onValueChange(e -> {
-            AL.info("Input of file chooser changed: "+e.name +" before: "+e.valueBefore);
+            AL.info("Input of file chooser changed: "+e.value +" before: "+e.valueBefore);
             // File content can be accessed via e.content (byte array)
         }));
 
