@@ -4,7 +4,7 @@ package com.osiris.desku.ui.event;
 import com.osiris.desku.ui.Component;
 
 public class FileChangeEvent<T extends Component<?>> extends JavaScriptEvent<T> {
-    public final String value;
+    public final String name;
     public final String valueBefore;
     public final byte[] content;
 
@@ -15,7 +15,7 @@ public class FileChangeEvent<T extends Component<?>> extends JavaScriptEvent<T> 
      */
     public FileChangeEvent(String rawJSMessage, T comp, String valueBefore) {
         super(rawJSMessage, comp);
-        this.value = jsMessage.get("newValue").getAsString();
+        this.name = jsMessage.get("newValue").getAsString();
 
         // Convert file content that is string binary to byte[]
         String content = jsMessage.get("newContent").getAsString();

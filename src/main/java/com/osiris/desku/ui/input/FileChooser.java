@@ -85,14 +85,16 @@ public class FileChooser extends Component<FileChooser> {
                         "  }\n" +
                         "  reader.readAsArrayBuffer(file);\n" +
                         "}else {\n" +
-                        "  message = `{\"newValue\": \"` + event.target.value + `\", \"newContent\": \"` + event.target.fileContent + `\", \"eventAsJson\":` + message + `}`;\n" +
+                        "var fileName = event.target.value\n" +
+                        "if(fileName.includes('\\\\')) fileName = fileName.split('\\\\').pop();\n" +
+                        "else if(fileName.includes('/')) fileName = fileName.split('/').pop();\n" +
+                        "  message = `{\"newValue\": \"` + fileName + `\", \"newContent\": \"` + event.target.fileContent + `\", \"eventAsJson\":` + message + `}`;\n" +
                         "}\n",
                 (msg) -> {
                     if (msg.equals("null")) return;
                     msg = msg.replace("\\", "/");
-                    System.out.println(msg);
                     FileChangeEvent<FileChooser> e = new FileChangeEvent<>(msg, this, input.element.attr("value"));
-                    input.element.attr("value", e.value); // Change in memory value, without triggering another change event
+                    input.element.attr("value", e.name); // Change in memory value, without triggering another change event
                     _onValueChange.execute(e); // Executes all listeners
                 });
         return _this;
