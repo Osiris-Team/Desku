@@ -105,7 +105,7 @@ public class Home extends Route {
                 vertical().childGap(true).scrollable(true, "100%", "100px", // Size for scroll layout
                         "100%", "5px") // Min sizes for children
                         .onScroll(e -> {
-                            System.out.println("SCROLL: "+e.rawJSMessage);
+                            AL.info("SCROLL: "+e.rawJSMessage);
                         })
         );
         for (int i = 0; i < 20; i++) {
@@ -158,15 +158,15 @@ public class Home extends Route {
         ly.horizontalCL().childGap(true).width("100%")
                 .add(button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
-            System.out.println(s);
+            AL.info(s);
             e.comp.text.set(s);
         }), button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
-            System.out.println(s);
+            AL.info(s);
             e.comp.text.set(s);
         }), button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
-            System.out.println(s);
+            AL.info(s);
             e.comp.text.set(s);
         }));
         // Button variants
@@ -175,28 +175,28 @@ public class Home extends Route {
                 button("Light").light(), button("Dark").dark());
         // Fields
         ly.add(textfield("Text field label", "Def").onValueChange(e -> {
-            System.out.println("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
+            AL.info("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
         }));
         ly.add(passwordfield("Password field label").onValueChange(e -> {
-            System.out.println("Input of passwordfield changed: "+e.value+" before: "+e.valueBefore);
+            AL.info("Input of passwordfield changed: "+e.value+" before: "+e.valueBefore);
         }));
         ly.add(checkbox("Checkbox label").onValueChange(e -> {
-            System.out.println("Input of checkbox changed: "+e.value+" before: "+e.valueBefore);
+            AL.info("Input of checkbox changed: "+e.value+" before: "+e.valueBefore);
         }));
         ly.add(colorpicker("Color picker label").onValueChange(e -> {
-            System.out.println("Input of colorpicker changed: "+e.value+" before: "+e.valueBefore);
+            AL.info("Input of colorpicker changed: "+e.value+" before: "+e.valueBefore);
         }));
         ly.add(slider("Slider label").onValueChange(e -> {
-            System.out.println("Input of slider changed: "+e.value+" before: "+e.valueBefore);
+            AL.info("Input of slider changed: "+e.value+" before: "+e.valueBefore);
         }));
         // Selector
         ly.add(selector("Selector label").add(text("Option 1"), text("Option 2"), text("Option 3"))
                 .onValueChange(e -> {
-            System.out.println("Input of selector changed: "+e.value+" before: "+e.valueBefore);
+            AL.info("Input of selector changed: "+e.value+" before: "+e.valueBefore);
         }));
         // File chooser
         ly.add(filechooser("File chooser label").onValueChange(e -> {
-            System.out.println("Input of file chooser changed: "+e.name +" before: "+e.valueBefore);
+            AL.info("Input of file chooser changed: "+e.name +" before: "+e.valueBefore);
             // File content can be accessed via e.content (byte array)
         }));
 
