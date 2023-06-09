@@ -17,7 +17,7 @@ public class D<T> extends Event<T> {
 
     public D(T value) {
         this.value = value;
-        initCleaner(30, obj -> obj != null && obj instanceof UI && !((UI)obj).isOpen(), AL::warn);
+        initCleaner(30, obj -> obj != null && obj instanceof UI && !((UI) obj).isOpen(), AL::warn);
     }
 
     public D(T value, List<Action<T>> actions) {
@@ -25,11 +25,11 @@ public class D<T> extends Event<T> {
         this.value = value;
     }
 
-    public T get(){
+    public T get() {
         return value;
     }
 
-    public D<T> set(T value){
+    public D<T> set(T value) {
         this.value = value;
         execute(value);
         return this;

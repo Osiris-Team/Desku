@@ -194,6 +194,10 @@ public class Home extends Route {
                 .onValueChange(e -> {
             System.out.println("Input of selector changed: "+e.value+" before: "+e.valueBefore);
         }));
+        // File chooser
+        ly.add(filechooser("File chooser label").onValueChange(e -> {
+            System.out.println("Input of file chooser changed: "+e.value+" before: "+e.valueBefore);
+        }));
 
         //
         // Tables

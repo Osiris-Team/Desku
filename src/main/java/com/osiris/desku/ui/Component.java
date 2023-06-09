@@ -137,7 +137,7 @@ public class Component<T extends Component<?>> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (children.contains(child)) {
             children.remove(child);
-            if(child.element.parent() != null)
+            if (child.element.parent() != null)
                 child.element.remove();
             child.update();
             if (!ui.isLoading.get())
@@ -175,14 +175,14 @@ public class Component<T extends Component<?>> {
     };
     public Consumer<AttributeChangeEvent> _attributeChange = e -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
-        if(e.isInsert){ // Add or change attribute
+        if (e.isInsert) { // Add or change attribute
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
             if (!ui.isLoading.get())
                 ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
                                 "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`);\n",
                         "internal", 0);
 
-        } else{// Remove attribute
+        } else {// Remove attribute
             element.removeAttr(e.attribute.getKey()); // Change in-memory representation
             if (!ui.isLoading.get())
                 ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
@@ -191,6 +191,7 @@ public class Component<T extends Component<?>> {
         }
         onAttributeChanged.execute(e);
     };
+    boolean changedAddToSupportScroll = false;
 
     public Component() {
         this("c");
@@ -523,7 +524,7 @@ public class Component<T extends Component<?>> {
         return _this;
     }
 
-    public boolean isVisible(){
+    public boolean isVisible() {
         return !style.containsKey("visibility");
     }
 
@@ -531,31 +532,31 @@ public class Component<T extends Component<?>> {
         if (b) {
             removeStyle("display");
             removeStyle("visibility");
-        } else{
+        } else {
             putStyle("display", "none");
             putStyle("visibility", "hidden");
         }
         return _this;
     }
 
-    boolean changedAddToSupportScroll = false;
     /**
      * Makes this component scrollable. <br>
      * Note that you must also set the width and height for this to work, <br>
      * and the min width and height for the child components.
+     *
      * @param b if true this component will be scrollable, otherwise not.
      */
-    public T scrollable(boolean b, String width, String height, String minChildWidth, String minChildHeight){
+    public T scrollable(boolean b, String width, String height, String minChildWidth, String minChildHeight) {
         // If we want to continue using flex display
         // together with scroll, items will be shrunk to 0pixel height
         // and thus making them invisible to the user and the scroll
         // bar not appearing. The official workaround: https://stackoverflow.com/a/21541021
         // is not optimal in our case, since the child containers style will not be inherited.
         // Thus, we do the following:
-        if(width != null && !width.isEmpty()) width(width);
-        if(height != null && !height.isEmpty()) height(height);
-        if(b){
-            if(!changedAddToSupportScroll){
+        if (width != null && !width.isEmpty()) width(width);
+        if (height != null && !height.isEmpty()) height(height);
+        if (b) {
+            if (!changedAddToSupportScroll) {
                 changedAddToSupportScroll = true;
                 for (Component<?> c : children) {
                     c.putStyle("min-width", minChildWidth);
@@ -563,13 +564,13 @@ public class Component<T extends Component<?>> {
                 }
                 Consumer<AddedChildEvent> superAdd = _add;
                 _add = e -> {
-                  e.childComp.putStyle("min-width", minChildWidth);
-                  e.childComp.putStyle("min-height", minChildHeight);
-                  superAdd.accept(e);
+                    e.childComp.putStyle("min-width", minChildWidth);
+                    e.childComp.putStyle("min-height", minChildHeight);
+                    superAdd.accept(e);
                 };
             }
             overflowAuto();
-        } else{
+        } else {
             removeStyle("overflow");
         }
         return _this;
@@ -789,7 +790,7 @@ public class Component<T extends Component<?>> {
      * Smart child layout. <br>
      * Creates, adds and returns a new smart child layout.
      */
-    public SmartLayout smartCL(){
+    public SmartLayout smartCL() {
         SmartLayout layout = new SmartLayout();
         add(layout);
         return layout;
@@ -932,9 +933,9 @@ public class Component<T extends Component<?>> {
     /**
      * Adds a CSS class to this component.
      */
-    public T addClass(String s){
+    public T addClass(String s) {
         String classes = element.attr("class");
-        classes += " "+s;
+        classes += " " + s;
         putAttribute("class", classes);
         return _this;
     }
@@ -942,7 +943,7 @@ public class Component<T extends Component<?>> {
     /**
      * Removes a CSS class from this component.
      */
-    public T removeClass(String s){
+    public T removeClass(String s) {
         String classes = element.attr("class");
         classes = classes.replace(s, "");
         putAttribute("class", classes);
@@ -975,13 +976,13 @@ public class Component<T extends Component<?>> {
         Component<T> _this = this;
         UI.get().registerJSListener("scroll", _this,
                 "message = `{\"isReachedEnd\": \"` + (Math.abs(event.target.scrollHeight - event.target.scrollTop - event.target.clientHeight) < 1) + `\"," +
-                " \"scrollHeight\": \"` + event.target.scrollHeight + `\"," +
+                        " \"scrollHeight\": \"` + event.target.scrollHeight + `\"," +
                         " \"scrollTop\": \"` + event.target.scrollTop + `\"," +
                         " \"clientHeight\": \"` + event.target.clientHeight + `\"," +
                         " \"eventAsJson\":` + message + `}`;\n",
                 (msg) -> {
-            _onScroll.execute(new ScrollEvent<T>(msg, (T) _this)); // Executes all listeners
-        });
+                    _onScroll.execute(new ScrollEvent<T>(msg, (T) _this)); // Executes all listeners
+                });
         return this._this;
     }
 
@@ -996,7 +997,7 @@ public class Component<T extends Component<?>> {
     //
     // Listeners
     //
-    public static class AttributeChangeEvent{
+    public static class AttributeChangeEvent {
         public final Attribute attribute;
         public final boolean isInsert;
 

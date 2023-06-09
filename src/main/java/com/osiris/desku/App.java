@@ -253,7 +253,7 @@ public class App {
             try {
                 String info = "\n\n/* Content from: ";
                 for (StackTraceElement el : new Exception().getStackTrace()) {
-                    info += el.toString()+" ";
+                    info += el.toString() + " ";
                 }
                 info += "*/\n\n";
                 s = info + s;
@@ -275,7 +275,7 @@ public class App {
             try {
                 String info = "\n\n// Content from: ";
                 for (StackTraceElement el : new Exception().getStackTrace()) {
-                    info += el.toString()+" ";
+                    info += el.toString() + " ";
                 }
                 info += "\n\n";
                 s = info + s;

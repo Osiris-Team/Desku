@@ -36,7 +36,7 @@ public class Selector extends Component<Selector> {
         this.label = label;
         this.button = new Button(defaultValue).secondary()
                 .childCenter().childCenter2().childGap("0.5vw").addClass("dropdown-toggle")
-                .putAttribute("type=","button").putAttribute("data-bs-toggle","dropdown")
+                .putAttribute("type=", "button").putAttribute("data-bs-toggle", "dropdown")
                 .putAttribute("aria-expanded", "false").onClick(e -> {
                     items.visible(!items.isVisible());
                 });
@@ -53,7 +53,7 @@ public class Selector extends Component<Selector> {
                 items.visible(false);
                 setValue(click.comp.element.text());
             });
-          superItemsAdd.accept(e); // Directly add children to items / list layout
+            superItemsAdd.accept(e); // Directly add children to items / list layout
         };
     }
 
@@ -80,7 +80,7 @@ public class Selector extends Component<Selector> {
         _onValueChange.addAction((event) -> code.accept(event));
         this.button.text.onAddedString.addAction(newValue -> {
             // This event is only triggered from the Java side.
-            TextChangeEvent<Selector> e = new TextChangeEvent<>("{\"newValue\": \""+newValue+"\", \"eventAsJson\": {}}",
+            TextChangeEvent<Selector> e = new TextChangeEvent<>("{\"newValue\": \"" + newValue + "\", \"eventAsJson\": {}}",
                     this, ""); // TODO support value before
             _onValueChange.execute(e); // Executes all listeners
         });

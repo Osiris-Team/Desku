@@ -25,10 +25,10 @@ public class TabLayout extends Component<TabLayout> {
         };
     }
 
-    public TabLayout selectTab(Component<?> tab){
+    public TabLayout selectTab(Component<?> tab) {
         int iPage = tabs.children.indexOf(tab);
-        if(iPage < 0){
-            AL.warn("Failed to select tab and show its page, since provided tab does not exist in tabs: " +tabs+" as html: "+ tabs.element.outerHtml());
+        if (iPage < 0) {
+            AL.warn("Failed to select tab and show its page, since provided tab does not exist in tabs: " + tabs + " as html: " + tabs.element.outerHtml());
             return this;
         }
         for (Component<?> t : tabs.children) {
@@ -44,17 +44,17 @@ public class TabLayout extends Component<TabLayout> {
         return this;
     }
 
-    public TabLayout addTabAndPage(String tab, Component<?> page){
+    public TabLayout addTabAndPage(String tab, Component<?> page) {
         return addTabAndPage(new Text(tab), page);
     }
 
-    public TabLayout addTabAndPage(Component<?> tab, Component<?> page){
+    public TabLayout addTabAndPage(Component<?> tab, Component<?> page) {
         page.visible(false);
 
         tabs.add(tab);
         pages.add(page);
 
-        if(tabs.children.size() == 1) // First tab is always visible
+        if (tabs.children.size() == 1) // First tab is always visible
             selectTab(tab);
         return this;
     }

@@ -122,6 +122,30 @@ public class Statics {
 
     /**
      */
+    static public FileChooser filechooser() {
+        return new FileChooser();
+    }
+
+    /**
+     */
+    static public FileChooser filechooser(String label) {
+        return new FileChooser(label);
+    }
+
+    /**
+     */
+    static public FileChooser filechooser(String label, String defaultValue) {
+        return new FileChooser(label, defaultValue);
+    }
+
+    /**
+     */
+    static public FileChooser filechooser(Text label, String defaultValue) {
+        return new FileChooser(label, defaultValue);
+    }
+
+    /**
+     */
     static public Input input(String type) {
         return new Input(type);
     }

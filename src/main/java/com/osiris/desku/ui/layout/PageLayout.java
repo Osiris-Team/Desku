@@ -14,7 +14,7 @@ public class PageLayout extends Component<PageLayout> {
     public Function<FetchDetails, List<Component<?>>> fetchChildComps;
     public int iStart, maxFetchCount;
 
-    public PageLayout(){
+    public PageLayout() {
         this.add(content, navigator);
         childVertical();
     }
@@ -25,7 +25,7 @@ public class PageLayout extends Component<PageLayout> {
      * Recommended if large amounts of data must be displayed,
      * but cannot be loaded all in at once.
      */
-    public PageLayout setDataProvider(int iStart, int maxFetchCount, Function<FetchDetails, List<Component<?>>> fetchChildComps){
+    public PageLayout setDataProvider(int iStart, int maxFetchCount, Function<FetchDetails, List<Component<?>>> fetchChildComps) {
         this.iStart = iStart;
         this.maxFetchCount = maxFetchCount;
         this.fetchChildComps = fetchChildComps;
@@ -40,10 +40,11 @@ public class PageLayout extends Component<PageLayout> {
         return _this;
     }
 
-    public class Navigator extends Component<Navigator>{
+    public class Navigator extends Component<Navigator> {
         public Component<?> content;
         public Button previous;
         public Button next;
+
         public Navigator(Component<?> content) {
             this.content = content;
 
@@ -52,8 +53,8 @@ public class PageLayout extends Component<PageLayout> {
                     .putStyle("border-bottom-right-radius", "0px");
             AtomicBoolean loaded = new AtomicBoolean(true);
             previous.onClick(e -> {
-                synchronized (loaded){
-                    if(!loaded.get()) return; // Do not accept other clicks, until below is resolved
+                synchronized (loaded) {
+                    if (!loaded.get()) return; // Do not accept other clicks, until below is resolved
                     loaded.set(false);
                     previous.laterWithOverlay((comp, overlay) -> {
                         // Fetch data
@@ -71,8 +72,8 @@ public class PageLayout extends Component<PageLayout> {
                     .putStyle("border-top-left-radius", "0px")
                     .putStyle("border-bottom-left-radius", "0px");
             next.onClick(e -> {
-                synchronized (loaded){
-                    if(!loaded.get()) return; // Do not accept other clicks, until below is resolved
+                synchronized (loaded) {
+                    if (!loaded.get()) return; // Do not accept other clicks, until below is resolved
                     loaded.set(false);
                     next.laterWithOverlay((comp, overlay) -> {
                         // Fetch data
@@ -91,7 +92,7 @@ public class PageLayout extends Component<PageLayout> {
             add(previous, next);
         }
 
-        boolean nextAllowed(){
+        boolean nextAllowed() {
             System.out.println(content.children.size());
             boolean bol = !content.children.isEmpty();
             System.out.println(bol);
@@ -100,7 +101,7 @@ public class PageLayout extends Component<PageLayout> {
             return bol;
         }
 
-        boolean previousAllowed(){
+        boolean previousAllowed() {
             boolean bol = !content.children.isEmpty();
             previous.enable(bol);
             next.enable(true);

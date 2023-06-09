@@ -10,12 +10,12 @@ public class Spinner extends Component<Spinner> {
 
     // TYPES
 
-    public Spinner typeBorder(){
+    public Spinner typeBorder() {
         addClass("spinner-border");
         return this;
     }
 
-    public Spinner typeGrow(){
+    public Spinner typeGrow() {
         addClass("spinner-grow");
         return this;
     }
