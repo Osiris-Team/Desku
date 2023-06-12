@@ -13,7 +13,7 @@ public class Main {
 
         // Create routes
         Route home = new MRoute("/", () -> { // It's recommended to create a new class and extend Route instead (for larger UIs)
-            return layout().add(text("Hello World!")); // Low-code Java UI via static methods
+            return vertical().add(text("Hello World!")); // Low-code Java UI via static methods
         });
 
         // Create and show windows
