@@ -274,7 +274,7 @@ tasks.withType(Jar).configureEach { duplicatesStrategy = DuplicatesStrategy.EXCL
 
 
 <details>
-<summary>How do I implement my own UI and UIManager? Why would I?</summary>
+<summary>How to support even more platforms? Custom UI and UIManager?</summary>
 
 UI and UIManager are both abstract classes that can be extended.
 Desku already provides implementations (DesktopUI and DesktopUIManager)
