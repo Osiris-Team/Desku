@@ -29,9 +29,6 @@ public class Main {
 All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app).
 
 - Easily develop desktop and mobile apps in one codebase!
-- Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
-- Each UIs content is provided by a tiny HTTP server and
-Java <=> JavaScript interactions are handled by an even tinier WebSocket server.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
 - You decide! Code your UI in Java or directly in HTML/CSS, or both!
@@ -136,6 +133,17 @@ Get the components' HTML string via
 Note that this also includes all its children.
 To make sure it equals the actual in memory representation
 call `component.updateAll()` before retrieving the HTML.
+</details>
+
+
+
+
+<details>
+<summary>What about performance?</summary>
+
+- Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
+- Each UIs content is provided by a tiny HTTP server and
+Java <=> JavaScript interactions are handled by an even tinier WebSocket server.
 </details>
 
 
