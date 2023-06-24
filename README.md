@@ -2,6 +2,8 @@
 Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
+Targets mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
+
 ```java
 import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 
@@ -13,7 +15,7 @@ public class Main {
 
         // Create routes
         Route home = new MRoute("/", () -> { // It's recommended to create a new class and extend Route instead (for larger UIs)
-            return layout().add(text("Hello World!")); // Low-code Java UI via static methods
+            return vertical().add(text("Hello World!")); // Low-code Java UI via static methods
         });
 
         // Create and show windows
@@ -27,9 +29,6 @@ public class Main {
 All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app).
 
 - Easily develop desktop and mobile apps in one codebase!
-- Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
-- Each UIs content is provided by a tiny HTTP server and
-Java <=> JavaScript interactions are handled by an even tinier WebSocket server.
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
 - You decide! Code your UI in Java or directly in HTML/CSS, or both!
@@ -134,6 +133,17 @@ Get the components' HTML string via
 Note that this also includes all its children.
 To make sure it equals the actual in memory representation
 call `component.updateAll()` before retrieving the HTML.
+</details>
+
+
+
+
+<details>
+<summary>What about performance?</summary>
+
+- Minimal memory and cpu usage since no additional JavaScript engine (Node.js) is being used.
+- Each UIs content is provided by a tiny HTTP server and
+Java <=> JavaScript interactions are handled by an even tinier WebSocket server.
 </details>
 
 
@@ -274,7 +284,7 @@ tasks.withType(Jar).configureEach { duplicatesStrategy = DuplicatesStrategy.EXCL
 
 
 <details>
-<summary>How do I implement my own UI and UIManager? Why would I?</summary>
+<summary>How to support even more platforms? Custom UI and UIManager?</summary>
 
 UI and UIManager are both abstract classes that can be extended.
 Desku already provides implementations (DesktopUI and DesktopUIManager)
