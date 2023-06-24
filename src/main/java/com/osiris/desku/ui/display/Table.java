@@ -2,6 +2,7 @@ package com.osiris.desku.ui.display;
 
 import com.osiris.desku.App;
 import com.osiris.desku.ui.Component;
+import com.osiris.events.Event;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -15,12 +16,12 @@ public class Table extends Component<Table> {
         }
     }
 
-    public HeaderContainer headers = new HeaderContainer(this);
-    public RowContainer rows = new RowContainer(this);
+    public Headers headers = new Headers(this);
+    public Rows rows = new Rows(this);
 
     public Table() {
-        super("table");
         add(headers, rows);
+        addClass("desku-table");
         //putStyle("display", "block"); // instead of table since that gives additional whitespace
     }
 
@@ -92,58 +93,95 @@ public class Table extends Component<Table> {
         return this;
     }
 
-    public static class HeaderContainer extends Component<HeaderContainer> {
+    public Header getHeaderAt(int index){
+        return (Header) headers.children.get(index);
+    }
+
+    public static class Headers extends Component<Headers> {
         /**
          * Reference to parent table if needed for method chaining.
          */
         public final Table t;
-        public final Row row = new Row();
+        public Event<Header> _onHeaderClick = new Event<>();
 
-        public HeaderContainer(Table table) {
-            super("thead");
+        public Headers(Table table) {
+            super("headers");
             this.t = table;
-            add(row);
-            _add = row._add; // Add directly to this row
-            _remove = row._remove; // Remove directly from this row
+            width("100%");
+            Consumer<AddedChildEvent> superAdd = this._add;
+            this._add = e -> {
+                if(e.isFirstAdd && e.childComp instanceof Header){
+                    e.childComp.onClick(click -> {
+                        _onHeaderClick.execute((Header) e.childComp);
+                    });
+                }
+                superAdd.accept(e);
+            };
+        }
+
+        public Headers onHeaderClick(Consumer<Header> code){
+            _onHeaderClick.addAction((event) -> code.accept(event));
+            return this;
         }
     }
 
-    public static class RowContainer extends Component<RowContainer> {
+    public static class Rows extends Component<Rows> {
         /**
          * Reference to parent table if needed for method chaining.
          */
         public final Table t;
+        public Event<Row> _onRowClick = new Event<>();
 
-        public RowContainer(Table table) {
-            super("tbody");
+        public Rows(Table table) {
+            super("rows");
+            childVertical();
             this.t = table;
+            width("100%"); // Children grow height of this layout
+            Consumer<AddedChildEvent> superAdd = this._add;
+            this._add = e -> {
+                if(e.isFirstAdd && e.childComp instanceof Row){
+                    e.childComp.onClick(click -> {
+                        _onRowClick.execute((Row) e.childComp);
+                    });
+                }
+                superAdd.accept(e);
+            };
+        }
+
+        public Rows onRowClick(Consumer<Row> code){
+            _onRowClick.addAction((event) -> code.accept(event));
+            return this;
         }
     }
 
     public static class Row extends Component<Row> {
-        Consumer<AddedChildEvent> superAdd = _add;
-
         public Row() {
-            super("tr");
-            _add = (e) -> { // event
-                // Headers get added directly,
-                // however other components first get wrapped into Table.Data
-                if (e.childComp instanceof Header) superAdd.accept(e);
-                else
-                    superAdd.accept(new AddedChildEvent(new Data().add(e.childComp), e.otherChildComp, e.isInsert, e.isReplace));
-            };
-        }
-    }
-
-    public static class Data extends Component<Data> {
-        public Data() {
-            super("td");
+            addClass("desku-table-row");
         }
     }
 
     public static class Header extends Component<Header> {
+        /**
+         * Width and height styles of this header are
+         * also used for each of its rows.
+         */
+        private boolean isForwardSizeToRows = true;
+
         public Header() {
-            super("th");
+            addClass("desku-table-header");
+        }
+
+        public boolean isForwardSizeToRows(){
+            return isForwardSizeToRows;
+        }
+
+        public Header forwardSizeToRows(boolean b){
+            this.isForwardSizeToRows = b;
+            return this;
+        }
+
+        public Component<?> getContent(){
+            return children.get(0);
         }
     }
 }

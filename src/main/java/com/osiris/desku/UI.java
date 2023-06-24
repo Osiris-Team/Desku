@@ -1,6 +1,7 @@
 package com.osiris.desku;
 
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.MyElement;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.Document;
@@ -11,10 +12,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -88,15 +86,7 @@ public abstract class UI {
         }
     }
 
-    /**
-     * Access this window synchronously now.
-     */
-    public UI access(Runnable code) {
-        UI.set(this, Thread.currentThread());
-        code.run();
-        UI.remove(Thread.currentThread());
-        return this;
-    }
+    private final List<PendingAppend> pendingAppends = new ArrayList<>();
 
     /**
      * Initialises/Displays the window and loads the HTML from the provided startURL.
@@ -130,33 +120,24 @@ public abstract class UI {
     }
 
     /**
-     * Note that this method is meant to be used internally. <br>
-     * Use {@link #navigate(Class)} instead if you want to send the
-     * user to another page.
+     * Access this window synchronously now.
      */
-    public void z_internal_load(Class<? extends Route> routeClass) throws IOException {
-        Route route = null;
-        for (Route r : App.routes) {
-            if (r.getClass().equals(routeClass)) {
-                route = r;
-                break;
-            }
-        }
-        if (route == null) { // Route was not registered
-            AL.warn("Failed to load page, since provided route '" + routeClass
-                    + "' was not registered, aka not added to App.routes!", new Exception());
-            return;
-        }
+    public UI access(Runnable code) {
         UI.set(this, Thread.currentThread());
-        this.isLoading.set(true);
-        this.route = route;
-        this.listenersAndComps.clear();
-        this.content = route.loadContent();
-        onLoadStateChanged.addAction((isLoading) -> {
-            if (isLoading) return;
-            this.isLoading.set(false);
-        });
+        code.run();
         UI.remove(Thread.currentThread());
+
+        synchronized (pendingAppends){
+            for (PendingAppend pendingAppend : pendingAppends) {
+                try{
+                    attachToParentSafely(pendingAppend);
+                } catch (Exception e) {
+                    AL.warn(e);
+                }
+            }
+            pendingAppends.clear();
+        }
+        return this;
     }
 
     private void priv_init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) {
@@ -325,8 +306,38 @@ public abstract class UI {
                 jsClientSendWebSocketMessage("(error == null ? ('" + id + " '+message) : ('!" + id + " '+error))");
     }
 
-    public String jsGetComp(String varName, int id) {
-        return "var " + varName + " = document.querySelectorAll('[java-id=\"" + id + "\"]')[0];\n";
+    /**
+     * Note that this method is meant to be used internally. <br>
+     * Use {@link #navigate(Class)} instead if you want to send the
+     * user to another page.
+     */
+    public void z_internal_load(Class<? extends Route> routeClass) throws IOException {
+        Route route = null;
+        for (Route r : App.routes) {
+            if (r.getClass().equals(routeClass)) {
+                route = r;
+                break;
+            }
+        }
+        if (route == null) { // Route was not registered
+            AL.warn("Failed to load page, since provided route '" + routeClass
+                    + "' was not registered, aka not added to App.routes!", new Exception());
+            return;
+        }
+        UI.set(this, Thread.currentThread());
+        this.isLoading.set(true);
+        this.route = route;
+        this.listenersAndComps.clear();
+        this.content = route.loadContent();
+        this.content.forEachChildRecursive(child -> {
+            child.isAttached = true;
+        });
+        this.content.isAttached = true;
+        onLoadStateChanged.addAction((isLoading) -> {
+            if (isLoading) return;
+            this.isLoading.set(false);
+        });
+        UI.remove(Thread.currentThread());
     }
 
     /**
@@ -472,6 +483,82 @@ public abstract class UI {
 
     public boolean isOpen() {
         return httpServer != null && httpServer.server.isAlive();
+    }
+
+    public String jsGetComp(String varName, int id) {
+        return "var " + varName + " = document.querySelector('[java-id=\"" + id + "\"]');\n";
+    }
+
+    /**
+     * Ensures all parents are attached before performing actually
+     * performing the pending append operation.
+     */
+    private void attachToParentSafely(PendingAppend pendingAppend) {
+        List<MyElement> parents = new ArrayList<>();
+        MyElement parent = pendingAppend.parent.element;
+        while(parent != null && parent instanceof MyElement){
+            parents.add(parent); // Make sure that the last attached parent is given too
+            if(parent.comp.isAttached) break;
+            Element p = parent.parent();
+            if(p instanceof MyElement) parent = (MyElement) p;
+            else break;
+        }
+        for (int i = parents.size() - 1; i >= 1; i--) { // >= 1 to exclude last added value, which is an already attached parent
+            MyElement parentOfParent = parents.get(i);
+            parent = parents.get(i - 1);
+            attachToParent(parentOfParent.comp, parent.comp);
+        }
+        attachToParent(pendingAppend.parent, pendingAppend.child);
+    }
+
+    public void attachWhenAccessEnds(Component<?> parent, Component<?> child) {
+        synchronized (pendingAppends){
+            pendingAppends.add(new PendingAppend(parent, child));
+        }
+    }
+
+    public <T extends Component<?>> void attachToParent(Component<?> parent, Component<?> child) {
+        executeJavaScript(jsAttachToParent(parent, child),
+                "internal", 0);
+        child.isAttached = true;
+    }
+
+    public String jsAttachToParent(Component<?> parent, Component<?> child) {
+        AL.info("jsAttachToParent "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached+") + "+
+                child.getClass().getSimpleName()+"("+child.id+") ");
+        return "try{"+jsGetComp("parentComp", parent.id) +
+                        "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
+                        "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +
+                        "console.log('ADDED CHILD: ');\n"+
+                        "console.log(child);\n}catch(e){console.error(e)}";
+    }
+
+    private class PendingAppend{
+        public Component<?> parent;
+        public Component<?> child;
+
+        public PendingAppend(Component<?> parent, Component<?> child) {
+            this.parent = parent;
+            this.child = child;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PendingAppend that = (PendingAppend) o;
+
+            if (!Objects.equals(parent, that.parent)) return false;
+            return Objects.equals(child, that.child);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = parent != null ? parent.hashCode() : 0;
+            result = 31 * result + (child != null ? child.hashCode() : 0);
+            return result;
+        }
     }
 
     public class PendingJavaScriptResult {

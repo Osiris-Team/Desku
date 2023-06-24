@@ -146,6 +146,30 @@ public class Statics {
 
     /**
      */
+    static public FileUploader fileuploader() {
+        return new FileUploader();
+    }
+
+    /**
+     */
+    static public FileUploader fileuploader(String label) {
+        return new FileUploader(label);
+    }
+
+    /**
+     */
+    static public FileUploader fileuploader(String label, String defaultValue) {
+        return new FileUploader(label, defaultValue);
+    }
+
+    /**
+     */
+    static public FileUploader fileuploader(Text label, String defaultValue) {
+        return new FileUploader(label, defaultValue);
+    }
+
+    /**
+     */
     static public Input input(String type) {
         return new Input(type);
     }

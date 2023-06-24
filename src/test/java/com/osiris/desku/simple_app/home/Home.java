@@ -1,6 +1,7 @@
 package com.osiris.desku.simple_app.home;
 
 import com.osiris.desku.App;
+import com.osiris.desku.Icon;
 import com.osiris.desku.Route;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.ui.Component;
@@ -194,10 +195,19 @@ public class Home extends Route {
                 .onValueChange(e -> {
             AL.info("Input of selector changed: "+e.value+" before: "+e.valueBefore);
         }));
-        // File chooser
-        ly.add(filechooser("File chooser label").onValueChange(e -> {
-            AL.info("Input of file chooser changed: "+e.value +" before: "+e.valueBefore);
+        // File uploader (probably only relevant if this a web server)
+        ly.add(fileuploader("File uploader label").onValueChange(e -> {
+            AL.info("Input of file uploader changed: "+e.value +" before: "+e.valueBefore);
             // File content can be accessed via e.content (byte array)
+        }));
+
+        //
+        // File chooser
+        //
+        ly.add(text("File chooser/selector").sizeXXL());
+        ly.add(filechooser("File chooser label").setDir(App.workingDir).onFileSelected(e -> {
+            AL.info("Selected a file: "+e.file);
+            // List of all selected files: e.directoryView.selectedFiles
         }));
 
         //
@@ -240,6 +250,14 @@ public class Home extends Route {
         ly.horizontalCL().childGap(true).add(spinner().typeGrow().primary(), spinner().typeGrow().secondary(), spinner().typeGrow().success(),
                 spinner().typeGrow().danger(), spinner().typeGrow().warning(), spinner().typeGrow().info(),
                 spinner().typeGrow().light(), spinner().typeGrow().dark());
+
+        //
+        // Icons (fontawesome)
+        //
+        ly.add(text("Icons").sizeXXL());
+        ly.horizontalCL().add(Icon.regular_bell(), Icon.regular_bookmark(), Icon.regular_heart());
+        ly.horizontalCL().add(Icon.solid_bell(), Icon.solid_bookmark(), Icon.solid_heart());
+        // Default sizes can be changed in App.theme
 
         return ly;
     }

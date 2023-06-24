@@ -27,14 +27,23 @@ public class Theme {
     public Attribute colorText = new Attribute("--color-text", "#308fff");
     public Attribute colorBase = new Attribute("--color-base", "#f5f5f5");
     public Attribute colorContrast = new Attribute("--color-contrast", "#ffffff");
+    // Icons
+    public Attribute iconWidth = new Attribute("--icon-width", "16px");
+    public Attribute iconHeight = new Attribute("--icon-height", "16px");
 
     public String toCSS() {
+        // All
         StringBuilder sb = new StringBuilder();
         sb.append("html{\n");
         for (Attribute attr : attributes) {
             sb.append("  ").append(attr.getKey()).append(": ").append(attr.getValue()).append(";\n");
         }
         sb.append("}\n");
+        // Icons
+        sb.append(".icon{" +
+                "width: " + iconWidth.getValue()+ ";"+
+                "height: " + iconHeight.getValue()+ ";"+
+                "}");
         return sb.toString();
     }
 

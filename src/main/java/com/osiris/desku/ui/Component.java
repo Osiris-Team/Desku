@@ -74,6 +74,15 @@ public class Component<T extends Component<?>> {
     public final Event<ScrollEvent> _onScroll = new Event<>();
     protected final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     /**
+     * Gets set to false in {@link AddedChildEvent}. <br>
+     */
+    public boolean isFirstAdd = true;
+    /**
+     * True if this component is attached to a UI. <br>
+     * Gets set to false if this component was removed. <br>
+     */
+    public boolean isAttached = false;
+    /**
      * The instance of the extending class. <br>
      * Is returned in pretty much all methods, to allow method chaining by returning
      * the extending class instead of {@link Component}.
@@ -90,19 +99,39 @@ public class Component<T extends Component<?>> {
      * Use wrapper methods like {@link #innerHTML(String)} for example.
      * </u>
      */
-    public Element element;
+    public MyElement element;
+    public Consumer<Component<?>> _remove = child -> {
+        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
+        if (children.contains(child)) {
+            children.remove(child);
+            if (child.element.parent() != null)
+                child.element.remove();
+            child.update();
+            if (!ui.isLoading.get())
+                ui.executeJavaScript(ui.jsGetComp("comp", id) +
+                                ui.jsGetComp("childComp", child.id) +
+                                "comp.removeChild(childComp);\n",
+                        "internal", 0);
+            child.isAttached = false;
+            onRemovedChild.execute(child);
+        }
+    };
     public Consumer<AddedChildEvent> _add = (e) -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (e.otherChildComp == null) { // add
             children.add(e.childComp);
             e.childComp.update();
             element.appendChild(e.childComp.element);
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("parentComp", id) +
-                                "var tempDiv = document.createElement('div');\n" +
-                                "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
-                                "parentComp.appendChild(tempDiv.firstChild);\n",
-                        "internal", 0);
+            if (!ui.isLoading.get()){
+                if(!this.isAttached) {
+                    // Means that this (parent) was not attached yet,
+                    // thus we postpone the addition of child to the end of UI.access()
+                    ui.attachWhenAccessEnds(this, e.childComp);
+                } else{
+                    ui.attachToParent(this, e.childComp);
+                }
+            }
+
             onAddedChild.execute(e);
         } else if (e.isInsert) {
             int iOtherComp = children.indexOf(e.otherChildComp);
@@ -116,6 +145,7 @@ public class Component<T extends Component<?>> {
                                 "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
                                 "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
                         "internal", 0);
+            e.childComp.isAttached = true;
             onAddedChild.execute(e);
         } else if (e.isReplace) {
             int iOtherComp = children.indexOf(e.otherChildComp);
@@ -129,23 +159,9 @@ public class Component<T extends Component<?>> {
                                 "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
                                 "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
                         "internal", 0);
+            e.childComp.isAttached = true;
             onAddedChild.execute(e);
-            onRemovedChild.execute(e.otherChildComp); // Removes from children, (node) children, and actual UI
-        }
-    };
-    public Consumer<Component<?>> _remove = child -> {
-        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
-        if (children.contains(child)) {
-            children.remove(child);
-            if (child.element.parent() != null)
-                child.element.remove();
-            child.update();
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("comp", id) +
-                                ui.jsGetComp("childComp", child.id) +
-                                "comp.removeChild(childComp);\n",
-                        "internal", 0);
-            onRemovedChild.execute(child);
+            _remove.accept(e.otherChildComp);// Removes from children, (node) children, and actual UI
         }
     };
     public Consumer<Attribute> _styleChange = attribute -> {
@@ -198,7 +214,7 @@ public class Component<T extends Component<?>> {
     }
 
     public Component(String tag) {
-        this.element = new Element(tag);
+        this.element = new MyElement(this, tag);
         element.attr("java-id", String.valueOf(id));
     }
 
@@ -1025,9 +1041,15 @@ public class Component<T extends Component<?>> {
          * If true, then {@link #otherChildComp} should NOT exist in the list anymore.
          */
         public boolean isReplace;
+        /**
+         * True if this is the first time {@link #childComp} was added to another component.
+         */
+        public boolean isFirstAdd;
 
         public AddedChildEvent(Component<?> childComp, Component<?> otherChildComp, boolean isInsert, boolean isReplace) {
             this.childComp = childComp;
+            this.isFirstAdd = childComp.isFirstAdd;
+            childComp.isFirstAdd = false;
             this.otherChildComp = otherChildComp;
             this.isInsert = isInsert;
             this.isReplace = isReplace;

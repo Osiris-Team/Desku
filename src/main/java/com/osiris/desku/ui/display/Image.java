@@ -9,6 +9,7 @@ import java.io.File;
 import java.nio.file.Files;
 
 public class Image extends Component<Image> {
+
     /**
      * Java integration of the HTML img tag. <br>
      * <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img</a>
@@ -18,12 +19,23 @@ public class Image extends Component<Image> {
      * @param src   examples: "/image.png" or "image.png" or "/sub-dir/image.png" or "sub-dir/image.png"
      */
     public Image(Class<?> clazz, String src) {
+        this("/" + clazz.getPackage().getName().replace(".", "/"), src);
+    }
+    /**
+     * Java integration of the HTML img tag. <br>
+     * <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img</a>
+     *
+     * @param packagePath image must be in the same package as this class or in a sub-package/sub-directory of this package.
+     *              See {@link App#getResourceInPackage(Package, String)} for more details.
+     * @param src   examples: "/image.png" or "image.png" or "/sub-dir/image.png" or "sub-dir/image.png"
+     */
+    public Image(String packagePath, String src) {
         super("img");
 
         // Paths
-        String packagePath = "/" + clazz.getPackage().getName().replace(".", "/");
+        if (!src.startsWith("/")) src = "/" + src;
         String imgNewPath = (packagePath.equals("/") ? "" : packagePath)
-                + (src.startsWith("/") ? src : ("/" + src));
+                + src;
         File img = new File(App.htmlDir + imgNewPath);
 
         // Set src of image
@@ -35,7 +47,7 @@ public class Image extends Component<Image> {
         if (img.exists()) return;
         img.getParentFile().mkdirs();
         try {
-            Files.copy(App.getResourceInPackage(clazz.getPackage(), src), img.toPath());
+            Files.copy(App.getResource(packagePath + src), img.toPath());
             AL.info("Unpacked image to: " + img);
         } catch (Exception e) {
             throw new RuntimeException(e);

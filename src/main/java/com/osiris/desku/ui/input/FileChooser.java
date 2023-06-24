@@ -1,21 +1,29 @@
 package com.osiris.desku.ui.input;
 
-import com.osiris.desku.UI;
+import com.osiris.desku.App;
+import com.osiris.desku.Icon;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.display.Image;
+import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Text;
-import com.osiris.desku.ui.event.FileChangeEvent;
 import com.osiris.events.Event;
+import com.osiris.jlib.logger.AL;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public class FileChooser extends Component<FileChooser> {
 
     // Layout
-    public Text label;
-    public Input input = new Input("file");
+    public TextField tfSelectedFiles;
+    public DirectoryView directoryView = new DirectoryView(App.userDir.getAbsoluteFile());
+    public Event<FileAsRow> _onFileSelected = new Event<>();
+    private boolean isMultiSelect = true;
 
-    // Events
-    public Event<FileChangeEvent<FileChooser>> _onValueChange = new Event<>();
 
     public FileChooser() {
         this("", "");
@@ -30,75 +38,134 @@ public class FileChooser extends Component<FileChooser> {
     }
 
     public FileChooser(Text label, String defaultValue) {
-        this.label = label;
-        add(this.label, this.input);
+        this.tfSelectedFiles = new TextField(label, defaultValue);
+        add(this.tfSelectedFiles, this.directoryView);
         childVertical();
-        this.input.putAttribute("value", defaultValue);
     }
 
-    /**
-     * The accept attribute value is a string that defines the file types the file input should accept.
-     * This string is a comma-separated list of unique file type specifiers.
-     * Because a given file type may be identified in more than one manner,
-     * it's useful to provide a thorough set of type specifiers when you need files of a given format. <br>
-     * Example: .doc,.docx,.xml,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document
-     */
-    public FileChooser accept(String s) {
-        putAttribute("accept", s);
-        return this;
-    }
-
-    public String getValue() {
-        return this.input.element.attr("value");
-    }
-
-    /**
-     * Triggers {@link #_onValueChange} event.
-     */
-    public FileChooser setValue(String s) {
-        this.input.putAttribute("value", s);
+    public FileChooser onFileSelected(Consumer<FileAsRow> code){
+        _onFileSelected.addAction(file -> code.accept(file));
         return this;
     }
 
     /**
-     * Adds a listener that gets executed when this component <br>
-     * was clicked by the user (a JavaScript click event was thrown). <br>
-     *
-     * @see UI#registerJSListener(String, Component, String, Consumer)
+     * Allow or deny selection of multiple files.
      */
-    public FileChooser onValueChange(Consumer<FileChangeEvent<FileChooser>> code) {
-        _onValueChange.addAction((event) -> code.accept(event));
-        // TODO this is probably slow af, and reads the complete file twice into memory (on JS and Java side)
-        UI.get().registerJSListener("input", input, "var fileContent = null;\n" +
-                        "try{fileContent = event.target.fileContent;}catch(e){}\n" +
-                        "if(fileContent == null){\n" +
-                        "  message = `null`\n" +
-                        "  var file = event.target.files[0]; \n" +
-                        "  var reader = new FileReader();\n" +
-                        "  event.target.reader = reader;\n" +
-                        "  reader.onload = () => {\n" +
-                        "    var string = '';\n" +
-                        "    new Int8Array(reader.result).forEach(e =>{ string += e + ' ' });\n" +
-                        "    event.target.fileContent = string;\n" +
-                        "    event.target.dispatchEvent(event);\n" + // Trigger the same event again, but this time with the file content
-                        "    event.target.fileContent = null;\n" +
-                        "  }\n" +
-                        "  reader.readAsArrayBuffer(file);\n" +
-                        "}else {\n" +
-                        "var fileName = event.target.value\n" +
-                        "if(fileName.includes('\\\\')) fileName = fileName.split('\\\\').pop();\n" +
-                        "else if(fileName.includes('/')) fileName = fileName.split('/').pop();\n" +
-                        "  message = `{\"newValue\": \"` + fileName + `\", \"newContent\": \"` + event.target.fileContent + `\", \"eventAsJson\":` + message + `}`;\n" +
-                        "}\n",
-                (msg) -> {
-                    if (msg.equals("null")) return;
-                    msg = msg.replace("\\", "/");
-                    FileChangeEvent<FileChooser> e = new FileChangeEvent<>(msg, this, input.element.attr("value"));
-                    input.element.attr("value", e.value); // Change in memory value, without triggering another change event
-                    _onValueChange.execute(e); // Executes all listeners
+    public boolean isMultiSelect() {
+        return isMultiSelect;
+    }
+
+    /**
+     * Allow or deny selection of multiple files.
+     */
+    public FileChooser multiSelect(boolean b) {
+        isMultiSelect = b;
+        return this;
+    }
+
+    public File getDir() {
+        return directoryView.dir;
+    }
+
+    public FileChooser setDir(File dir) {
+        directoryView.setDir(dir);
+        return this;
+    }
+
+
+    public class FileAsRow extends Table.Row{
+        public File file;
+        public DirectoryView directoryView;
+        public CheckBox checkBox = new CheckBox().onValueChange(e -> {
+            if(e.value && !isMultiSelect && !directoryView.selectedFiles.isEmpty()){
+                e.comp.setValue(false);
+                return;
+            }
+            if(e.value) {
+                directoryView.selectedFiles.add(this);
+                _onFileSelected.execute(this);
+            }
+            else directoryView.selectedFiles.remove(this);
+        });
+        public Image icon;
+        public Text txtFileName;
+        public Text txtLastModified;
+
+        public FileAsRow(DirectoryView directoryView, File file, Image icon){
+            this.directoryView = directoryView;
+            this.file = file;
+            add(checkBox);
+            add(this.icon = icon);
+            add(txtFileName = new Text(file.getName()));
+
+            add(txtLastModified = new Text(new Date(file.lastModified()).toString()));
+            if(file.isDirectory()){
+                onClick(e -> {
+                    directoryView.setDir(file);
                 });
-        return _this;
+                directoryView.updateAll();
+            }
+        }
     }
 
+    public class DirectoryView extends Component<DirectoryView>{
+        public Table table;
+        public CopyOnWriteArrayList<FileAsRow> files = new CopyOnWriteArrayList<>();
+        public CopyOnWriteArrayList<FileAsRow> selectedFiles = new CopyOnWriteArrayList<>();
+        private File dir;
+
+        public DirectoryView(String dir) {
+            setDir(new File(dir));
+        }
+        public DirectoryView(File dir) {
+            childVertical();
+            setDir(dir);
+        }
+
+        public File getDir() {
+            return dir;
+        }
+
+        public void setDir(File dir) {
+            this.dir = dir;
+
+            files.clear();
+            //removeAll();
+
+            table = new Table();
+            add(table);
+            table.headers("Select", "Icon", dir.getAbsolutePath().replace("\\", "/"), "Modified");
+            String selectWidth = "5%", iconWidth = "5%", nameWidth = "70%", modifiedWidth = "20%";
+            table.getHeaderAt(0).width(selectWidth);
+            table.getHeaderAt(1).width(iconWidth);
+            table.getHeaderAt(2).width(nameWidth).childStart();
+            table.getHeaderAt(3).width(modifiedWidth).childStart();
+
+            try{
+                List<File> _files = new ArrayList<>(); // First half is directories, then actual files
+                for (File f : dir.listFiles()) {
+                    if(f.isDirectory()) _files.add(f);
+                }
+                for (File f : dir.listFiles()) {
+                    if(f.isFile()) _files.add(f);
+                }
+
+                for (File file : _files) {
+                    FileAsRow fileAsRow =
+                            new FileAsRow(this, file, (file.isDirectory() ? Icon.solid_folder() : Icon.regular_file()));
+                    files.add(fileAsRow);
+                    table.row(fileAsRow);
+                    fileAsRow.children.get(0).width(selectWidth);
+                    fileAsRow.children.get(1).width(iconWidth);
+                    fileAsRow.children.get(2).width(nameWidth).childStart();
+                    fileAsRow.children.get(3).width(modifiedWidth).childStart();
+                }
+            } catch (Exception e) {
+                String msg = "Failed to retrieve directory content ("+e.getMessage()+") for " + dir;
+                AL.warn(msg, e);
+                table.row(msg, "", "", "");
+            }
+        }
+    }
 
 }
