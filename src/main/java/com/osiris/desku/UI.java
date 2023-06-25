@@ -494,6 +494,8 @@ public abstract class UI {
      * performing the pending append operation.
      */
     private void attachToParentSafely(PendingAppend pendingAppend) {
+        if(pendingAppend.child.isAttached) return;
+
         List<MyElement> parents = new ArrayList<>();
         MyElement parent = pendingAppend.parent.element;
         while(parent != null && parent instanceof MyElement){
@@ -503,12 +505,21 @@ public abstract class UI {
             if(p instanceof MyElement) parent = (MyElement) p;
             else break;
         }
-        for (int i = parents.size() - 1; i >= 1; i--) { // >= 1 to exclude last added value, which is an already attached parent
-            MyElement parentOfParent = parents.get(i);
-            parent = parents.get(i - 1);
-            attachToParent(parentOfParent.comp, parent.comp);
+        if(parents.size() >= 2){
+            MyElement rootParentParent = parents.get(parents.size() - 1); // attached
+            MyElement rootParent = parents.get(parents.size() - 2); // not attached yet
+            // If this gets appended, there is no need of
+            // performing the pending append operations of all its children.
+            rootParent.comp.updateAll();
+            attachToParent(rootParentParent.comp, rootParent.comp);
+            // Above also sets isAttached = true of all child components recursively,
+            // thus next attachToParentSafely() will return directly without doing nothing,
+            // and thus all pending appends for those children will not be executed,
+            // since otherwise that would cause duplicate components
+        } else{
+            pendingAppend.child.updateAll();
+            attachToParent(pendingAppend.parent, pendingAppend.child);
         }
-        attachToParent(pendingAppend.parent, pendingAppend.child);
     }
 
     public void attachWhenAccessEnds(Component<?> parent, Component<?> child) {
@@ -521,11 +532,18 @@ public abstract class UI {
         executeJavaScript(jsAttachToParent(parent, child),
                 "internal", 0);
         child.isAttached = true;
+        child.forEachChildRecursive(child2 -> {
+            child2.isAttached = true;
+        });
     }
 
     public String jsAttachToParent(Component<?> parent, Component<?> child) {
         AL.info("jsAttachToParent "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached+") + "+
                 child.getClass().getSimpleName()+"("+child.id+") ");
+        child.forEachChildRecursive(c -> {
+            AL.info(c.style.toString());
+        });
+
         return "try{"+jsGetComp("parentComp", parent.id) +
                         "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
                         "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +

@@ -11,6 +11,7 @@ import com.osiris.desku.ui.layout.SmartLayout;
 import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
+import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Element;
 
@@ -72,7 +73,7 @@ public class Component<T extends Component<?>> {
      * Do not add actions via this variable, use {@link #onScroll(Consumer)} instead.
      */
     public final Event<ScrollEvent> _onScroll = new Event<>();
-    protected final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
+    public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     /**
      * Gets set to false in {@link AddedChildEvent}. <br>
      */
@@ -179,6 +180,7 @@ public class Component<T extends Component<?>> {
                         "internal", 0);
         } else { // Add or change style
             style.put(attribute.getKey(), attribute.getValue());
+            AL.info("Added style! " + style);
             String style = element.hasAttr("style") ? element.attributes().get("style") : "";
             style += attribute.getKey() + ": " + attribute.getValue() + ";";
             element.attr("style", style); // Change in-memory representation
