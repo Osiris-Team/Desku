@@ -3,7 +3,6 @@ package com.osiris.desku.ui.display;
 
 import com.osiris.desku.App;
 import com.osiris.desku.ui.Component;
-import com.osiris.jlib.logger.AL;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -48,7 +47,7 @@ public class Image extends Component<Image> {
         img.getParentFile().mkdirs();
         try {
             Files.copy(App.getResource(packagePath + src), img.toPath());
-            AL.info("Unpacked image to: " + img);
+            //AL.info("Unpacked image to: " + img);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

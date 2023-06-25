@@ -530,8 +530,8 @@ public abstract class UI {
     }
 
     public <T extends Component<?>> void attachToParent(Component<?> parent, Component<?> child, Component.AddedChildEvent e) {
-        AL.info("attachToParent() "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached()+") ++++ "+
-                child.getClass().getSimpleName()+"("+child.id+") ");
+        //AL.info("attachToParent() "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached()+") ++++ "+
+        //        child.getClass().getSimpleName()+"("+child.id+") ");
 
         if (e.otherChildComp == null) { // add
             executeJavaScript(jsAttachToParent(parent, child),
