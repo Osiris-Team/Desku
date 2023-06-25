@@ -330,9 +330,9 @@ public abstract class UI {
         this.listenersAndComps.clear();
         this.content = route.loadContent();
         this.content.forEachChildRecursive(child -> {
-            child.isAttached = true;
+            child.setAttached(true);
         });
-        this.content.isAttached = true;
+        this.content.setAttached(true);
         onLoadStateChanged.addAction((isLoading) -> {
             if (isLoading) return;
             this.isLoading.set(false);
@@ -494,13 +494,13 @@ public abstract class UI {
      * performing the pending append operation.
      */
     private void attachToParentSafely(PendingAppend pendingAppend) {
-        if(pendingAppend.child.isAttached) return;
+        if(pendingAppend.child.isAttached()) return;
 
         List<MyElement> parents = new ArrayList<>();
         MyElement parent = pendingAppend.parent.element;
         while(parent != null && parent instanceof MyElement){
             parents.add(parent); // Make sure that the last attached parent is given too
-            if(parent.comp.isAttached) break;
+            if(parent.comp.isAttached()) break;
             Element p = parent.parent();
             if(p instanceof MyElement) parent = (MyElement) p;
             else break;
@@ -530,12 +530,15 @@ public abstract class UI {
     }
 
     public <T extends Component<?>> void attachToParent(Component<?> parent, Component<?> child, Component.AddedChildEvent e) {
+        AL.info("attachToParent() "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached()+") ++++ "+
+                child.getClass().getSimpleName()+"("+child.id+") ");
+
         if (e.otherChildComp == null) { // add
             executeJavaScript(jsAttachToParent(parent, child),
                     "internal", 0);
-            child.isAttached = true;
+            child.setAttached(true);
             child.forEachChildRecursive(child2 -> {
-                child2.isAttached = true;
+                child2.setAttached(true);
             });
         } else if (e.isInsert || e.isReplace) { // for replace, remove() must be executed after this function returns
             executeJavaScript(
@@ -543,16 +546,14 @@ public abstract class UI {
                             "var child = `" + e.childComp.element.outerHtml() + "`;\n" +
                             "otherChildComp.insertAdjacentHTML(\"beforebegin\", child);\n",
                     "internal", 0);
-            e.childComp.isAttached = true;
+            e.childComp.setAttached(true);
             e.childComp.forEachChildRecursive(child2 -> {
-                child2.isAttached = true;
+                child2.setAttached(true);
             });
         }
     }
 
     public String jsAttachToParent(Component<?> parent, Component<?> child) {
-        //AL.info("jsAttachToParent "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached+") + "+
-        //        child.getClass().getSimpleName()+"("+child.id+") ");
         return "try{"+jsGetComp("parentComp", parent.id) +
                         "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
                         "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +

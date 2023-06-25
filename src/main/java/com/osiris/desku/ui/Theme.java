@@ -4,6 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Theme {
+    /**
+     * Replaces all hyphens by their uppercase version
+     * of their next char.
+     */
+    public static String getJSCompatibleCSSKey(String s){
+        int indexOfHyphen = 0;
+        while(true){
+            indexOfHyphen = s.indexOf("-");
+            if(indexOfHyphen == -1) break;
+            String c = String.valueOf(s.charAt(indexOfHyphen + 1));
+            s = s.replaceAll("-"+c, c.toUpperCase());
+        }
+        return s;
+    }
     public List<Attribute> attributes = new ArrayList<>();
     // Space sizes
     public Attribute spaceXS = new Attribute("--space-xs", "0.25rem");

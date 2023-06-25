@@ -73,6 +73,11 @@ public class Component<T extends Component<?>> {
      * Do not add actions via this variable, use {@link #onScroll(Consumer)} instead.
      */
     public final Event<ScrollEvent> _onScroll = new Event<>();
+    /**
+     * Gets executed when this component <br>
+     * was attached to the UI.
+     */
+    public final Event<Void> _onAttached = new Event<>();
     public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     /**
      * Gets set to false in {@link AddedChildEvent}. <br>
@@ -82,7 +87,15 @@ public class Component<T extends Component<?>> {
      * True if this component is attached to a UI. <br>
      * Gets set to false if this component was removed. <br>
      */
-    public boolean isAttached = false;
+    private boolean isAttached = false;
+    public T setAttached(boolean b){
+        isAttached = b;
+        _onAttached.execute(null);
+        return _this;
+    }
+    public boolean isAttached(){
+        return isAttached;
+    }
     /**
      * The instance of the extending class. <br>
      * Is returned in pretty much all methods, to allow method chaining by returning
@@ -152,29 +165,62 @@ public class Component<T extends Component<?>> {
         onAddedChild.execute(e);
         if (e.isReplace) _remove.accept(e.otherChildComp);// Removes from children, (node) children, and actual UI
     };
-    public Consumer<Attribute> _styleChange = attribute -> {
+    public Consumer<Attribute> _styleChange =  attribute -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
-        if (attribute.getValue().isEmpty()) { // Remove style
+        if (attribute.getValue().isEmpty()) {
+
+            // Remove style
             style.remove(attribute.getKey());
             String style = element.hasAttr("style") ? element.attributes().get("style") : "";
             int iKeyFirstChar = style.indexOf(attribute.getKey());
             if (iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
             style = style.substring(0, iKeyFirstChar) + style.substring(style.indexOf(";", iKeyFirstChar) + 1);
             element.attr("style", style); // Change in-memory representation
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                "comp.style." + attribute.getKey() + " = ``;\n",
-                        "internal", 0);
-        } else { // Add or change style
+
+            // Update UI
+            if (!ui.isLoading.get()){
+                if(isAttached){
+                    ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                    "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = ``;\n",
+                            "internal", 0);
+                } else{// Execute style change once attached
+                    _onAttached.addOneTimeAction((event, action) -> {
+                        ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                        "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = ``;\n",
+                                        //"console.log(`REMOVED STYLE ("+id+"): ` + comp.style);\n",
+                                "internal", 0);
+                    }, AL::warn);
+                }
+            }
+        } else {
+
+            // Add or change style
             style.put(attribute.getKey(), attribute.getValue());
-            AL.info("Added style! " + style);
+
             String style = element.hasAttr("style") ? element.attributes().get("style") : "";
             style += attribute.getKey() + ": " + attribute.getValue() + ";";
             element.attr("style", style); // Change in-memory representation
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                "comp.style." + attribute.getKey() + " = `" + attribute.getValue() + "`;\n",
-                        "internal", 0);
+
+            // Update UI
+            if (!ui.isLoading.get()){
+                if(isAttached) {
+                    ui.executeJavaScript("try{"+ui.jsGetComp("comp", id) + // Change UI representation
+                                    "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = `" + attribute.getValue() + "`;\n" +
+                                    "}catch(e){console.error(e);}\n",
+                            "internal", 0);
+                }
+                else { // Execute style change once attached
+                    String finalStyle = style;
+                    _onAttached.addOneTimeAction((event, action) -> {
+                        //AL.info("Added style! "+getClass().getSimpleName()+"("+id+"/"+isAttached+") " + finalStyle);
+                        ui.executeJavaScript("try{"+ui.jsGetComp("comp", id) + // Change UI representation
+                                        "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = `" + attribute.getValue() + "`;\n" +
+                                        //"console.log(`ADDED STYLE ("+id+"): ` + comp.style);\n" +
+                                        "}catch(e){console.error(e);}\n",
+                                "internal", 0);
+                    }, AL::warn);
+                }
+            }
         }
         onStyleChanged.execute(attribute);
     };
@@ -182,17 +228,35 @@ public class Component<T extends Component<?>> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (e.isInsert) { // Add or change attribute
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`);\n",
-                        "internal", 0);
+            if (!ui.isLoading.get()){
+                if(isAttached){
+                    ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                    "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`);\n",
+                            "internal", 0);
+                } else{ // Execute attribute add once attached
+                    _onAttached.addOneTimeAction((event, action) -> {
+                        ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                        "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`);\n",
+                                "internal", 0);
+                    }, AL::warn);
+                }
+            }
 
         } else {// Remove attribute
             element.removeAttr(e.attribute.getKey()); // Change in-memory representation
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                "comp.removeAttribute(`" + e.attribute.getKey() + "`);\n",
-                        "internal", 0);
+            if (!ui.isLoading.get()){
+                if(isAttached){
+                    ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                    "comp.removeAttribute(`" + e.attribute.getKey() + "`);\n",
+                            "internal", 0);
+                } else{ // Execute attribute remove once attached
+                    _onAttached.addOneTimeAction((event, action) -> {
+                        ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
+                                        "comp.removeAttribute(`" + e.attribute.getKey() + "`);\n",
+                                "internal", 0);
+                    }, AL::warn);
+                }
+            }
         }
         onAttributeChanged.execute(e);
     };
