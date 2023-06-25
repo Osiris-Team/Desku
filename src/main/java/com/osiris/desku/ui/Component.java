@@ -179,18 +179,8 @@ public class Component<T extends Component<?>> {
 
             // Update UI
             if (!ui.isLoading.get()){
-                if(isAttached){
-                    ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = ``;\n",
-                            "internal", 0);
-                } else{// Execute style change once attached
-                    _onAttached.addOneTimeAction((event, action) -> {
-                        ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                        "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = ``;\n",
-                                        //"console.log(`REMOVED STYLE ("+id+"): ` + comp.style);\n",
-                                "internal", 0);
-                    }, AL::warn);
-                }
+                executeJS("comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey())
+                        + " = ``;\n"); // Change UI representation
             }
         } else {
 
@@ -203,23 +193,8 @@ public class Component<T extends Component<?>> {
 
             // Update UI
             if (!ui.isLoading.get()){
-                if(isAttached) {
-                    ui.executeJavaScript("try{"+ui.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = `" + attribute.getValue() + "`;\n" +
-                                    "}catch(e){console.error(e);}\n",
-                            "internal", 0);
-                }
-                else { // Execute style change once attached
-                    String finalStyle = style;
-                    _onAttached.addOneTimeAction((event, action) -> {
-                        //AL.info("Added style! "+getClass().getSimpleName()+"("+id+"/"+isAttached+") " + finalStyle);
-                        ui.executeJavaScript("try{"+ui.jsGetComp("comp", id) + // Change UI representation
-                                        "comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey()) + " = `" + attribute.getValue() + "`;\n" +
-                                        //"console.log(`ADDED STYLE ("+id+"): ` + comp.style);\n" +
-                                        "}catch(e){console.error(e);}\n",
-                                "internal", 0);
-                    }, AL::warn);
-                }
+                executeJS("comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey())
+                        + " = `" + attribute.getValue() + "`;\n"); // Change UI representation
             }
         }
         onStyleChanged.execute(attribute);
@@ -229,33 +204,14 @@ public class Component<T extends Component<?>> {
         if (e.isInsert) { // Add or change attribute
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
             if (!ui.isLoading.get()){
-                if(isAttached){
-                    ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`);\n",
-                            "internal", 0);
-                } else{ // Execute attribute add once attached
-                    _onAttached.addOneTimeAction((event, action) -> {
-                        ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                        "comp.setAttribute(`" + e.attribute.getKey() + "`, `" + e.attribute.getValue() + "`);\n",
-                                "internal", 0);
-                    }, AL::warn);
-                }
+                executeJS("comp.setAttribute(`" + e.attribute.getKey()
+                        + "`, `" + e.attribute.getValue() + "`);\n"); // Change UI representation
             }
 
         } else {// Remove attribute
             element.removeAttr(e.attribute.getKey()); // Change in-memory representation
             if (!ui.isLoading.get()){
-                if(isAttached){
-                    ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                    "comp.removeAttribute(`" + e.attribute.getKey() + "`);\n",
-                            "internal", 0);
-                } else{ // Execute attribute remove once attached
-                    _onAttached.addOneTimeAction((event, action) -> {
-                        ui.executeJavaScript(ui.jsGetComp("comp", id) + // Change UI representation
-                                        "comp.removeAttribute(`" + e.attribute.getKey() + "`);\n",
-                                "internal", 0);
-                    }, AL::warn);
-                }
+                executeJS("comp.removeAttribute(`" + e.attribute.getKey() + "`);\n"); // Change UI representation
             }
         }
         onAttributeChanged.execute(e);
@@ -277,6 +233,30 @@ public class Component<T extends Component<?>> {
             list.add(c);
         }
         return list;
+    }
+
+    /**
+     * Executes the provided JavaScript code now, or later
+     * if this component is not attached yet. <br>
+     * Your code will be encapsulated in a try/catch block and errors logged to
+     * the clients JavaScript console. <br>
+     * A reference of this component will be added, thus you can access
+     * this component via the "comp" variable in your provided JavaScript code.
+     */
+    public T executeJS(String code){
+        UI ui = UI.get();
+        if(isAttached){
+            ui.executeJavaScript(ui.jsGetComp("comp", id) +
+                            code,
+                    "internal", 0);
+        } else{ // Execute code once attached
+            _onAttached.addOneTimeAction((event, action) -> {
+                ui.executeJavaScript(ui.jsGetComp("comp", id) +
+                                code,
+                        "internal", 0);
+            }, AL::warn);
+        }
+        return _this;
     }
 
     /**
