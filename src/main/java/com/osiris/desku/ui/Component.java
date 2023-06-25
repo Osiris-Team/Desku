@@ -118,52 +118,39 @@ public class Component<T extends Component<?>> {
         }
     };
     public Consumer<AddedChildEvent> _add = (e) -> {
-        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
+
+        // Perform in-memory update
         if (e.otherChildComp == null) { // add
             children.add(e.childComp);
             e.childComp.update();
             element.appendChild(e.childComp.element);
-            if (!ui.isLoading.get()){
-                if(!this.isAttached) {
-                    // Means that this (parent) was not attached yet,
-                    // thus we postpone the addition of child to the end of UI.access()
-                    ui.attachWhenAccessEnds(this, e.childComp);
-                } else{
-                    ui.attachToParent(this, e.childComp);
-                }
-            }
-
-            onAddedChild.execute(e);
         } else if (e.isInsert) {
             int iOtherComp = children.indexOf(e.otherChildComp);
             children.set(iOtherComp, e.childComp);
             e.childComp.update();
             element.insertChildren(iOtherComp, e.childComp.element);
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("parentComp", id) +
-                                ui.jsGetComp("otherChildComp", e.otherChildComp.id) +
-                                "var tempDiv = document.createElement('div');\n" +
-                                "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
-                                "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
-                        "internal", 0);
-            e.childComp.isAttached = true;
-            onAddedChild.execute(e);
         } else if (e.isReplace) {
             int iOtherComp = children.indexOf(e.otherChildComp);
             children.set(iOtherComp, e.childComp);
             e.childComp.update();
             element.insertChildren(iOtherComp, e.childComp.element);
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("parentComp", id) +
-                                ui.jsGetComp("otherChildComp", e.otherChildComp.id) +
-                                "var tempDiv = document.createElement('div');\n" +
-                                "tempDiv.innerHTML = `" + e.childComp.element.outerHtml() + "`;\n" +
-                                "parentComp.insertBefore(tempDiv.firstChild, otherChildComp);\n",
-                        "internal", 0);
-            e.childComp.isAttached = true;
-            onAddedChild.execute(e);
-            _remove.accept(e.otherChildComp);// Removes from children, (node) children, and actual UI
         }
+
+        // Perform actual UI update
+        UI ui = UI.get();
+        if (!ui.isLoading.get()){
+            if(!this.isAttached) {
+                // Means that this (parent) was not attached yet,
+                // thus we postpone the addition of child to the end of UI.access()
+                ui.attachWhenAccessEnds(this, e.childComp, e);
+            } else{
+                ui.attachToParent(this, e.childComp, e);
+            }
+        }
+
+        // Execute listeners
+        onAddedChild.execute(e);
+        if (e.isReplace) _remove.accept(e.otherChildComp);// Removes from children, (node) children, and actual UI
     };
     public Consumer<Attribute> _styleChange = attribute -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
