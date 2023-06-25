@@ -511,14 +511,15 @@ public abstract class UI {
             // If this gets appended, there is no need of
             // performing the pending append operations of all its children.
             rootParent.comp.updateAll();
-            attachToParent(rootParentParent.comp, rootParent.comp, e);
+            attachToParent(rootParentParent.comp, rootParent.comp,
+                    new Component.AddedChildEvent(rootParent.comp, null, false, false));
             // Above also sets isAttached = true of all child components recursively,
             // thus next attachToParentSafely() will return directly without doing nothing,
             // and thus all pending appends for those children will not be executed,
             // since otherwise that would cause duplicate components
         } else{
             pendingAppend.child.updateAll();
-            attachToParent(pendingAppend.parent, pendingAppend.child, e);
+            attachToParent(pendingAppend.parent, pendingAppend.child, pendingAppend.e);
         }
     }
 
@@ -562,10 +563,12 @@ public abstract class UI {
     private class PendingAppend{
         public Component<?> parent;
         public Component<?> child;
+        public Component.AddedChildEvent e;
 
         public PendingAppend(Component<?> parent, Component<?> child, Component.AddedChildEvent e) {
             this.parent = parent;
             this.child = child;
+            this.e = e;
         }
 
         @Override
