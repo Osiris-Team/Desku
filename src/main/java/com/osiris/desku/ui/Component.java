@@ -246,13 +246,20 @@ public class Component<T extends Component<?>> {
     public T executeJS(String code){
         UI ui = UI.get();
         if(isAttached){
-            ui.executeJavaScript(ui.jsGetComp("comp", id) +
-                            code,
+            ui.executeJavaScript(
+                    "try{"+
+                            ui.jsGetComp("comp", id) +
+                            code+
+                            "}catch(e){console.error(e)}",
                     "internal", 0);
         } else{ // Execute code once attached
             _onAttached.addOneTimeAction((event, action) -> {
-                ui.executeJavaScript(ui.jsGetComp("comp", id) +
-                                code,
+
+                ui.executeJavaScript(
+                        "try{"+
+                                ui.jsGetComp("comp", id) +
+                                code+
+                                "}catch(e){console.error(e)}",
                         "internal", 0);
             }, AL::warn);
         }
