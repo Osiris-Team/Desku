@@ -11,6 +11,7 @@ import com.osiris.jlib.logger.AL;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -96,14 +97,19 @@ public class FileChooser extends Component<FileChooser> {
             this.file = file;
             add(checkBox);
             add(this.icon = icon);
-            add(txtFileName = new Text(file.getName()));
+            if(file == null){
+                add(txtFileName = new Text("..DRIVES"));
+                add(txtLastModified = new Text(""));
+            } else{
+                add(txtFileName = new Text(file.getName()));
+                add(txtLastModified = new Text(new Date(file.lastModified()).toString()));
 
-            add(txtLastModified = new Text(new Date(file.lastModified()).toString()));
-            if(file.isDirectory()){
+            }
+            if(file==null || file.isDirectory()){
                 onClick(e -> {
                     directoryView.setDir(file);
                 });
-                directoryView.updateAll();
+                AL.info("Attached onClick for "+this.toPrintString());
             }
         }
     }
@@ -130,11 +136,12 @@ public class FileChooser extends Component<FileChooser> {
             this.dir = dir;
 
             files.clear();
-            //removeAll();
+            removeAll();
 
             table = new Table();
             add(table);
-            table.headers("Select", "Icon", dir.getAbsolutePath().replace("\\", "/"), "Modified");
+            table.headers("Select", "Icon", dir == null ? ".." : // If this the case then parent shows drives/roots
+                    dir.getAbsolutePath().replace("\\", "/"), "Modified");
             String selectWidth = "5%", iconWidth = "5%", nameWidth = "70%", modifiedWidth = "20%";
             table.getHeaderAt(0).width(selectWidth);
             table.getHeaderAt(1).width(iconWidth);
@@ -142,23 +149,38 @@ public class FileChooser extends Component<FileChooser> {
             table.getHeaderAt(3).width(modifiedWidth).childStart();
 
             try{
-                List<File> _files = new ArrayList<>(); // First half is directories, then actual files
-                for (File f : dir.listFiles()) {
-                    if(f.isDirectory()) _files.add(f);
-                }
-                for (File f : dir.listFiles()) {
-                    if(f.isFile()) _files.add(f);
+                List<File> _files = new ArrayList<>();
+                if(dir != null){
+                    // Add parent dir first, or drives view if parent dir is null
+                    File parentDir = dir.getParentFile();
+                    _files.add(parentDir);
+                    // First half is directories, then actual files
+                    for (File f : dir.listFiles()) {
+                        if(f.isDirectory()) _files.add(f);
+                    }
+                    for (File f : dir.listFiles()) {
+                        if(f.isFile()) _files.add(f);
+                    }
+                } else{
+                    // show drives
+                    Collections.addAll(_files, File.listRoots());
                 }
 
                 for (File file : _files) {
                     FileAsRow fileAsRow =
-                            new FileAsRow(this, file, (file.isDirectory() ? Icon.solid_folder() : Icon.regular_file()));
+                            new FileAsRow(this, file,
+                                    (file == null || file.isDirectory() ? Icon.solid_folder() : Icon.regular_file()));
                     files.add(fileAsRow);
                     table.row(fileAsRow);
                     fileAsRow.children.get(0).width(selectWidth);
                     fileAsRow.children.get(1).width(iconWidth);
                     fileAsRow.children.get(2).width(nameWidth).childStart();
                     fileAsRow.children.get(3).width(modifiedWidth).childStart();
+                }
+                if(dir != null){
+                    // Since firstRow is always parent, also set its text to ..
+                    FileAsRow firstRow = (FileAsRow) table.rows.children.get(0);
+                    firstRow.txtFileName.set("..");
                 }
             } catch (Exception e) {
                 String msg = "Failed to retrieve directory content ("+e.getMessage()+") for " + dir;

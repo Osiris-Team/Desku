@@ -244,7 +244,13 @@ public class Component<T extends Component<?>> {
      * this component via the "comp" variable in your provided JavaScript code.
      */
     public T executeJS(String code){
-        UI ui = UI.get();
+        return executeJS(UI.get(), code);
+    }
+
+    /**
+     * @see #executeJS(String)
+     */
+    public T executeJS(UI ui, String code){
         if(isAttached){
             ui.executeJavaScript(
                     "try{"+
@@ -254,7 +260,6 @@ public class Component<T extends Component<?>> {
                     "internal", 0);
         } else{ // Execute code once attached
             _onAttached.addOneTimeAction((event, action) -> {
-
                 ui.executeJavaScript(
                         "try{"+
                                 ui.jsGetComp("comp", id) +
@@ -263,6 +268,25 @@ public class Component<T extends Component<?>> {
                         "internal", 0);
             }, AL::warn);
         }
+        return _this;
+    }
+
+    /**
+     * Executes the provided JavaScript code now, or later if this component is not attached yet. <br>
+     * Additional arguments make it possible to execute Java code, once your provided JavaScript code
+     * finishes execution. Also enables you to pass over Strings from JavaScript to Java. <br>
+     * @see UI#jsAddPermanentCallback(String, Consumer, Consumer)
+     */
+    public T executeJS(String code, Consumer<String> onSuccess, Consumer<String> onError){
+        return executeJS(UI.get(), code, onSuccess, onError);
+    }
+
+    /**
+     * @see #executeJS(String, Consumer, Consumer)
+     */
+    public T executeJS(UI ui, String code, Consumer<String> onSuccess, Consumer<String> onError){
+        code = ui.jsAddPermanentCallback(code, onSuccess, onError);
+        executeJS(code);
         return _this;
     }
 
@@ -1048,6 +1072,10 @@ public class Component<T extends Component<?>> {
 
     public Component<?> lastChild() {
         return children.get(children.size() - 1);
+    }
+
+    public String toPrintString(){
+        return this.getClass().getSimpleName()+"_"+id;
     }
 
     //

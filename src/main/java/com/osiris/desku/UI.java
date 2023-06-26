@@ -288,16 +288,16 @@ public abstract class UI {
      * @param jsCode               modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
      *                             Your JS code could look like this: <br>
      *                             message = 'first second third etc...';
-     * @param onJSFunctionExecuted executed when the provided jsCode executes successfully. String contains the message variable that can be set in your jsCode.
-     * @param onJSFunctionFailed   executed when the provided jsCode threw an exception. String contains details about the exception/error.
+     * @param onSuccess executed when the provided jsCode executes successfully. String contains the message variable that can be set in your jsCode.
+     * @param onError   executed when the provided jsCode threw an exception. String contains details about the exception/error.
      */
-    public String jsAddPermanentCallback(String jsCode, Consumer<String> onJSFunctionExecuted, Consumer<String> onJSFunctionFailed) {
+    public String jsAddPermanentCallback(String jsCode, Consumer<String> onSuccess, Consumer<String> onError) {
         // 1. execute js code
         // 2. execute callback in java with params from js code
         // 3. return success to js code and execute it
         int id = webSocketServer.counter.getAndIncrement();
         synchronized (webSocketServer.javaScriptCallbacks) {
-            PendingJavaScriptResult pendingJavaScriptResult = new PendingJavaScriptResult(id, onJSFunctionExecuted, onJSFunctionFailed);
+            PendingJavaScriptResult pendingJavaScriptResult = new PendingJavaScriptResult(id, onSuccess, onError);
             webSocketServer.javaScriptCallbacks.add(pendingJavaScriptResult);
         }
         return "var message = '';\n" + // Separated by space
@@ -360,6 +360,7 @@ public abstract class UI {
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
     public <T extends Component<?>> UI registerJSListener(String eventName, Component<T> comp, String jsOnEvent, Consumer<String> onEvent) {
+        AL.info("registerJSListener() "+ comp.toPrintString());
         synchronized (listenersAndComps) {
             List<Component<?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
@@ -370,7 +371,8 @@ public abstract class UI {
                 return this; // Already registered
             alreadyRegisteredComps.add(comp);
         }
-        String jsNow = jsGetComp("comp", comp.id) +
+        String jsNow =
+                "console.error(\"INFO: Registered event listener! START\");\n" +
                 "comp.addEventListener(\"" + eventName + "\", (event) => {\n" +
                 jsAddPermanentCallback("function getObjProps(obj) {\n" +
                                 "  var json = '{';\n" +
@@ -399,11 +401,16 @@ public abstract class UI {
                         }) + // JS code that triggers Java function gets executed on a click event for this component
                 "});\n";
 
-        if (!isLoading.get()) executeJavaScript(jsNow, "internal", 0);
+        AL.info("registerJSListener() START ");
+        if (!isLoading.get()) {
+            comp.executeJS(this, jsNow);
+            AL.info("registerJSListener() FINISH ");
+        }
         else onLoadStateChanged.addAction((action, isLoading) -> {
             if (isLoading) return;
             action.remove();
-            executeJavaScript(jsNow, "internal", 0);
+            comp.executeJS(this, jsNow);
+            AL.info("registerJSListener() FINISH ");
         }, AL::warn);
         return this;
     }
