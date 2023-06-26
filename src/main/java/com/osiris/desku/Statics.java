@@ -27,6 +27,18 @@ public class Statics {
     }
 
     /**
+     * Java integration of the HTML img tag. <br>
+     * <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img</a>
+     *
+     * @param packagePath image must be in the same package as this class or in a sub-package/sub-directory of this package.
+     *              See {@link App#getResourceInPackage(Package, String)} for more details.
+     * @param src   examples: "/image.png" or "image.png" or "/sub-dir/image.png" or "sub-dir/image.png"
+     */
+    static public Image image(String packagePath, String src) {
+        return new Image(packagePath, src);
+    }
+
+    /**
      */
     static public Router router() {
         return new Router();
@@ -200,26 +212,26 @@ public class Statics {
 
     /**
      */
-    static public Selector selector() {
-        return new Selector();
+    static public Select select() {
+        return new Select();
     }
 
     /**
      */
-    static public Selector selector(String label) {
-        return new Selector(label);
+    static public Select select(String label) {
+        return new Select(label);
     }
 
     /**
      */
-    static public Selector selector(String label, String defaultValue) {
-        return new Selector(label, defaultValue);
+    static public Select select(String label, String defaultValue) {
+        return new Select(label, defaultValue);
     }
 
     /**
      */
-    static public Selector selector(Text label, String defaultValue) {
-        return new Selector(label, defaultValue);
+    static public Select select(Text label, String defaultValue) {
+        return new Select(label, defaultValue);
     }
 
     /**

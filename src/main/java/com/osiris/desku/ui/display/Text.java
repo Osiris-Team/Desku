@@ -2,19 +2,26 @@ package com.osiris.desku.ui.display;
 
 import com.osiris.desku.UI;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.event.TextChangeEvent;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.TextNode;
 
+import java.util.function.Consumer;
+
 public class Text extends Component<Text> {
+    /**
+     * Executed when the value changed on the Java side.
+     */
+    public final Event<TextChangeEvent<Text>> _onValueChanged = new Event<>();
     /**
      * Executed when a child was added on the Java side.
      */
-    public final Event<String> onAddedString = new Event<>();
+    public final Event<String> _onAddedString = new Event<>();
     /**
      * Executed when a child was removed on the Java side.
      */
-    public final Event<Void> onRemovedAllStrings = new Event<>();
+    public final Event<Void> _onRemovedAllStrings = new Event<>();
 
     public Text(String s) {
         super("txt");
@@ -22,13 +29,13 @@ public class Text extends Component<Text> {
         // Attach Java event listeners
         UI win = UI.get();
         Runnable registration = () -> {
-            onAddedString.addAction((childString) -> {
+            _onAddedString.addAction((childString) -> {
                 win.executeJavaScript(win.jsGetComp("comp", id) +
                                 "var childString = document.createTextNode(`" + childString + "`);\n" +
                                 "comp.appendChild(childString);\n",
                         "internal", 0);
             });
-            onRemovedAllStrings.addAction((_void) -> {
+            _onRemovedAllStrings.addAction((_void) -> {
                 win.executeJavaScript(win.jsGetComp("comp", id) +
                                 "comp.textContent = '';\n", // remove all text nodes
                         "internal", 0);
@@ -42,13 +49,23 @@ public class Text extends Component<Text> {
         }, AL::warn);
     }
 
+    public Text onValueChanged(Consumer<TextChangeEvent<Text>> code){
+        _onValueChanged.addAction(e -> {
+            code.accept(e);
+        });
+        return this;
+    }
+
     public String get() {
         return element.text();
     }
 
     public Text set(String s) {
+        String oldValue = get();
         clear();
         append(s);
+        _onValueChanged.execute(new TextChangeEvent<>("{\"newValue\": \""+s+"\", \"eventAsJson\": {}}",
+                this, oldValue));
         return this;
     }
 
@@ -56,13 +73,13 @@ public class Text extends Component<Text> {
         for (TextNode txt : element.textNodes()) {
             txt.remove(); // Remove all text nodes from parent
         }
-        onRemovedAllStrings.execute(null); // Updates the UI
+        _onRemovedAllStrings.execute(null); // Updates the UI
         return this;
     }
 
     public Text append(String s) {
         element.appendText(s);
-        onAddedString.execute(s); // Updates the UI
+        _onAddedString.execute(s); // Updates the UI
         return this;
     }
 
