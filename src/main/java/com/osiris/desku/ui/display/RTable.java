@@ -57,7 +57,7 @@ public class RTable extends Component<RTable> {
         for (Field f : clazz.getFields()) {
             if (predicate.test(f)) {
                 String name = f.getName();
-                table.headers.add(new Table.Header().add(new Text(name)));
+                table.headers.add(new Text(name));
             }
         }
         table.recalcMaxColumnWidthPercent();

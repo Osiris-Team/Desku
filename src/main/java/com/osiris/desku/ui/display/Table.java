@@ -5,6 +5,8 @@ import com.osiris.desku.ui.Component;
 import com.osiris.events.Event;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class Table extends Component<Table> {
@@ -16,13 +18,15 @@ public class Table extends Component<Table> {
         }
     }
 
-    public Headers headers = new Headers(this);
+    public Row headers = new Row().addClass("desku-table-header");
     public Rows rows = new Rows(this);
     /**
-     * Gets recalculated in {@link #headers(Header...)}.
+     * Gets recalculated in {@link #headers(Row...)}. <br>
+     * Set to -1 or smaller, to disable.
      */
     public double maxColumnWidthPercent = 100;
     public void recalcMaxColumnWidthPercent(){
+        if(maxColumnWidthPercent < 0) return;
         maxColumnWidthPercent = (1.0 / headers.children.size()) * 100.0;
         for (Component<?> header : headers.children) {
             header.putStyle("max-width", maxColumnWidthPercent+"%");
@@ -38,7 +42,7 @@ public class Table extends Component<Table> {
         add(headers, rows);
         addClass("desku-table");
         rows.onAddedChild.addAction(e -> {
-           if(e.childComp instanceof Row){
+           if(maxColumnWidthPercent > 0 && e.childComp instanceof Row){
                Row row = (Row) e.childComp;
                for (Component<?> rowColumn : row.children) {
                    rowColumn.putStyle("max-width", maxColumnWidthPercent+"%");
@@ -54,7 +58,7 @@ public class Table extends Component<Table> {
     public Table headers(String... headers) {
         this.headers.removeAll();
         for (String header : headers) {
-            this.headers.add(new Header().add(new Text(header)));
+            this.headers.add(new Text(header));
         }
         recalcMaxColumnWidthPercent();
         return _this;
@@ -63,9 +67,9 @@ public class Table extends Component<Table> {
     /**
      * Easily set/replace the headers.
      */
-    public Table headers(Header... headers) {
+    public Table headers(Component<?>... headers) {
         this.headers.removeAll();
-        for (Header header : headers) {
+        for (Component<?> header : headers) {
             this.headers.add(header);
         }
         recalcMaxColumnWidthPercent();
@@ -118,8 +122,8 @@ public class Table extends Component<Table> {
         return this;
     }
 
-    public Header getHeaderAt(int index){
-        return (Header) headers.children.get(index);
+    public Component<?> getHeaderAt(int index){
+        return headers.children.get(index);
     }
 
     public static class Headers extends Component<Headers> {
@@ -127,7 +131,7 @@ public class Table extends Component<Table> {
          * Reference to parent table if needed for method chaining.
          */
         public final Table t;
-        public Event<Header> _onHeaderClick = new Event<>();
+        public Event<Row> _onHeaderClick = new Event<>();
 
         public Headers(Table table) {
             super("headers");
@@ -135,16 +139,16 @@ public class Table extends Component<Table> {
             width("100%");
             Consumer<AddedChildEvent> superAdd = this._add;
             this._add = e -> {
-                if(e.isFirstAdd && e.childComp instanceof Header){
+                if(e.isFirstAdd && e.childComp instanceof Row){
                     e.childComp.onClick(click -> {
-                        _onHeaderClick.execute((Header) e.childComp);
+                        _onHeaderClick.execute((Row) e.childComp);
                     });
                 }
                 superAdd.accept(e);
             };
         }
 
-        public Headers onHeaderClick(Consumer<Header> code){
+        public Headers onHeaderClick(Consumer<Row> code){
             _onHeaderClick.addAction((event) -> code.accept(event));
             return this;
         }
@@ -182,27 +186,38 @@ public class Table extends Component<Table> {
     public static class Row extends Component<Row> {
         public Row() {
             addClass("desku-table-row");
+
+            // Wrap all added children first into cell
+            Consumer<AddedChildEvent> superAdd = _add;
+            _add = e -> {
+                Cell cell = new Cell();
+                cell.add(e.childComp);
+                e.childComp = cell;
+                superAdd.accept(e);
+            };
+        }
+
+        public List<Cell> getCells(){
+            List<Cell> cells = new ArrayList<>();
+            for (Component<?> child : children) {
+                cells.add((Cell) child);
+            }
+            return cells;
+        }
+
+        public List<Component<?>> getContents(){
+            List<Component<?>> contents = new ArrayList<>();
+            for (Cell cell : getCells()) {
+                contents.add(cell.getContent());
+            }
+            return contents;
         }
     }
 
-    public static class Header extends Component<Header> {
-        /**
-         * Width and height styles of this header are
-         * also used for each of its rows.
-         */
-        private boolean isForwardSizeToRows = true;
+    public static class Cell extends Component<Cell> {
 
-        public Header() {
-            addClass("desku-table-header");
-        }
-
-        public boolean isForwardSizeToRows(){
-            return isForwardSizeToRows;
-        }
-
-        public Header forwardSizeToRows(boolean b){
-            this.isForwardSizeToRows = b;
-            return this;
+        public Cell(){
+            addClass("desku-table-cell");
         }
 
         public Component<?> getContent(){

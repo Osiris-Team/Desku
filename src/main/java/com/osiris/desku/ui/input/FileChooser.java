@@ -162,6 +162,7 @@ public class FileChooser extends Component<FileChooser> {
             removeAll();
 
             table = new Table();
+            table.maxColumnWidthPercent = -1;
             add(table);
             table.headers("Select", "Icon", dir == null ? ".." : // If this the case then parent shows drives/roots
                     dir.getAbsolutePath().replace("\\", "/"), "Modified");
