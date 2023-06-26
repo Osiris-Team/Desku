@@ -191,7 +191,7 @@ public class Home extends Route {
             AL.info("Input of slider changed: "+e.value+" before: "+e.valueBefore);
         }));
         // Selector
-        ly.add(selector("Select label").add(text("Option 1"), text("Option 2"), text("Option 3"))
+        ly.add(select("Select label").add(text("Option 1"), text("Option 2"), text("Option 3"))
                 .onSelectedChange(e -> {
             AL.info("Input of select changed: "+e.value+" before: "+e.valueBefore);
         }));
