@@ -60,6 +60,7 @@ public class RTable extends Component<RTable> {
                 table.headers.add(new Table.Header().add(new Text(name)));
             }
         }
+        table.recalcMaxColumnWidthPercent();
         return this;
     }
 

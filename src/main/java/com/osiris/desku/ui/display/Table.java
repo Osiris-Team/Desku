@@ -18,10 +18,33 @@ public class Table extends Component<Table> {
 
     public Headers headers = new Headers(this);
     public Rows rows = new Rows(this);
+    /**
+     * Gets recalculated in {@link #headers(Header...)}.
+     */
+    public double maxColumnWidthPercent = 100;
+    public void recalcMaxColumnWidthPercent(){
+        maxColumnWidthPercent = (1.0 / headers.children.size()) * 100.0;
+        for (Component<?> header : headers.children) {
+            header.putStyle("max-width", maxColumnWidthPercent+"%");
+        }
+        for (Component<?> row : rows.children) {
+            for (Component<?> rowColumn : row.children.get(0).children) {
+                rowColumn.putStyle("max-width", maxColumnWidthPercent+"%");
+            }
+        }
+    }
 
     public Table() {
         add(headers, rows);
         addClass("desku-table");
+        rows.onAddedChild.addAction(e -> {
+           if(e.childComp instanceof Row){
+               Row row = (Row) e.childComp;
+               for (Component<?> rowColumn : row.children) {
+                   rowColumn.putStyle("max-width", maxColumnWidthPercent+"%");
+               }
+           }
+        });
         //putStyle("display", "block"); // instead of table since that gives additional whitespace
     }
 
@@ -33,6 +56,7 @@ public class Table extends Component<Table> {
         for (String header : headers) {
             this.headers.add(new Header().add(new Text(header)));
         }
+        recalcMaxColumnWidthPercent();
         return _this;
     }
 
@@ -44,6 +68,7 @@ public class Table extends Component<Table> {
         for (Header header : headers) {
             this.headers.add(header);
         }
+        recalcMaxColumnWidthPercent();
         return _this;
     }
 

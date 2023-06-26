@@ -9,12 +9,13 @@
   border: 1px solid #ddd;
   padding: 4px;
   width: 100%;
-  justify-content: space-evenly;
+  flex-grow: 1;
   align-items: center;
 }
-.desku-table-row *, .d-table-header * {
+.desku-table-row *, .desku-table-header * {
   justify-content: center;
   align-items: center;
+  flex-grow: 1;
 }
 
 .desku-table-row:nth-child(even){background-color: #f2f2f2;}
