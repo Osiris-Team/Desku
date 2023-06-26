@@ -108,6 +108,7 @@ public class FileChooser extends Component<FileChooser> {
             if(file==null || file.isDirectory()){
                 onClick(e -> {
                     directoryView.setDir(file);
+                    directoryView.scrollIntoView();
                 });
             }
         }

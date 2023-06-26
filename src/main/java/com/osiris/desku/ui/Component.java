@@ -1078,6 +1078,30 @@ public class Component<T extends Component<?>> {
         return this.getClass().getSimpleName()+"_"+id;
     }
 
+    public T scrollIntoView(){
+        return scrollIntoView(true, "start", "nearest");
+    }
+
+    public T scrollIntoView(boolean smooth){
+        return scrollIntoView(smooth, "start", "nearest");
+    }
+
+    /**
+     * @param smooth if true: scrolling should animate smoothly, otherwise instant: scrolling should happen instantly in a single jump.
+     * @param block defines vertical alignment. One of start, center, end, or nearest. Defaults to start.
+     * @param inline defines horizontal alignment. One of start, center, end, or nearest. Defaults to nearest.
+     */
+    public T scrollIntoView(boolean smooth, String block, String inline){
+        executeJS("comp.scrollIntoView({ behavior: \"" +
+                (smooth ? "smooth" : "instant") +
+                "\", block: \"" +
+                block +
+                "\", inline: \"" +
+                inline +
+                "\" });");
+        return _this;
+    }
+
     //
     // Listeners
     //
