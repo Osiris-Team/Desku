@@ -360,7 +360,6 @@ public abstract class UI {
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
     public <T extends Component<?>> UI registerJSListener(String eventName, Component<T> comp, String jsOnEvent, Consumer<String> onEvent) {
-        AL.info("registerJSListener() "+ comp.toPrintString());
         synchronized (listenersAndComps) {
             List<Component<?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
@@ -401,16 +400,13 @@ public abstract class UI {
                         }) + // JS code that triggers Java function gets executed on a click event for this component
                 "});\n";
 
-        AL.info("registerJSListener() START ");
         if (!isLoading.get()) {
             comp.executeJS(this, jsNow);
-            AL.info("registerJSListener() FINISH ");
         }
         else onLoadStateChanged.addAction((action, isLoading) -> {
             if (isLoading) return;
             action.remove();
             comp.executeJS(this, jsNow);
-            AL.info("registerJSListener() FINISH ");
         }, AL::warn);
         return this;
     }

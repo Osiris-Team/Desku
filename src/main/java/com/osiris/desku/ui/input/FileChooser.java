@@ -109,7 +109,6 @@ public class FileChooser extends Component<FileChooser> {
                 onClick(e -> {
                     directoryView.setDir(file);
                 });
-                AL.info("Attached onClick for "+this.toPrintString());
             }
         }
     }
