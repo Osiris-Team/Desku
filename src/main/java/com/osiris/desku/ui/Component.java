@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -1041,6 +1042,25 @@ public class Component<T extends Component<?>> {
         Component<T> _this = this;
         UI.get().registerJSListener("click", _this, (msg) -> {
             _onClick.execute(new ClickEvent<T>(msg, (T) _this)); // Executes all listeners
+        });
+        return this._this;
+    }
+
+    /**
+     * Adds a listener that gets executed when this component <br>
+     * was double-clicked by the user. <br>
+     *
+     * @see UI#registerJSListener(String, Component, Consumer)
+     */
+    public T onDoubleClick(Consumer<ClickEvent<T>> code) {
+        AtomicLong msLastClick = new AtomicLong();
+        onClick(e -> {
+            long msCurrentClick = System.currentTimeMillis();
+            long msBetweenClicks = msCurrentClick - msLastClick.get();
+            if(msBetweenClicks < 500){
+                code.accept(e);
+            }
+            msLastClick.set(msCurrentClick);
         });
         return this._this;
     }

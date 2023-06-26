@@ -5,6 +5,7 @@ import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.TextChangeEvent;
 import com.osiris.desku.ui.layout.ListLayout;
+import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.events.Event;
 
 import java.util.function.Consumer;
@@ -14,7 +15,8 @@ public class Selector extends Component<Selector> {
     // Layout
     public Text label;
     public Button button;
-    public ListLayout items = new ListLayout().visible(false);
+    public ListLayout items = new ListLayout();
+    public Overlay itemsOverlay;
 
     // Events
     public Event<TextChangeEvent<Selector>> _onValueChange = new Event<>();
@@ -32,25 +34,25 @@ public class Selector extends Component<Selector> {
     }
 
     public Selector(Text label, String defaultValue) {
-        addClass("dropdown");
         this.label = label;
         this.button = new Button(defaultValue).secondary()
-                .childCenter().childCenter2().childGap("0.5vw").addClass("dropdown-toggle")
-                .putAttribute("type=", "button").putAttribute("data-bs-toggle", "dropdown")
-                .putAttribute("aria-expanded", "false").onClick(e -> {
-                    items.visible(!items.isVisible());
+                .width("100%")
+                .childCenter().childCenter2().childGap("0.5vw").onClick(e -> {
+                    itemsOverlay.visible(!itemsOverlay.isVisible());
                 });
-        this.items.addClass("dropdown-menu");
-        add(this.label, this.button, this.items);
+        this.itemsOverlay = new Overlay(button).visible(false)
+                .width("100%").height("500px").putStyle("max-height", "50vh")
+                .putStyle("background-color", "red")
+                .add(items);
+        add(this.label, this.button, this.itemsOverlay);
         childVertical();
 
         // Lastly change add function:
         Consumer<AddedChildEvent> superItemsAdd = this.items._add;
         this._add = e -> {
-            e.childComp.addClass("dropdown-item");
             e.childComp.putStyle("cursor", "pointer");
             e.childComp.onClick(click -> {
-                items.visible(false);
+                itemsOverlay.visible(false);
                 setValue(click.comp.element.text());
             });
             superItemsAdd.accept(e); // Directly add children to items / list layout

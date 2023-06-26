@@ -371,7 +371,6 @@ public abstract class UI {
             alreadyRegisteredComps.add(comp);
         }
         String jsNow =
-                "console.error(\"INFO: Registered event listener! START\");\n" +
                 "comp.addEventListener(\"" + eventName + "\", (event) => {\n" +
                 jsAddPermanentCallback("function getObjProps(obj) {\n" +
                                 "  var json = '{';\n" +

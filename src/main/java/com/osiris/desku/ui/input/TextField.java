@@ -12,6 +12,7 @@ public class TextField extends Component<TextField> {
 
     // Layout
     public Text label;
+    public String defaultValue;
     public Input input = new Input("text");
 
     // Events
@@ -32,6 +33,7 @@ public class TextField extends Component<TextField> {
     public TextField(Text label, String defaultValue) {
         addClass("textfield");
         this.label = label;
+        this.defaultValue = defaultValue;
         add(this.label, this.input);
         childVertical();
         this.input.putAttribute("value", defaultValue);

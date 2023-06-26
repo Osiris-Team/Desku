@@ -12,7 +12,8 @@ public class CheckBox extends Component<CheckBox> {
 
     // Layout
     public Text label;
-    public Input input = new Input("checkbox");
+    public Input input = new Input("checkbox")
+            .addClass("form-check-input").addClass("mt-0");
 
     // Events
     public Event<BooleanChangeEvent<CheckBox>> _onValueChange = new Event<>();
@@ -30,11 +31,10 @@ public class CheckBox extends Component<CheckBox> {
     }
 
     public CheckBox(Text label, boolean defaultValue) {
-        addClass("checkbox");
         this.label = label;
         add(this.input, this.label);
         childGap(true);
-        this.input.element.attr("checked", defaultValue); // TODO not sure if this also works in async
+        setValue(defaultValue);
     }
 
     public boolean getValue() {
@@ -46,6 +46,8 @@ public class CheckBox extends Component<CheckBox> {
      */
     public CheckBox setValue(boolean val) {
         this.input.putAttribute("value", String.valueOf(val));
+        if(val) input.putAttribute("checked");
+        else input.removeAttribute("checked");
         return this;
     }
 
@@ -61,6 +63,8 @@ public class CheckBox extends Component<CheckBox> {
                 (msg) -> {
                     BooleanChangeEvent<CheckBox> e = new BooleanChangeEvent<>(msg, this, getValue());
                     input.element.attr("value", String.valueOf(e.value)); // Change in memory value, without triggering another change event
+                    if(e.value) input.element.attr("checked","");
+                    else input.element.removeAttr("checked");
                     _onValueChange.execute(e); // Executes all listeners
                 });
         return _this;

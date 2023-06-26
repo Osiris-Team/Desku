@@ -23,6 +23,7 @@ public class FileChooser extends Component<FileChooser> {
     public TextField tfSelectedFiles;
     public DirectoryView directoryView = new DirectoryView(App.userDir.getAbsoluteFile());
     public Event<FileAsRow> _onFileSelected = new Event<>();
+    public Event<FileAsRow> _onFileDeselected = new Event<>();
     private boolean isMultiSelect = true;
 
 
@@ -40,12 +41,31 @@ public class FileChooser extends Component<FileChooser> {
 
     public FileChooser(Text label, String defaultValue) {
         this.tfSelectedFiles = new TextField(label, defaultValue);
-        add(this.tfSelectedFiles, this.directoryView);
+        directoryView.visible(false);
         childVertical();
+        tfSelectedFiles.onClick(e -> {
+            directoryView.visible(!directoryView.isVisible());
+        });
+        onFileSelected(e -> {
+            String filePaths = tfSelectedFiles.getValue();
+            filePaths += e.cleanFilePath+"; ";
+            this.tfSelectedFiles.setValue(filePaths);
+        });
+        onFileDeselected(e -> {
+            String filePaths = tfSelectedFiles.getValue();
+            filePaths = filePaths.replace(e.cleanFilePath+";", "");
+            this.tfSelectedFiles.setValue(filePaths);
+        });
+
+        add(this.tfSelectedFiles, this.directoryView);
     }
 
     public FileChooser onFileSelected(Consumer<FileAsRow> code){
         _onFileSelected.addAction(file -> code.accept(file));
+        return this;
+    }
+    public FileChooser onFileDeselected(Consumer<FileAsRow> code){
+        _onFileDeselected.addAction(file -> code.accept(file));
         return this;
     }
 
@@ -76,6 +96,7 @@ public class FileChooser extends Component<FileChooser> {
 
     public class FileAsRow extends Table.Row{
         public File file;
+        public String cleanFilePath;
         public DirectoryView directoryView;
         public CheckBox checkBox = new CheckBox().onValueChange(e -> {
             if(e.value && !isMultiSelect && !directoryView.selectedFiles.isEmpty()){
@@ -85,8 +106,10 @@ public class FileChooser extends Component<FileChooser> {
             if(e.value) {
                 directoryView.selectedFiles.add(this);
                 _onFileSelected.execute(this);
+            } else{
+                directoryView.selectedFiles.remove(this);
+                _onFileDeselected.execute(this);
             }
-            else directoryView.selectedFiles.remove(this);
         });
         public Image icon;
         public Text txtFileName;
@@ -95,6 +118,7 @@ public class FileChooser extends Component<FileChooser> {
         public FileAsRow(DirectoryView directoryView, File file, Image icon){
             this.directoryView = directoryView;
             this.file = file;
+            this.cleanFilePath = file == null ? "" : file.getAbsolutePath().replace("\\", "/");
             add(checkBox);
             add(this.icon = icon);
             if(file == null){
@@ -106,9 +130,8 @@ public class FileChooser extends Component<FileChooser> {
 
             }
             if(file==null || file.isDirectory()){
-                onClick(e -> {
+                onDoubleClick(e -> {
                     directoryView.setDir(file);
-                    directoryView.scrollIntoView();
                 });
             }
         }
@@ -166,10 +189,44 @@ public class FileChooser extends Component<FileChooser> {
                     Collections.addAll(_files, File.listRoots());
                 }
 
+                // Get default selected files
+                List<File> defaultSelectedFiles = new ArrayList<>();
+                for (String s : tfSelectedFiles.defaultValue.split(";")) {
+                    if(!s.trim().isEmpty())
+                        defaultSelectedFiles.add(new File(s));
+                }
+
+                // Create UI components for files
                 for (File file : _files) {
-                    FileAsRow fileAsRow =
-                            new FileAsRow(this, file,
-                                    (file == null || file.isDirectory() ? Icon.solid_folder() : Icon.regular_file()));
+
+                    FileAsRow fileAsRow = new FileAsRow(this, file,
+                            (file == null || file.isDirectory() ? Icon.solid_folder() : Icon.regular_file()));
+
+                    int iSelectedFile = -1;
+                    for (int i = 0; i < selectedFiles.size(); i++) {
+                        FileAsRow f = selectedFiles.get(i);
+                        if (f.file.getAbsolutePath().equals(file.getAbsolutePath())) {
+                            iSelectedFile = i;
+                            //AL.info("Found already selected file! "+f.file);
+                            break;
+                        }
+                    }
+                    if(iSelectedFile != -1){
+                        selectedFiles.set(iSelectedFile, fileAsRow);
+                        fileAsRow.checkBox.setValue(true);
+                    }
+
+                    boolean isSelectedByDefault = false;
+                    for (int i = 0; i < defaultSelectedFiles.size(); i++) {
+                        File f = defaultSelectedFiles.get(i);
+                        if (f.getAbsolutePath().equals(file.getAbsolutePath())) {
+                            isSelectedByDefault = true;
+                            //AL.info("Found DEFAULT selected file! "+f);
+                            break;
+                        }
+                    }
+                    if(isSelectedByDefault) fileAsRow.checkBox.setValue(true);
+                    
                     files.add(fileAsRow);
                     table.row(fileAsRow);
                     fileAsRow.children.get(0).width(selectWidth);
