@@ -5,6 +5,7 @@ Java Framework for developing low-code Desktop and Mobile Applications in one co
 Targets mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
 
 ```java
+import com.osiris.desku.App;
 import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 
 public class Main {
@@ -19,7 +20,7 @@ public class Main {
         });
 
         // Create and show windows
-        UIManager.create(home);
+        App.uis.create(home);
     }
 }
 ```
