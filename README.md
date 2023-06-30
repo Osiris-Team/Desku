@@ -2,20 +2,24 @@
 Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
-Targets mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
+### Who is it for?
+Mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
+In addition to its simplicity, it is also highly beginner-friendly, making it accessible to everyone that is new to coding.
 
+### What does it look like?
 ```java
 import com.osiris.desku.App;
 import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 
 public class Main {
-    public static void main(String[] args) throws IOException, UnsupportedPlatformException, CefInitializationException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         // Setup app details
         App.init(new DesktopUIManager());
         App.name = "My-App";
 
         // Create routes
-        Route home = new MRoute("/", () -> { // It's recommended to create a new class and extend Route instead (for larger UIs)
+        // For larger UIs create a new class and extend Route instead
+        Route home = new MRoute("/", () -> { 
             return vertical().add(text("Hello World!")); // Low-code Java UI via static methods
         });
 
