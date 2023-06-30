@@ -27,7 +27,7 @@ public class Main {
 
 ### Features
 #### Its highly recommended to use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) to get started since it has also support for Android and iOS, and everything setup correctly.
-All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app).
+#### Usage examples for all default components can be found [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app) (CTRL + F to search by name).
 
 - Easily develop desktop and mobile apps in one codebase!
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
