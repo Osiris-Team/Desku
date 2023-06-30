@@ -4,7 +4,7 @@ Java Framework for developing low-code Desktop and Mobile Applications in one co
 
 ### Who is it for?
 Mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
-In addition to its simplicity, it is also highly beginner-friendly, making it accessible to everyone that is new to coding.
+In addition, it is also highly beginner-friendly, making it accessible to everyone that is new to coding due to its simplicity.
 
 ### What does it look like?
 ```java
