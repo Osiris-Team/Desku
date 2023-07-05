@@ -2,32 +2,38 @@
 Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
-Targets mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
+### Who is it for?
+Mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
+In addition, it is also highly beginner-friendly, making it accessible to everyone that is new to coding due to its simplicity.
 
+### What does it look like?
 ```java
+import com.osiris.desku.App;
 import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 
 public class Main {
-    public static void main(String[] args) throws IOException, UnsupportedPlatformException, CefInitializationException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         // Setup app details
         App.init(new DesktopUIManager());
         App.name = "My-App";
 
         // Create routes
-        Route home = new MRoute("/", () -> { // It's recommended to create a new class and extend Route instead (for larger UIs)
+        // For larger UIs create a new class and extend Route instead
+        Route home = new MRoute("/", () -> { 
             return vertical().add(text("Hello World!")); // Low-code Java UI via static methods
         });
 
         // Create and show windows
-        UIManager.create(home);
+        App.uis.create(home);
     }
 }
 ```
 
-### Features
-#### Its highly recommended to use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) to get started since it has also support for Android and iOS, and everything setup correctly.
-All features/components are tested [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app).
+### How to get started?
+#### Use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) as template since it has also support for Android and iOS, everything setup correctly and scripts for generating binaries + installers.
+#### Usage examples for all default components can be found [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app) (CTRL + F to search by name).
 
+### Features
 - Easily develop desktop and mobile apps in one codebase!
 - Full Java [FlexBox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) 
 bindings, thus making simple/complex layout creation faster and easier than ever.
@@ -36,7 +42,7 @@ bindings, thus making simple/complex layout creation faster and easier than ever
 - Update the UI asynchronously hassle-free.
 - Contains cross-platform desktop WebView implementation already. 
 Android and iOS implementations are provided in the starter repo.
-- Uses [Bootstrap v5.3.0 components](https://getbootstrap.com/docs/5.3/components) and styles.
+- Uses [Bootstrap v5.3.0](https://getbootstrap.com/docs/5.3/components) for styling and [Jsoup](https://jsoup.org/) for handling the HTML of components.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
@@ -47,6 +53,7 @@ way, its pretty easy to create a Desku-Extension:
 3. Create a release and use JitPack or Maven to host the files.
 
 ### Todo
+- Native notifications and in-app overlay notifications.
 - Default components suit similar to https://vaadin.com/docs/latest/components.
 - Serializable UI, to restore state (on ice right now, since it seems
 to be more complicated than expected)
