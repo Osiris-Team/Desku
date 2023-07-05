@@ -1106,6 +1106,12 @@ public class Component<T extends Component<?>> {
         return scrollIntoView(smooth, "start", "nearest");
     }
 
+    public T enable(boolean b) {
+        if (b) removeAttribute("disabled");
+        else putAttribute("disabled");
+        return _this;
+    }
+
     /**
      * @param smooth if true: scrolling should animate smoothly, otherwise instant: scrolling should happen instantly in a single jump.
      * @param block defines vertical alignment. One of start, center, end, or nearest. Defaults to start.

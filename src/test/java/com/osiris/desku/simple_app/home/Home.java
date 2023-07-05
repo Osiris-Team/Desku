@@ -9,6 +9,7 @@ import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.jlib.logger.AL;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +34,24 @@ public class Home extends Route {
     @Override
     public Component<?> loadContent() {
         Vertical ly = vertical().childGap(true).padding(true);
-        ly.horizontalCL().size("100%", "70vh").childCenter()
-                .add(text("Build Desktop Apps with Java, HTML and CSS today!")
-                        .sizeXXL().selfCenter()
-                        .size("40vh", "20vh").bold())
-                .add(image(this.getClass(), "/images/pc.png").width("30vw").selfCenter());
-        ly.add(text("I am clickable text! Click me!").selfCenter().onClick(event -> {
+
+        //
+        // Images
+        //
+        // Existing image in the same folder as this class
+        ly.add(
+                image(this.getClass(), "/images/desku_banner.png").width("100%")
+        );
+        // In-memory created 1x1 black image
+        ly.add(
+                image(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "black.png")
+                        .width("100%").height("10vh")
+        );
+
+        //
+        // Events
+        //
+        ly.add(text("Build Desktop Apps with Java/JS, HTML and CSS today! I am clickable text! Click me!").selfCenter().onClick(event -> {
             event.comp.set("Thank you for clicking!");
         }));
 

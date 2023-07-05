@@ -121,10 +121,4 @@ public class Button extends Component<Button> {
     }
 
     // OTHER
-
-    public Button enable(boolean b) {
-        if (b) removeAttribute("disabled");
-        else putAttribute("disabled");
-        return this;
-    }
 }

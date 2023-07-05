@@ -52,6 +52,93 @@ public abstract class UI {
         startWebSocketClient(webSocketServer.domain, webSocketServer.port);
     }
 
+    //
+    // Abstract methods that require implementation
+    //
+
+    /**
+     * Initialises/Displays the window and loads the HTML from the provided startURL.
+     *
+     * @param startURL      URL of the HTML content. Example: http://localhost or https://google.com or file:///ABSOLUTE_PATH_TO_HTML_FILE
+     * @param isTransparent
+     * @param widthPercent
+     * @param heightPercent
+     */
+    public abstract void init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) throws Exception;
+
+    /**
+     * This invalidates the container and thus to see changes in the UI
+     * make sure execute {@link java.awt.Component#revalidate()} manually.
+     *
+     * @param widthPercent 0 to 100% of the parent size (screen if null).
+     */
+    public abstract void width(int widthPercent);
+
+    /**
+     * This invalidates the container and thus to see changes in the UI
+     * make sure execute {@link java.awt.Component#revalidate()} manually.
+     *
+     * @param heightPercent 0 to 100% of the parent size (screen if null).
+     */
+    public abstract void height(int heightPercent);
+
+    /**
+     * Moves the window on the X axis.
+     *
+     * @param x amount to add to current x value.
+     */
+    public abstract void plusX(int x);
+
+    /**
+     * Moves the window on the Y axis.
+     *
+     * @param y amount to add to current y value.
+     */
+    public abstract void plusY(int y);
+
+    /**
+     * Executes JavaScript code now. Method may wait until execution finishes, or not.
+     * However, it must ensure that the code is executed in an orderly, synchronous fashion.
+     * Meaning that the JavaScript code in the second call of this method, gets executed after the code in the first call.
+     * @param jsCode JavaScript (JS) code.
+     * @param jsCodeSourceName file name containing the JS code.
+     * @param jsCodeStartingLineNumber line number/position the JS code starts in.
+     */
+    public abstract void executeJavaScript(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber);
+
+    /**
+     * Maximizes this window.
+     */
+    public abstract void maximize(boolean b);
+
+    /**
+     * Puts this window into full-screen.
+     */
+    public abstract void fullscreen(boolean b);
+
+    public static class SizeChange{
+        public int width, height;
+
+        /**
+         * @param width in pixel.
+         * @param height in pixel.
+         */
+        public SizeChange(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+    }
+    Event<SizeChange> _onSizeChange = new Event<>();
+    /**
+     * Adds a listener to {@link #_onSizeChange} which
+     * gets executed when this windows size changes.
+     */
+    public abstract void onSizeChange(Consumer<SizeChange> code);
+
+    //
+    // Utility methods
+    //
+
     /**
      * Always null, except when code is running inside... <br>
      * - {@link #access(Runnable)} <br>
@@ -87,16 +174,6 @@ public abstract class UI {
     }
 
     private final List<PendingAppend> pendingAppends = new ArrayList<>();
-
-    /**
-     * Initialises/Displays the window and loads the HTML from the provided startURL.
-     *
-     * @param startURL      URL of the HTML content. Example: http://localhost or https://google.com or file:///ABSOLUTE_PATH_TO_HTML_FILE
-     * @param isTransparent
-     * @param widthPercent
-     * @param heightPercent
-     */
-    public abstract void init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) throws Exception;
 
     /**
      * Executes JavaScript to navigate to another route. <br>
@@ -240,43 +317,11 @@ public abstract class UI {
     }
 
     /**
-     * This invalidates the container and thus to see changes in the UI
-     * make sure execute {@link java.awt.Component#revalidate()} manually.
-     *
-     * @param widthPercent 0 to 100% of the parent size (screen if null).
-     */
-    public abstract void width(int widthPercent);
-
-    /**
      * @see #height(int)
      */
     public void heightFull() {
         height(100);
     }
-
-    /**
-     * This invalidates the container and thus to see changes in the UI
-     * make sure execute {@link java.awt.Component#revalidate()} manually.
-     *
-     * @param heightPercent 0 to 100% of the parent size (screen if null).
-     */
-    public abstract void height(int heightPercent);
-
-    /**
-     * Moves the window on the X axis.
-     *
-     * @param x amount to add to current x value.
-     */
-    public abstract void plusX(int x);
-
-    /**
-     * Moves the window on the Y axis.
-     *
-     * @param y amount to add to current y value.
-     */
-    public abstract void plusY(int y);
-
-    public abstract void executeJavaScript(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber);
 
     /**
      * Returns new JS (JavaScript) code, that when executed in client browser

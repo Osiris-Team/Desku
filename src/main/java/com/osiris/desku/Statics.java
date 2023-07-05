@@ -5,6 +5,8 @@ import com.osiris.desku.ui.display.*;
 import com.osiris.desku.ui.input.*;
 import com.osiris.desku.ui.layout.*;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.lang.reflect.Field;
 import java.util.function.Predicate;
 
@@ -13,6 +15,20 @@ import java.util.function.Predicate;
  * execute this in your console: ./gradlew build :test --tests "com.osiris.desku.GenerateStatics"
  */
 public class Statics {
+
+    /**
+     * Java integration of the HTML img tag. <br>
+     * <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img</a>
+     * <br><br>
+     * If not existing the image will be written to<br>
+     * {@link App#htmlDir}/java-images/IMAGE_NAME.
+     *
+     * @param image for example of type {@link BufferedImage}.
+     * @param name for example "image.png" or "/image.jpg" or "/folder/image.jpg".
+     */
+    static public Image image(RenderedImage image, String name) {
+        return new Image(image, name);
+    }
 
     /**
      * Java integration of the HTML img tag. <br>
