@@ -1,5 +1,6 @@
 package com.osiris.desku;
 
+import com.osiris.desku.ui.UI;
 import com.osiris.events.Action;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;

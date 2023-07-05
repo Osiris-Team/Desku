@@ -1,6 +1,8 @@
-package com.osiris.desku;
+package com.osiris.desku.ui;
 
 
+import com.osiris.desku.App;
+import com.osiris.desku.Route;
 import com.osiris.jlib.logger.AL;
 import fi.iki.elonen.NanoHTTPD;
 

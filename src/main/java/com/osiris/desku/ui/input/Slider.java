@@ -1,7 +1,7 @@
 package com.osiris.desku.ui.input;
 
-import com.osiris.desku.UI;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.DoubleChangeEvent;
 import com.osiris.events.Event;

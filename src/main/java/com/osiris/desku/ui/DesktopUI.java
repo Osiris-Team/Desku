@@ -1,10 +1,14 @@
-package com.osiris.desku;
+package com.osiris.desku.ui;
 
+import com.osiris.desku.App;
+import com.osiris.desku.Route;
 import com.osiris.desku.swing.Swing;
+import com.osiris.desku.ui.utils.Rectangle;
 import com.osiris.jlib.logger.AL;
 import dev.webview.Webview;
 
 import javax.swing.*;
+import java.awt.Component;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -19,7 +23,7 @@ import java.util.function.Consumer;
 public class DesktopUI extends UI {
     public JFrame frame;
     public Webview browser;
-    public Component browserDesktopUI;
+    public java.awt.Component browserDesktopUI;
 
     public DesktopUI(Route route) throws Exception {
         this(route, false, 70, 60);
@@ -127,12 +131,12 @@ public class DesktopUI extends UI {
         browser.close();
         frame.dispose();
         super.close();
-        if (UIManager.all.isEmpty()) System.exit(0);
+        if (com.osiris.desku.ui.UIManager.all.isEmpty()) System.exit(0);
     }
 
     /**
      * This invalidates the container and thus to see changes in the DesktopUI
-     * make sure execute {@link Component#revalidate()} manually.
+     * make sure execute {@link java.awt.Component#revalidate()} manually.
      *
      * @param widthPercent 0 to 100% of the parent size (screen if null).
      */
@@ -149,7 +153,7 @@ public class DesktopUI extends UI {
 
     /**
      * This invalidates the container and thus to see changes in the DesktopUI
-     * make sure execute {@link Component#revalidate()} manually.
+     * make sure execute {@link java.awt.Component#revalidate()} manually.
      *
      * @param heightPercent 0 to 100% of the parent size (screen if null).
      */
@@ -164,7 +168,7 @@ public class DesktopUI extends UI {
             updateHeight(frame.getParent(), frame, heightPercent);
     }
 
-    private void updateWidth(Component parent, Component target, int widthPercent) {
+    private void updateWidth(java.awt.Component parent, java.awt.Component target, int widthPercent) {
         int parentWidth; // If no parent provided use the screen dimensions
         if (parent != null) parentWidth = parent.getWidth();
         else parentWidth =
@@ -176,7 +180,7 @@ public class DesktopUI extends UI {
         target.setMaximumSize(size);
     }
 
-    private void updateHeight(Component parent, Component target, int heightPercent) {
+    private void updateHeight(java.awt.Component parent, Component target, int heightPercent) {
         int parentHeight; // If no parent provided use the screen dimensions
         if (parent != null) parentHeight = parent.getHeight();
         else parentHeight =
@@ -209,19 +213,68 @@ public class DesktopUI extends UI {
     }
 
     @Override
+    public void minimize(boolean b) {
+        frame.setExtendedState(b ? JFrame.ICONIFIED : JFrame.NORMAL);
+    }
+
+    @Override
     public void fullscreen(boolean b) {
         GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
         device.setFullScreenWindow(b ? frame : null);
     }
 
     @Override
-    public void onSizeChange(Consumer<SizeChange> code) {
+    public void onSizeChange(Consumer<com.osiris.desku.ui.utils.Rectangle> code) {
         frame.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                code.accept(new SizeChange(e.getComponent().getWidth(), e.getComponent().getHeight()));
+                code.accept(new com.osiris.desku.ui.utils.Rectangle(
+                        e.getComponent().getWidth(), e.getComponent().getHeight()));
                 frame.revalidate();
             }
         });
+    }
+
+    @Override
+    public Rectangle getScreenSize() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd = ge.getDefaultScreenDevice();
+        GraphicsConfiguration gc = gd.getDefaultConfiguration();
+        java.awt.Rectangle screenSize = gc.getBounds();
+        Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
+
+        int width = screenSize.width - screenInsets.left - screenInsets.right;
+        int height = screenSize.height - screenInsets.top - screenInsets.bottom;
+        return new Rectangle(width, height);
+    }
+
+    @Override
+    public Rectangle getScreenSizeWithoutTaskBar() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd = ge.getDefaultScreenDevice();
+        GraphicsConfiguration gc = gd.getDefaultConfiguration();
+        java.awt.Rectangle screenSize = gc.getBounds();
+        Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
+        // TODO if window has decoration, add it to this calculation
+
+        int width = screenSize.width - screenInsets.left - screenInsets.right;
+        int height = screenSize.height - screenInsets.top - screenInsets.bottom;
+        return new Rectangle(screenSize.width - width, screenSize.height - height);
+    }
+
+    @Override
+    public void decorate(boolean b) {
+        frame.setUndecorated(!b);
+    }
+
+    @Override
+    public void allwaysOnTop(boolean b) {
+        frame.setAlwaysOnTop(b);
+    }
+
+    @Override
+    public void focus(boolean b) {
+        if(b) frame.requestFocus();
+        else frame.getOwner().requestFocus();
     }
 }

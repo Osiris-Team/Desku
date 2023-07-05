@@ -1,8 +1,12 @@
 package com.osiris.desku.simple_app;
 
-import com.osiris.desku.*;
+import com.osiris.desku.App;
+import com.osiris.desku.Route;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.simple_app.home.Home;
+import com.osiris.desku.ui.DesktopUI;
+import com.osiris.desku.ui.DesktopUIManager;
+import com.osiris.desku.ui.UIManager;
 
 class AppTest {
 

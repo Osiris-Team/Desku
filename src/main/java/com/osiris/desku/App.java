@@ -1,6 +1,8 @@
 package com.osiris.desku;
 
 import com.osiris.desku.ui.Theme;
+import com.osiris.desku.ui.UI;
+import com.osiris.desku.ui.UIManager;
 import com.osiris.jlib.Stream;
 import com.osiris.jlib.logger.AL;
 import org.apache.commons.io.FileUtils;

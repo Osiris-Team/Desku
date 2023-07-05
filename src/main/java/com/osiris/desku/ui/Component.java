@@ -1,7 +1,6 @@
 package com.osiris.desku.ui;
 
 import com.osiris.desku.App;
-import com.osiris.desku.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.desku.ui.event.ScrollEvent;

@@ -1,4 +1,6 @@
-package com.osiris.desku;
+package com.osiris.desku.ui;
+
+import com.osiris.desku.Route;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 

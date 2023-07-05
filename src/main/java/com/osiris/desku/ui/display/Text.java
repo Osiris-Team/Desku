@@ -1,7 +1,7 @@
 package com.osiris.desku.ui.display;
 
-import com.osiris.desku.UI;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.event.TextChangeEvent;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;

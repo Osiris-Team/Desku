@@ -1,9 +1,12 @@
 package com.osiris.desku.hello_world_app;
 
-import com.osiris.desku.*;
-import com.osiris.desku.ui.layout.Vertical;
+import com.osiris.desku.App;
+import com.osiris.desku.MRoute;
+import com.osiris.desku.Route;
+import com.osiris.desku.ui.DesktopUIManager;
 
-import static com.osiris.desku.Statics.*;
+import static com.osiris.desku.Statics.text;
+import static com.osiris.desku.Statics.vertical;
 public class HelloWorldApp {
     public static void main(String[] args) throws Exception {
         // Setup app details
