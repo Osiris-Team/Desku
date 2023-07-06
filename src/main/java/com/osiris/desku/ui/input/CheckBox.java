@@ -35,6 +35,7 @@ public class CheckBox extends Component<CheckBox> {
         add(this.input, this.label);
         childGap(true);
         setValue(defaultValue);
+        childCenter2();
     }
 
     public boolean getValue() {
