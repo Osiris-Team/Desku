@@ -31,7 +31,7 @@ public class Main {
 
 ### How to get started?
 #### Use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) as template since it has also support for Android and iOS, everything setup correctly and scripts for generating binaries + installers.
-#### Usage examples for all default components can be found [here](https://github.com/Osiris-Team/Desku/tree/main/src/test/java/com/osiris/desku/simple_app) (CTRL + F to search by name).
+#### Usage examples for all default components can be found [here](https://github.com/Osiris-Team/Desku/blob/main/src/test/java/com/osiris/desku/simple_app/home/Home.java) (CTRL + F to search by name).
 
 ### Features
 - Easily develop desktop and mobile apps in one codebase!
