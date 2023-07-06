@@ -10,7 +10,7 @@ public class DesktopUIManager extends UIManager {
     }
 
     @Override
-    public UI create(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
-        return new DesktopUI(route, isTransparent, widthPercent, heightPercent);
+    public UI create(Route route, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception {
+        return new DesktopUI(route, isTransparent, isDecorated, widthPercent, heightPercent);
     }
 }

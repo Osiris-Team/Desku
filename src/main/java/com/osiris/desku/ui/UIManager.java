@@ -9,5 +9,5 @@ public abstract class UIManager {
 
     public abstract UI create(Route route) throws Exception;
 
-    public abstract UI create(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception;
+    public abstract UI create(Route route, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception;
 }

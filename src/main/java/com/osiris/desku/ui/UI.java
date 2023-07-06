@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -42,16 +43,17 @@ public abstract class UI {
     public HTTPServer httpServer;
 
     public UI(Route route) throws Exception {
-        this(route, false, 70, 60);
+        this(route, false, true, 70, 60);
     }
 
-    public UI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
+    public UI(Route route, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception {
         startHTTPServer();
         startWebSocketServer();
 
         //load(route.getClass()); // Done in HTTPServer
 
-        priv_init("http://" + App.domainName + ":" + httpServer.serverPort + (route.path.startsWith("/") ? "" : "/") + route.path, isTransparent, widthPercent, heightPercent);
+        priv_init("http://" + App.domainName + ":" + httpServer.serverPort + (route.path.startsWith("/") ? "" : "/") + route.path,
+                isTransparent, isDecorated, widthPercent, heightPercent);
         startWebSocketClient(webSocketServer.domain, webSocketServer.port);
     }
 
@@ -64,10 +66,11 @@ public abstract class UI {
      *
      * @param startURL      URL of the HTML content. Example: http://localhost or https://google.com or file:///ABSOLUTE_PATH_TO_HTML_FILE
      * @param isTransparent
+     * @param isDecorated
      * @param widthPercent
      * @param heightPercent
      */
-    public abstract void init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) throws Exception;
+    public abstract void init(String startURL, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception;
 
     /**
      * This invalidates the container and thus to see changes in the UI
@@ -75,7 +78,7 @@ public abstract class UI {
      *
      * @param widthPercent 0 to 100% of the parent size (screen if null).
      */
-    public abstract void width(int widthPercent);
+    public abstract void width(int widthPercent) throws InterruptedException, InvocationTargetException;
 
     /**
      * This invalidates the container and thus to see changes in the UI
@@ -83,21 +86,21 @@ public abstract class UI {
      *
      * @param heightPercent 0 to 100% of the parent size (screen if null).
      */
-    public abstract void height(int heightPercent);
+    public abstract void height(int heightPercent) throws InterruptedException, InvocationTargetException;
 
     /**
      * Moves the window on the X axis.
      *
      * @param x amount to add to current x value.
      */
-    public abstract void plusX(int x);
+    public abstract void plusX(int x) throws InterruptedException, InvocationTargetException;
 
     /**
      * Moves the window on the Y axis.
      *
      * @param y amount to add to current y value.
      */
-    public abstract void plusY(int y);
+    public abstract void plusY(int y) throws InterruptedException, InvocationTargetException;
 
     /**
      * Executes JavaScript code now. Method may wait until execution finishes, or not.
@@ -112,48 +115,48 @@ public abstract class UI {
     /**
      * Maximizes this window if true, otherwise restores the previous state.
      */
-    public abstract void maximize(boolean b);
+    public abstract void maximize(boolean b) throws InterruptedException, InvocationTargetException;
 
     /**
      * Minimizes this window if true, otherwise restores the previous state.
      */
-    public abstract void minimize(boolean b);
+    public abstract void minimize(boolean b) throws InterruptedException, InvocationTargetException;
 
     /**
      * Puts this window into full-screen if true, otherwise restores the previous state.
      */
-    public abstract void fullscreen(boolean b);
+    public abstract void fullscreen(boolean b) throws InterruptedException, InvocationTargetException;
 
     /**
      * Adds a listener which gets executed when this windows size changes.
      */
-    public abstract void onSizeChange(Consumer<Rectangle> code);
+    public abstract void onSizeChange(Consumer<Rectangle> code) throws InterruptedException, InvocationTargetException;
 
-    public abstract Rectangle getScreenSize();
+    public abstract Rectangle getScreenSize() throws InterruptedException, InvocationTargetException;
 
-    public abstract Rectangle getScreenSizeWithoutTaskBar();
+    public abstract Rectangle getScreenSizeWithoutTaskBar() throws InterruptedException, InvocationTargetException;
 
     /**
      * If true decorates the window, otherwise removes the decoration.
      */
-    public abstract void decorate(boolean b);
+    public abstract void decorate(boolean b) throws InterruptedException, InvocationTargetException;
 
     /**
      * If true sets this window to be on top of all other windows, otherwise restores the previous state.
      */
-    public abstract void allwaysOnTop(boolean b);
+    public abstract void allwaysOnTop(boolean b) throws InterruptedException, InvocationTargetException;
 
     /**
      * If true focuses this window, otherwise loses focus.
      */
-    public abstract void focus(boolean b);
+    public abstract void focus(boolean b) throws InterruptedException, InvocationTargetException;
 
     /**
      * Changes the windows background color. <br>
      * Also changes the background color of {@link #content} if not null. <br>
      * @param hexColor example: "#FF0000FF" (first 2 digits are red, then green, then blue, then alpha/opacity where 00 is transparent and FF fully visible).
      */
-    public abstract void background(String hexColor);
+    public abstract void background(String hexColor) throws InterruptedException, InvocationTargetException;
 
     //
     // Utility methods
@@ -162,7 +165,7 @@ public abstract class UI {
     /**
      * Always null, except when code is running inside... <br>
      * - {@link #access(Runnable)} <br>
-     * - constructor {@link #UI(Route, boolean, int, int)} when generating this UIs' HTML  for the first time. <br>
+     * - constructor {@link #UI(Route, boolean, boolean, int, int)} when generating this UIs' HTML  for the first time. <br>
      * - any triggered JavaScript event that was registered via {@link #registerJSListener(String, Component, Consumer)}. <br>
      * or {@link #set(UI, Thread...)} was called before.
      */
@@ -237,13 +240,13 @@ public abstract class UI {
         return this;
     }
 
-    private void priv_init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) {
+    private void priv_init(String startURL, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) {
         try {
             AL.info("Starting new window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
             AL.info("Please stand by...");
             UIManager.all.add(this);
             long ms = System.currentTimeMillis();
-            init(startURL, isTransparent, widthPercent, heightPercent);
+            init(startURL, isTransparent, isDecorated, widthPercent, heightPercent);
             AL.info("Init took " + (System.currentTimeMillis() - ms) + "ms for " + this);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -332,14 +335,14 @@ public abstract class UI {
     /**
      * @see #width(int)
      */
-    public void widthFull() {
+    public void widthFull() throws InterruptedException, InvocationTargetException {
         width(100);
     }
 
     /**
      * @see #height(int)
      */
-    public void heightFull() {
+    public void heightFull() throws InterruptedException, InvocationTargetException {
         height(100);
     }
 

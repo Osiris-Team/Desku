@@ -16,7 +16,9 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -28,11 +30,11 @@ public class DesktopUI extends UI {
     public java.awt.Canvas browserContainer;
 
     public DesktopUI(Route route) throws Exception {
-        this(route, false, 70, 60);
+        this(route, false, true, 70, 60);
     }
 
-    public DesktopUI(Route route, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
-        super(route, isTransparent, widthPercent, heightPercent);
+    public DesktopUI(Route route, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception {
+        super(route, isTransparent, isDecorated, widthPercent, heightPercent);
     }
 
     /**
@@ -45,10 +47,11 @@ public class DesktopUI extends UI {
      *
      * @param startURL      URL of the HTML content. Example: http://localhost or https://google.com or file:///ABSOLUTE_PATH_TO_HTML_FILE
      * @param isTransparent
+     * @param isDecorated
      * @param widthPercent
      * @param heightPercent
      */
-    public void init(String startURL, boolean isTransparent, int widthPercent, int heightPercent) throws Exception {
+    public void init(String startURL, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception {
         AtomicBoolean isLoaded = new AtomicBoolean(false);
         onLoadStateChanged.addAction((action, isLoading) -> {
             if (!isLoading) {
@@ -63,15 +66,15 @@ public class DesktopUI extends UI {
 
         // Using createAWT allows you to defer the creation of the webview until the
         // canvas is fully renderable.
-        browserContainer = (Canvas) Webview.createAWT(true, (wv) -> {
-            browser = wv;
+        browserContainer = (Canvas) Webview.createAWT(true, (browser) -> {
+            this.browser = browser;
 
-            wv.bind("tellJavaThatIsLoaded", e -> {
+            browser.bind("tellJavaThatIsLoaded", e -> {
                 onLoadStateChanged.execute(false); // stopped loading
                 return null;
             });
-            wv.loadURL(startURL);
-            wv.eval("const event = new Event(\"pageloaded\");\n" +
+            browser.loadURL(startURL);
+            browser.eval("const event = new Event(\"pageloaded\");\n" +
                     "async function notifyOnPageLoad() {\n" +
                     "  setTimeout(function() {  \n" +
                     "    if (document.readyState === 'complete') {\n" +
@@ -103,8 +106,8 @@ public class DesktopUI extends UI {
                     }
                     int finalContentWidth = contentWidth;
                     int finalContentHeight = contentHeight;
-                    wv.dispatch(() -> {
-                        wv.setFixedSize(finalContentWidth, finalContentHeight);
+                    browser.dispatch(() -> {
+                        browser.setFixedSize(finalContentWidth, finalContentHeight);
                         //browserContainer.setSize(finalContentWidth, finalContentHeight); // This somehow breaks stuff
                     });
                 }
@@ -118,7 +121,7 @@ public class DesktopUI extends UI {
             });
 
             // Run the webview event loop, the webview is fully disposed when this returns.
-            wv.run();
+            browser.run();
         });
 
         frame.getContentPane().add(browserContainer, BorderLayout.CENTER);
@@ -133,6 +136,11 @@ public class DesktopUI extends UI {
         Swing.center(frame);
         frame.revalidate();
         frame.setFocusable(true);
+
+        // These must be called before showing the window
+        if(isTransparent) background("#00000000");
+        decorate(isDecorated);
+
         frame.setVisible(true);
         frame.requestFocus();
 
@@ -154,15 +162,17 @@ public class DesktopUI extends UI {
      *
      * @param widthPercent 0 to 100% of the parent size (screen if null).
      */
-    public void width(int widthPercent) {
-        if (frame == null) onLoadStateChanged.addAction((action, isLoading) -> {
-            if (!isLoading) {
-                action.remove();
+    public void width(int widthPercent) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            if (frame == null) onLoadStateChanged.addAction((action, isLoading) -> {
+                if (!isLoading) {
+                    action.remove();
+                    updateWidth(frame.getParent(), frame, widthPercent);
+                }
+            }, AL::warn);
+            else
                 updateWidth(frame.getParent(), frame, widthPercent);
-            }
-        }, AL::warn);
-        else
-            updateWidth(frame.getParent(), frame, widthPercent);
+        });
     }
 
     /**
@@ -171,15 +181,17 @@ public class DesktopUI extends UI {
      *
      * @param heightPercent 0 to 100% of the parent size (screen if null).
      */
-    public void height(int heightPercent) {
-        if (frame == null) onLoadStateChanged.addAction((action, isLoading) -> {
-            if (!isLoading) {
-                action.remove();
+    public void height(int heightPercent) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            if (frame == null) onLoadStateChanged.addAction((action, isLoading) -> {
+                if (!isLoading) {
+                    action.remove();
+                    updateHeight(frame.getParent(), frame, heightPercent);
+                }
+            }, AL::warn);
+            else
                 updateHeight(frame.getParent(), frame, heightPercent);
-            }
-        }, AL::warn);
-        else
-            updateHeight(frame.getParent(), frame, heightPercent);
+        });
     }
 
     private void updateWidth(java.awt.Component parent, java.awt.Component target, int widthPercent) {
@@ -206,12 +218,16 @@ public class DesktopUI extends UI {
         target.setMaximumSize(size);
     }
 
-    public void plusX(int x) {
-        frame.setLocation(frame.getX() + x, frame.getY());
+    public void plusX(int x) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            frame.setLocation(frame.getX() + x, frame.getY());
+        });
     }
 
-    public void plusY(int y) {
-        frame.setLocation(frame.getX(), frame.getY() + y);
+    public void plusY(int y) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            frame.setLocation(frame.getX(), frame.getY() + y);
+        });
     }
 
     @Override
@@ -222,83 +238,96 @@ public class DesktopUI extends UI {
     }
 
     @Override
-    public void maximize(boolean b) {
-        frame.setExtendedState(b ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
-    }
-
-    @Override
-    public void minimize(boolean b) {
-        frame.setExtendedState(b ? JFrame.ICONIFIED : JFrame.NORMAL);
-    }
-
-    @Override
-    public void fullscreen(boolean b) {
-        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
-        device.setFullScreenWindow(b ? frame : null);
-    }
-
-    @Override
-    public void onSizeChange(Consumer<com.osiris.desku.ui.utils.Rectangle> code) {
-        frame.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                code.accept(new com.osiris.desku.ui.utils.Rectangle(
-                        e.getComponent().getWidth(), e.getComponent().getHeight()));
-                frame.revalidate();
-            }
+    public void maximize(boolean b) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            frame.setExtendedState(b ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
         });
     }
 
     @Override
-    public Rectangle getScreenSize() {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice gd = ge.getDefaultScreenDevice();
-        GraphicsConfiguration gc = gd.getDefaultConfiguration();
-        java.awt.Rectangle screenSize = gc.getBounds();
-        Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
-
-        int width = screenSize.width - screenInsets.left - screenInsets.right;
-        int height = screenSize.height - screenInsets.top - screenInsets.bottom;
-        return new Rectangle(width, height);
+    public void minimize(boolean b) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            frame.setExtendedState(b ? JFrame.ICONIFIED : JFrame.NORMAL);
+        });
     }
 
     @Override
-    public Rectangle getScreenSizeWithoutTaskBar() {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice gd = ge.getDefaultScreenDevice();
-        GraphicsConfiguration gc = gd.getDefaultConfiguration();
-        java.awt.Rectangle screenSize = gc.getBounds();
-        Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
-        // TODO if window has decoration, add it to this calculation
-
-        int width = screenSize.width - screenInsets.left - screenInsets.right;
-        int height = screenSize.height - screenInsets.top - screenInsets.bottom;
-        return new Rectangle(screenSize.width - width, screenSize.height - height);
+    public void fullscreen(boolean b) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()[0];
+            device.setFullScreenWindow(b ? frame : null);
+        });
     }
 
     @Override
-    public void decorate(boolean b) {
-        if(frame.isDisplayable()){
-            boolean wasVisible = frame.isVisible(); // Check if the frame was visible
-            frame.setVisible(false); // Hide the frame
-            frame.dispose(); // Dispose of the frame
-            frame.setUndecorated(!b); // Set the decoration flag
-            frame.pack(); // Pack the frame
-            frame.setVisible(wasVisible);
-        } else{
+    public void onSizeChange(Consumer<com.osiris.desku.ui.utils.Rectangle> code) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            frame.addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    code.accept(new com.osiris.desku.ui.utils.Rectangle(
+                            e.getComponent().getWidth(), e.getComponent().getHeight()));
+                    frame.revalidate();
+                }
+            });
+        });
+    }
+
+    @Override
+    public Rectangle getScreenSize() throws InterruptedException, InvocationTargetException {
+        AtomicReference<Rectangle> rec = new AtomicReference<>();
+        SwingUtilities.invokeAndWait(() -> {
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice gd = ge.getDefaultScreenDevice();
+            GraphicsConfiguration gc = gd.getDefaultConfiguration();
+            java.awt.Rectangle screenSize = gc.getBounds();
+            Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
+
+            int width = screenSize.width - screenInsets.left - screenInsets.right;
+            int height = screenSize.height - screenInsets.top - screenInsets.bottom;
+            rec.set(new Rectangle(width, height));
+        });
+        return rec.get();
+    }
+
+    @Override
+    public Rectangle getScreenSizeWithoutTaskBar() throws InterruptedException, InvocationTargetException {
+        AtomicReference<Rectangle> rec = new AtomicReference<>();
+        SwingUtilities.invokeAndWait(() -> {
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice gd = ge.getDefaultScreenDevice();
+            GraphicsConfiguration gc = gd.getDefaultConfiguration();
+            java.awt.Rectangle screenSize = gc.getBounds();
+            Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
+            // TODO if window has decoration, add it to this calculation
+
+            int width = screenSize.width - screenInsets.left - screenInsets.right;
+            int height = screenSize.height - screenInsets.top - screenInsets.bottom;
+            rec.set(new Rectangle(screenSize.width - width, screenSize.height - height));
+        });
+        return rec.get();
+    }
+
+    @Override
+    public void decorate(boolean b) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
             frame.setUndecorated(!b);
-        }
+        });
     }
 
     @Override
-    public void allwaysOnTop(boolean b) {
-        frame.setAlwaysOnTop(b);
+    public void allwaysOnTop(boolean b) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            frame.setAlwaysOnTop(b);
+        });
     }
 
     @Override
-    public void focus(boolean b) {
-        if(b) frame.requestFocus();
-        else frame.transferFocusBackward();
+    public void focus(boolean b) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            if(b) frame.requestFocus();
+            else frame.transferFocusBackward();
+        });
     }
 
     public Color convertCSSColor(String cssHexColor) {
@@ -322,10 +351,12 @@ public class DesktopUI extends UI {
     }
 
     @Override
-    public void background(String hexColor) {
-        Color color = convertCSSColor(hexColor);
-        frame.setBackground(color);
-        frame.getContentPane().setBackground(color);
-        if(content != null) content.putStyle("background-color", hexColor);
+    public void background(String hexColor) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(() -> {
+            Color color = convertCSSColor(hexColor);
+            frame.setBackground(color);
+            frame.getContentPane().setBackground(color);
+            if(content != null) content.putStyle("background-color", hexColor);
+        });
     }
 }

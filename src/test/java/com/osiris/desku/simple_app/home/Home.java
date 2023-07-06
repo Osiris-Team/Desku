@@ -277,28 +277,63 @@ public class Home extends Route {
         // UI
         //
         ly.add(text("UI/Window").sizeXXL());
-        ly.horizontalCL().add(
+        ly.horizontalCL().childSpaceEvenly().add(
                 checkbox("maximize").onValueChange(e -> {
-                    UI.get().maximize(e.value);
+                    try{
+                        UI.get().maximize(e.value);
+                    } catch (Exception ex) {
+                        AL.warn(ex);
+                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                    }
                 }),
                 checkbox("minimize").onValueChange(e -> {
-                    UI.get().minimize(e.value);
+                    try{
+                        UI.get().minimize(e.value);
+                    } catch (Exception ex) {
+                        AL.warn(ex);
+                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                    }
                 }),
                 checkbox("fullscreen").onValueChange(e -> {
-                    UI.get().fullscreen(e.value);
+                    try{
+                        UI.get().fullscreen(e.value);
+                    } catch (Exception ex) {
+                        AL.warn(ex);
+                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                    }
                 }),
                 checkbox("decorate").onValueChange(e -> {
-                    UI.get().decorate(e.value);
+                    try{
+                        UI.get().decorate(e.value);
+                    } catch (Exception ex) {
+                        AL.warn(ex);
+                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                    }
                 }),
                 checkbox("allwaysOnTop").onValueChange(e -> {
-                    UI.get().allwaysOnTop(e.value);
+                    try{
+                        UI.get().allwaysOnTop(e.value);
+                    } catch (Exception ex) {
+                        AL.warn(ex);
+                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                    }
                 }),
                 checkbox("focus").onValueChange(e -> {
-                    UI.get().focus(e.value);
+                    try{
+                        UI.get().focus(e.value);
+                    } catch (Exception ex) {
+                        AL.warn(ex);
+                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                    }
                 }),
                 checkbox("transparent background").onValueChange(e -> {
-                    if(e.value)UI.get().background("#00000000");
-                    else UI.get().background("#FFFFFFFF");
+                    try{
+                        if(e.value)UI.get().background("#00000000");
+                        else UI.get().background("#FFFFFFFF");
+                    } catch (Exception ex) {
+                        AL.warn(ex);
+                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                    }
                 })
         );
 
