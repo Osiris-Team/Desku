@@ -18,7 +18,12 @@ public abstract class JavaScriptEvent<T extends Component<?>> {
     public JavaScriptEvent(String rawJSMessage, T comp) {
         this.rawJSMessage = rawJSMessage;
         this.comp = comp;
-        this.jsMessage = JsonFile.parser.fromJson(rawJSMessage, JsonObject.class);
+        try{
+            this.jsMessage = JsonFile.parser.fromJson(rawJSMessage, JsonObject.class);
+        } catch (Exception e) {
+            System.err.println("JS MESSAGE RELATED TO ERROR BELOW: "+ rawJSMessage);
+            throw e;
+        }
     }
 
     public JsonObject toJson() {

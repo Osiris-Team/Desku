@@ -6,6 +6,8 @@ import com.osiris.desku.swing.Swing;
 import com.osiris.desku.ui.utils.Rectangle;
 import com.osiris.jlib.logger.AL;
 import dev.webview.Webview;
+import dev.webview.platform.OperatingSystem;
+import dev.webview.platform.Platform;
 
 import javax.swing.*;
 import java.awt.Component;
@@ -23,7 +25,7 @@ import java.util.function.Consumer;
 public class DesktopUI extends UI {
     public JFrame frame;
     public Webview browser;
-    public java.awt.Component browserDesktopUI;
+    public java.awt.Canvas browserContainer;
 
     public DesktopUI(Route route) throws Exception {
         this(route, false, 70, 60);
@@ -56,13 +58,12 @@ public class DesktopUI extends UI {
         }, Exception::printStackTrace);
 
         frame = new JFrame();
-
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
         // Using createAWT allows you to defer the creation of the webview until the
         // canvas is fully renderable.
-        browserDesktopUI = Webview.createAWT(true, (wv) -> {
+        browserContainer = (Canvas) Webview.createAWT(true, (wv) -> {
             browser = wv;
 
             wv.bind("tellJavaThatIsLoaded", e -> {
@@ -89,10 +90,23 @@ public class DesktopUI extends UI {
             frame.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
+                    Dimension contentSize = e.getComponent().getSize();
+                    // Exclude decoration/top-bar from width/height
+                    Insets insets = frame.getInsets();
+                    int contentWidth = contentSize.width - insets.left - insets.right;
+                    int contentHeight = contentSize.height - insets.top - insets.bottom;
+                    // There is a random margin on Windows that isn't visible, so we must
+                    // compensate. // TODO figure out why this is caused.
+                    if (Platform.os == OperatingSystem.WINDOWS) {
+                        contentWidth -= 16;
+                        contentHeight -= 39;
+                    }
+                    int finalContentWidth = contentWidth;
+                    int finalContentHeight = contentHeight;
                     wv.dispatch(() -> {
-                        wv.setSize(e.getComponent().getWidth(), e.getComponent().getHeight());
+                        wv.setFixedSize(finalContentWidth, finalContentHeight);
+                        //browserContainer.setSize(finalContentWidth, finalContentHeight); // This somehow breaks stuff
                     });
-                    frame.revalidate();
                 }
             });
 
@@ -107,7 +121,7 @@ public class DesktopUI extends UI {
             wv.run();
         });
 
-        frame.getContentPane().add(browserDesktopUI, BorderLayout.CENTER);
+        frame.getContentPane().add(browserContainer, BorderLayout.CENTER);
         if (widthPercent <= 0 || heightPercent <= 0) {
             widthPercent = 100;
             heightPercent = 100;
@@ -264,7 +278,16 @@ public class DesktopUI extends UI {
 
     @Override
     public void decorate(boolean b) {
-        frame.setUndecorated(!b);
+        if(frame.isDisplayable()){
+            boolean wasVisible = frame.isVisible(); // Check if the frame was visible
+            frame.setVisible(false); // Hide the frame
+            frame.dispose(); // Dispose of the frame
+            frame.setUndecorated(!b); // Set the decoration flag
+            frame.pack(); // Pack the frame
+            frame.setVisible(wasVisible);
+        } else{
+            frame.setUndecorated(!b);
+        }
     }
 
     @Override
@@ -275,6 +298,34 @@ public class DesktopUI extends UI {
     @Override
     public void focus(boolean b) {
         if(b) frame.requestFocus();
-        else frame.getOwner().requestFocus();
+        else frame.transferFocusBackward();
+    }
+
+    public Color convertCSSColor(String cssHexColor) {
+        if (cssHexColor.startsWith("#")) {
+            // Remove the # symbol from the beginning
+            cssHexColor = cssHexColor.substring(1);
+        }
+
+        int alpha = 255; // Default alpha value (fully opaque)
+        if (cssHexColor.length() == 8) {
+            // Extract the alpha value from the last two characters
+            String alphaHex = cssHexColor.substring(6);
+            alpha = Integer.parseInt(alphaHex, 16);
+        }
+
+        int red = Integer.parseInt(cssHexColor.substring(0, 2), 16);
+        int green = Integer.parseInt(cssHexColor.substring(2, 4), 16);
+        int blue = Integer.parseInt(cssHexColor.substring(4, 6), 16);
+
+        return new Color(red, green, blue, alpha);
+    }
+
+    @Override
+    public void background(String hexColor) {
+        Color color = convertCSSColor(hexColor);
+        frame.setBackground(color);
+        frame.getContentPane().setBackground(color);
+        if(content != null) content.putStyle("background-color", hexColor);
     }
 }

@@ -148,6 +148,13 @@ public abstract class UI {
      */
     public abstract void focus(boolean b);
 
+    /**
+     * Changes the windows background color. <br>
+     * Also changes the background color of {@link #content} if not null. <br>
+     * @param hexColor example: "#FF0000FF" (first 2 digits are red, then green, then blue, then alpha/opacity where 00 is transparent and FF fully visible).
+     */
+    public abstract void background(String hexColor);
+
     //
     // Utility methods
     //

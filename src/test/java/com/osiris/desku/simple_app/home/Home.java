@@ -5,6 +5,7 @@ import com.osiris.desku.Icon;
 import com.osiris.desku.Route;
 import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.jlib.logger.AL;
@@ -271,6 +272,35 @@ public class Home extends Route {
         ly.horizontalCL().add(Icon.regular_bell(), Icon.regular_bookmark(), Icon.regular_heart());
         ly.horizontalCL().add(Icon.solid_bell(), Icon.solid_bookmark(), Icon.solid_heart());
         // Default sizes can be changed in App.theme
+
+        //
+        // UI
+        //
+        ly.add(text("UI/Window").sizeXXL());
+        ly.horizontalCL().add(
+                checkbox("maximize").onValueChange(e -> {
+                    UI.get().maximize(e.value);
+                }),
+                checkbox("minimize").onValueChange(e -> {
+                    UI.get().minimize(e.value);
+                }),
+                checkbox("fullscreen").onValueChange(e -> {
+                    UI.get().fullscreen(e.value);
+                }),
+                checkbox("decorate").onValueChange(e -> {
+                    UI.get().decorate(e.value);
+                }),
+                checkbox("allwaysOnTop").onValueChange(e -> {
+                    UI.get().allwaysOnTop(e.value);
+                }),
+                checkbox("focus").onValueChange(e -> {
+                    UI.get().focus(e.value);
+                }),
+                checkbox("transparent background").onValueChange(e -> {
+                    if(e.value)UI.get().background("#00000000");
+                    else UI.get().background("#FFFFFFFF");
+                })
+        );
 
         return ly;
     }
