@@ -5,11 +5,12 @@ import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.TextChangeEvent;
 import com.osiris.desku.ui.layout.SmartLayout;
+import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 
 import java.util.function.Consumer;
 
-public class Select extends Component<Select> {
+public class OptionField extends Component<OptionField> {
 
     // Layout
     public Text label;
@@ -17,21 +18,21 @@ public class Select extends Component<Select> {
     public SmartLayout items = new SmartLayout();
 
     // Events
-    public Event<TextChangeEvent<Select>> _onSelectedChange = new Event<>();
+    public Event<TextChangeEvent<OptionField>> _onValueChange = new Event<>();
 
-    public Select() {
+    public OptionField() {
         this("", "");
     }
 
-    public Select(String label) {
+    public OptionField(String label) {
         this(label, "");
     }
 
-    public Select(String label, String defaultValue) {
+    public OptionField(String label, String defaultValue) {
         this(new Text(label).sizeS(), defaultValue);
     }
 
-    public Select(Text label, String defaultValue) {
+    public OptionField(Text label, String defaultValue) {
         if(defaultValue == null || defaultValue.isEmpty()) defaultValue = "Select";
         this.label = label;
         this.button = new Button(defaultValue).secondary()
@@ -49,20 +50,28 @@ public class Select extends Component<Select> {
             e.childComp.putStyle("cursor", "pointer");
             e.childComp.onClick(click -> {
                 items.visible(false);
-                setSelected(click.comp.element.text());
+                set(click.comp.element.text());
             });
             superItemsAdd.accept(e); // Directly add children to items / list layout
         };
     }
 
-    public String getSelected() {
+    public OptionField add(String... options) {
+        if (options == null) return _this;
+        GodIterator.forEach(options, s -> {
+            _add.accept(new AddedChildEvent(new Text(s), null, false, false));
+        });
+        return _this;
+    }
+
+    public String get() {
         return this.button.element.attr("value");
     }
 
     /**
-     * Triggers {@link #_onSelectedChange} event.
+     * Triggers {@link #_onValueChange} event.
      */
-    public Select setSelected(String s) {
+    public OptionField set(String s) {
         this.button.putAttribute("value", s);
         this.button.text.set(s);
         return this;
@@ -74,14 +83,14 @@ public class Select extends Component<Select> {
      *
      * @see UI#registerJSListener(String, Component, String, Consumer)
      */
-    public Select onSelectedChange(Consumer<TextChangeEvent<Select>> code) {
-        _onSelectedChange.addAction((event) -> code.accept(event));
+    public OptionField onValueChange(Consumer<TextChangeEvent<OptionField>> code) {
+        _onValueChange.addAction((event) -> code.accept(event));
         this.button.text.onValueChanged(e -> {
             // This event is only triggered from the Java side.
-            TextChangeEvent<Select> textChangeEvent = new TextChangeEvent<>("{\"newValue\": \"" + e.value + "\", \"eventAsJson\": {}}",
+            TextChangeEvent<OptionField> textChangeEvent = new TextChangeEvent<>("{\"newValue\": \"" + e.value + "\", \"eventAsJson\": {}}",
                     this, e.valueBefore);
             this.button.element.attr("value", e.value); // Update in-memory value
-            _onSelectedChange.execute(textChangeEvent); // Executes all listeners
+            _onValueChange.execute(textChangeEvent); // Executes all listeners
         });
         return _this;
     }

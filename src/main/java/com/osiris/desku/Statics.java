@@ -204,6 +204,30 @@ public class Statics {
 
     /**
      */
+    static public OptionField optionfield() {
+        return new OptionField();
+    }
+
+    /**
+     */
+    static public OptionField optionfield(String label) {
+        return new OptionField(label);
+    }
+
+    /**
+     */
+    static public OptionField optionfield(String label, String defaultValue) {
+        return new OptionField(label, defaultValue);
+    }
+
+    /**
+     */
+    static public OptionField optionfield(Text label, String defaultValue) {
+        return new OptionField(label, defaultValue);
+    }
+
+    /**
+     */
     static public PasswordField passwordfield() {
         return new PasswordField();
     }
@@ -224,30 +248,6 @@ public class Statics {
      */
     static public PasswordField passwordfield(Text label, String defaultValue) {
         return new PasswordField(label, defaultValue);
-    }
-
-    /**
-     */
-    static public Select select() {
-        return new Select();
-    }
-
-    /**
-     */
-    static public Select select(String label) {
-        return new Select(label);
-    }
-
-    /**
-     */
-    static public Select select(String label, String defaultValue) {
-        return new Select(label, defaultValue);
-    }
-
-    /**
-     */
-    static public Select select(Text label, String defaultValue) {
-        return new Select(label, defaultValue);
     }
 
     /**

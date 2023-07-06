@@ -204,10 +204,12 @@ public class Home extends Route {
         ly.add(slider("Slider label").onValueChange(e -> {
             AL.info("Input of slider changed: "+e.value+" before: "+e.valueBefore);
         }));
-        // Selector
-        ly.add(select("Select label").add(text("Option 1"), text("Option 2"), text("Option 3"))
-                .onSelectedChange(e -> {
-            AL.info("Input of select changed: "+e.value+" before: "+e.valueBefore);
+        // Option field
+        // You can also add strings directly instead of components
+        ly.add(optionfield("Option field label")
+                .add(text("Option 1"), text("Option 2"), text("Option 3"))
+                .onValueChange(e -> {
+            AL.info("Input of option field changed: "+e.value+" before: "+e.valueBefore);
         }));
         // File uploader (probably only relevant if this a web server)
         ly.add(fileuploader("File uploader label").onValueChange(e -> {
