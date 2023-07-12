@@ -138,8 +138,8 @@ public class DesktopUI extends UI {
         frame.setFocusable(true);
 
         // These must be called before showing the window
+        decorate(isDecorated); // Must be called before background()
         if(isTransparent) background("#00000000");
-        decorate(isDecorated);
 
         frame.setVisible(true);
         frame.requestFocus();
@@ -355,8 +355,14 @@ public class DesktopUI extends UI {
         SwingUtilities.invokeAndWait(() -> {
             Color color = convertCSSColor(hexColor);
             frame.setBackground(color);
-            frame.getContentPane().setBackground(color);
+            //frame.getContentPane().setBackground(color); TODO find out why this makes the frame clickthorugh
+            //browserContainer.setBackground(color);
             if(content != null) content.putStyle("background-color", hexColor);
+
+            if(hexColor.equals("#00000000")){
+                //frame.setOpacity(0.99f); // Slightly transparent to allow mouse events
+                //TODO doesnt fix shit
+            }
         });
     }
 }

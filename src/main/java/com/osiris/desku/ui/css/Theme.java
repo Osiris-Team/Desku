@@ -1,24 +1,7 @@
-package com.osiris.desku.ui;
+package com.osiris.desku.ui.css;
 
-import java.util.ArrayList;
-import java.util.List;
+public class Theme extends CSS{
 
-public class Theme {
-    /**
-     * Replaces all hyphens by their uppercase version
-     * of their next char.
-     */
-    public static String getJSCompatibleCSSKey(String s){
-        int indexOfHyphen = 0;
-        while(true){
-            indexOfHyphen = s.indexOf("-");
-            if(indexOfHyphen == -1) break;
-            String c = String.valueOf(s.charAt(indexOfHyphen + 1));
-            s = s.replaceAll("-"+c, c.toUpperCase());
-        }
-        return s;
-    }
-    public List<Attribute> attributes = new ArrayList<>();
     // Space sizes
     public Attribute spaceXS = new Attribute("--space-xs", "0.25rem");
     public Attribute spaceS = new Attribute("--space-s", "0.5rem");
@@ -45,30 +28,18 @@ public class Theme {
     public Attribute iconWidth = new Attribute("--icon-width", "16px");
     public Attribute iconHeight = new Attribute("--icon-height", "16px");
 
-    public String toCSS() {
-        // All
-        StringBuilder sb = new StringBuilder();
-        sb.append("html{\n");
-        for (Attribute attr : attributes) {
-            sb.append("  ").append(attr.getKey()).append(": ").append(attr.getValue()).append(";\n");
-        }
-        sb.append("}\n");
-        // Icons
-        sb.append(".icon{" +
-                "width: " + iconWidth.getValue()+ ";"+
-                "height: " + iconHeight.getValue()+ ";"+
-                "}");
-        return sb.toString();
+    public Scrollbar scrollbar = new Scrollbar();
+
+    public Theme() {
+        super("html");
     }
 
-    public class Attribute extends org.jsoup.nodes.Attribute {
-        public Attribute(String key, String value) {
-            super(key, value);
-            attributes.add(this);
-        }
-
-        public String toCSS() {
-            return getKey() + ": " + getValue() + "; ";
-        }
+    @Override
+    public String toCSS() {
+        return super.toCSS() +
+                ".icon{" +
+                "width: " + iconWidth.getValue()+ ";"+
+                "height: " + iconHeight.getValue()+ ";"+
+                "}\n" + scrollbar.toCSS();
     }
 }

@@ -1,6 +1,7 @@
 package com.osiris.desku.ui;
 
 import com.osiris.desku.App;
+import com.osiris.desku.ui.css.CSS;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.desku.ui.event.ScrollEvent;
@@ -179,7 +180,7 @@ public class Component<T extends Component<?>> {
 
             // Update UI
             if (!ui.isLoading.get()){
-                executeJS("comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey())
+                executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
                         + " = ``;\n"); // Change UI representation
             }
         } else {
@@ -193,7 +194,7 @@ public class Component<T extends Component<?>> {
 
             // Update UI
             if (!ui.isLoading.get()){
-                executeJS("comp.style." + Theme.getJSCompatibleCSSKey(attribute.getKey())
+                executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
                         + " = `" + attribute.getValue() + "`;\n"); // Change UI representation
             }
         }
