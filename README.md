@@ -2,6 +2,8 @@
 Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
+### Desku is in early development, thus critical bugs and incomplete features are to be expected.
+
 ### Who is it for?
 Mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
 In addition, it is also highly beginner-friendly, making it accessible to everyone that is new to coding due to its simplicity.
