@@ -71,6 +71,10 @@ the `Statics` class.
 
 ### Documentation
 
+![](https://github.com/Osiris-Team/Desku/blob/main/docs/ChatGPT%20Support%20Banner.png?raw=true)
+Copy and send [this](https://raw.githubusercontent.com/Osiris-Team/Desku/main/README.md) 
+to [ChatGPT](https://chat.openai.com/) and ask it questions to get quick support.
+
 #### User interface
 
 <div>
