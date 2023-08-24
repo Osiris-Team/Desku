@@ -7,6 +7,9 @@ import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.display.Text;
+import com.osiris.desku.ui.input.Button;
+import com.osiris.desku.ui.input.TextField;
+import com.osiris.desku.ui.layout.Horizontal;
 import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.jlib.logger.AL;
 
@@ -15,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.osiris.desku.Statics.*;
 
@@ -337,6 +341,29 @@ public class Home extends Route {
                         e.comp.label.set("Failed, see log for details. "+ex.getMessage());
                     }
                 })
+        );
+
+        //
+        // Performance tests
+        //
+        ly.add(text("Performance tests").sizeXXL());
+        AtomicLong ms = new AtomicLong(System.currentTimeMillis());
+        TextField numElements = textfield("Enter a number of how many elements to add", "100");
+        Horizontal lyElements = horizontal().scrollable(true, "100vw", "100px", "10px", "10px");
+        Button btnAddElements = button("Click to add elements below").onClick(e -> {
+            ms.set(System.currentTimeMillis());
+            int size = Integer.parseInt(numElements.getValue());
+            for (int i1 = 0; i1 < size; i1++) {
+                lyElements.add(image(Home.class,"/images/desku_banner.png"));
+            }
+            long msTook = System.currentTimeMillis() - ms.get();
+            e.comp.text.set("Click to add elements below (took "+msTook+"ms, total elements: "+lyElements.children.size()+")");
+        });
+
+        ly.add(
+                numElements,
+                btnAddElements,
+                lyElements
         );
 
         return ly;

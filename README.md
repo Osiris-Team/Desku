@@ -30,6 +30,12 @@ public class Main {
     }
 }
 ```
+<details>
+<summary>Screenshots</summary>
+
+AppTest home page (24.08.2023), which includes all default components:
+![img.png](/docs/AppTestPage.png)
+</details>
 
 ### How to get started?
 #### Use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) as starting point since it also supports Android and iOS, everything is setup correctly and scripts for generating binaries + installers are included.
@@ -99,6 +105,7 @@ and update the `App.theme` variable.
 
 Probably the best and easiest way to show is with an example.
 The code below shows the JavaScript click event being implemented:
+
 ```java
 public class ClickEvent extends JavaScriptEvent {
     public final boolean isTrusted;
@@ -112,14 +119,16 @@ public class ClickEvent extends JavaScriptEvent {
     }
 }
 
-public class MyComp extends Component<MyComp>{
+public class MyComp extends Component<MyComp> {
     /**
      * Do not add actions via this variable, use {@link #onClick(Consumer)} instead.
      */
     public final Event<ClickEvent> _onClick = new Event<>();
-    public MyComp(){
+
+    public MyComp() {
         super("my-comp");
     }
+
     /**
      * Adds a listener that gets executed when this component was clicked.
      */
@@ -131,7 +140,7 @@ public class MyComp extends Component<MyComp>{
         });
         return target;
     }
-};
+}
 ```
 You can register listeners on any JavaScript event 
 you'd like: https://developer.mozilla.org/en-US/docs/Web/Events
