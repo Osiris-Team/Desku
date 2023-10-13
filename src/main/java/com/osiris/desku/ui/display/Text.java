@@ -1,19 +1,14 @@
 package com.osiris.desku.ui.display;
 
+import com.google.gson.JsonObject;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.UI;
-import com.osiris.desku.ui.event.TextChangeEvent;
+import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.TextNode;
 
-import java.util.function.Consumer;
-
-public class Text extends Component<Text> {
-    /**
-     * Executed when the value changed on the Java side.
-     */
-    public final Event<TextChangeEvent<Text>> _onValueChanged = new Event<>();
+public class Text extends Component<Text, String> {
     /**
      * Executed when a child was added on the Java side.
      */
@@ -24,8 +19,8 @@ public class Text extends Component<Text> {
     public final Event<Void> _onRemovedAllStrings = new Event<>();
 
     public Text(String s) {
-        super("txt");
-        append(s);
+        super(s, "txt");
+        setValue(s);
         // Attach Java event listeners
         UI win = UI.get();
         Runnable registration = () -> {
@@ -49,23 +44,11 @@ public class Text extends Component<Text> {
         }, AL::warn);
     }
 
-    public Text onValueChanged(Consumer<TextChangeEvent<Text>> code){
-        _onValueChanged.addAction(e -> {
-            code.accept(e);
-        });
-        return this;
-    }
 
-    public String get() {
-        return element.text();
-    }
-
-    public Text set(String s) {
-        String oldValue = get();
+    public Text setValue(String v) {
+        String oldValue = internalValue;
         clear();
-        append(s);
-        _onValueChanged.execute(new TextChangeEvent<>("{\"newValue\": \""+s+"\", \"eventAsJson\": {}}",
-                this, oldValue));
+        append(oldValue, v);
         return this;
     }
 
@@ -77,9 +60,21 @@ public class Text extends Component<Text> {
         return this;
     }
 
-    public Text append(String s) {
-        element.appendText(s);
-        _onAddedString.execute(s); // Updates the UI
+    public Text append(String v) {
+        getValue(oldV -> {
+            append(oldV, v);
+        });
+        return this;
+    }
+
+    public Text append(String oldV, String v) {
+        element.appendText(v);
+        _onAddedString.execute(v); // Updates the UI
+        JsonObject obj = new JsonObject();
+        obj.addProperty("newValue", v);
+        obj.add("eventAsJson", new JsonObject());
+        readOnlyOnValueChange.execute(new ValueChangeEvent<>("", obj,
+                this, v, oldV));
         return this;
     }
 

@@ -1,31 +1,26 @@
 package com.osiris.desku.ui.input;
 
 import com.osiris.desku.ui.Component;
-import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.display.Text;
-import com.osiris.desku.ui.event.TextChangeEvent;
+import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.layout.SmartLayout;
 import com.osiris.desku.utils.GodIterator;
-import com.osiris.events.Event;
 
 import java.util.function.Consumer;
 
-public class OptionField extends Component<OptionField> {
+public class OptionField extends Component<OptionField, String> {
 
     // Layout
     public Text label;
     public Button button;
     public SmartLayout items = new SmartLayout();
 
-    // Events
-    public Event<TextChangeEvent<OptionField>> _onValueChange = new Event<>();
-
     public OptionField() {
-        this("", "");
+        this("", "Select");
     }
 
     public OptionField(String label) {
-        this(label, "");
+        this(label, "Select");
     }
 
     public OptionField(String label, String defaultValue) {
@@ -33,7 +28,7 @@ public class OptionField extends Component<OptionField> {
     }
 
     public OptionField(Text label, String defaultValue) {
-        if(defaultValue == null || defaultValue.isEmpty()) defaultValue = "Select";
+        super(defaultValue);
         this.label = label;
         this.button = new Button(defaultValue).secondary()
                 .width("100%")
@@ -50,7 +45,7 @@ public class OptionField extends Component<OptionField> {
             e.childComp.putStyle("cursor", "pointer");
             e.childComp.onClick(click -> {
                 items.visible(false);
-                set(click.comp.element.text());
+                setValue(click.comp.element.text());
             });
             superItemsAdd.accept(e); // Directly add children to items / list layout
         };
@@ -64,35 +59,27 @@ public class OptionField extends Component<OptionField> {
         return _this;
     }
 
-    public String get() {
-        return this.button.element.attr("value");
-    }
-
-    /**
-     * Triggers {@link #_onValueChange} event.
-     */
-    public OptionField set(String s) {
-        this.button.putAttribute("value", s);
-        this.button.text.set(s);
+    @Override
+    public OptionField getValue(Consumer<String> v) {
+        button.label.getValue(v);
         return this;
     }
 
-    /**
-     * Adds a listener that gets executed when this component <br>
-     * was clicked by the user (a JavaScript click event was thrown). <br>
-     *
-     * @see UI#registerJSListener(String, Component, String, Consumer)
-     */
-    public OptionField onValueChange(Consumer<TextChangeEvent<OptionField>> code) {
-        _onValueChange.addAction((event) -> code.accept(event));
-        this.button.text.onValueChanged(e -> {
-            // This event is only triggered from the Java side.
-            TextChangeEvent<OptionField> textChangeEvent = new TextChangeEvent<>("{\"newValue\": \"" + e.value + "\", \"eventAsJson\": {}}",
-                    this, e.valueBefore);
-            this.button.element.attr("value", e.value); // Update in-memory value
-            _onValueChange.execute(textChangeEvent); // Executes all listeners
+
+    public OptionField setValue(String v) {
+        button.label.setValue(v);
+        return this;
+    }
+
+
+    @Override
+    public OptionField onValueChange(Consumer<ValueChangeEvent<OptionField, String>> code) {
+        // Forward input text change event to this component
+        button.label.onValueChange(e -> {
+            ValueChangeEvent<OptionField, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore);
+            code.accept(e2);
         });
-        return _this;
+        return this;
     }
 
 

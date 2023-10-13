@@ -1,6 +1,6 @@
 package com.osiris.desku.ui.css;
 
-public class Theme extends CSS{
+public class Theme extends CSS {
 
     // Space sizes
     public Attribute spaceXS = new Attribute("--space-xs", "0.25rem");
@@ -38,8 +38,8 @@ public class Theme extends CSS{
     public String toCSS() {
         return super.toCSS() +
                 ".icon{" +
-                "width: " + iconWidth.getValue()+ ";"+
-                "height: " + iconHeight.getValue()+ ";"+
+                "width: " + iconWidth.getValue() + ";" +
+                "height: " + iconHeight.getValue() + ";" +
                 "}\n" + scrollbar.toCSS();
     }
 }

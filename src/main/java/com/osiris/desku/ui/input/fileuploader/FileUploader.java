@@ -1,21 +1,21 @@
-package com.osiris.desku.ui.input;
+package com.osiris.desku.ui.input.fileuploader;
 
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.display.Text;
-import com.osiris.desku.ui.event.FileChangeEvent;
-import com.osiris.events.Event;
+import com.osiris.desku.ui.event.ValueChangeEvent;
+import com.osiris.desku.ui.input.Input;
 
 import java.util.function.Consumer;
 
-public class FileUploader extends Component<FileUploader> {
+/**
+ * Component to let the user upload a file from their device.
+ */
+public class FileUploader extends Component<FileUploader, File> {
 
     // Layout
     public Text label;
-    public Input input = new Input("file");
-
-    // Events
-    public Event<FileChangeEvent<FileUploader>> _onValueChange = new Event<>();
+    public Input<String> input;
 
     public FileUploader() {
         this("", "");
@@ -29,11 +29,12 @@ public class FileUploader extends Component<FileUploader> {
         this(new Text(label).sizeS(), defaultValue);
     }
 
-    public FileUploader(Text label, String defaultValue) {
+    public FileUploader(Text label, String defaultFileName) {
+        super(new File("", new byte[]{}));
         this.label = label;
+        this.input = new Input<>("file", defaultFileName);
         add(this.label, this.input);
         childVertical();
-        this.input.putAttribute("value", defaultValue);
     }
 
     /**
@@ -48,17 +49,14 @@ public class FileUploader extends Component<FileUploader> {
         return this;
     }
 
-    public String getValue() {
-        return this.input.element.attr("value");
+    /**
+     * Returns the uploaded file, or a file where {@link File#content} length is 0, if nothing uploaded yet.
+     */
+    @Override
+    public FileUploader getValue(Consumer<File> v) {
+        return super.getValue(v);
     }
 
-    /**
-     * Triggers {@link #_onValueChange} event.
-     */
-    public FileUploader setValue(String s) {
-        this.input.putAttribute("value", s);
-        return this;
-    }
 
     /**
      * Adds a listener that gets executed when this component <br>
@@ -66,9 +64,12 @@ public class FileUploader extends Component<FileUploader> {
      *
      * @see UI#registerJSListener(String, Component, String, Consumer)
      */
-    public FileUploader onValueChange(Consumer<FileChangeEvent<FileUploader>> code) {
-        _onValueChange.addAction((event) -> code.accept(event));
+
+    public FileUploader onValueChange(Consumer<ValueChangeEvent<FileUploader, File>> code) {
+        readOnlyOnValueChange.addAction((event) -> code.accept(event));
         // TODO this is probably slow af, and reads the complete file twice into memory (on JS and Java side)
+        // This makes currently less sense, because Desku is two in one (server and client)
+        // but if its someday distributed as a website/server then the above comment can be removed.
         UI.get().registerJSListener("input", input, "var fileContent = null;\n" +
                         "try{fileContent = event.target.fileContent;}catch(e){}\n" +
                         "if(fileContent == null){\n" +
@@ -91,11 +92,22 @@ public class FileUploader extends Component<FileUploader> {
                         "  message = `{\"newValue\": \"` + fileName + `\", \"newContent\": \"` + event.target.fileContent + `\", \"eventAsJson\":` + message + `}`;\n" +
                         "}\n",
                 (msg) -> {
-                    if (msg.equals("null")) return;
+                    if (msg.isEmpty()) return;
                     msg = msg.replace("\\", "/");
-                    FileChangeEvent<FileUploader> e = new FileChangeEvent<>(msg, this, input.element.attr("value"));
-                    input.element.attr("value", e.value); // Change in memory value, without triggering another change event
-                    _onValueChange.execute(e); // Executes all listeners
+                    ValueChangeEvent<FileUploader, File> e = new ValueChangeEvent<>(msg, this, internalValue);
+                    // Convert file content that is string binary to byte[] // TODO is this really necessary?
+                    String content = e.jsMessage.get("newContent").getAsString();
+                    String[] bytes = content.split(" ");
+                    int length = bytes.length;
+                    byte[] byteArray = new byte[length];
+                    for (int i = 0; i < bytes.length; i++) {
+                        byteArray[i] = Byte.parseByte(bytes[i]);
+                    }
+                    e.value.content = byteArray;
+                    File newValue = e.value; // msg contains the new data and is parsed above in the event constructor
+                    internalValue = newValue; // Change in memory value, without triggering another change event
+                    element.attr("value", e.jsMessage.get("newValue").getAsString());
+                    readOnlyOnValueChange.execute(e); // Executes all listeners
                 });
         return _this;
     }

@@ -9,15 +9,15 @@ import java.util.function.Supplier;
  * which makes it possible to use lambdas.
  */
 public class MRoute extends Route {
-    public Supplier<Component<?>> onLoad;
+    public Supplier<Component<?,?>> onLoad;
 
-    public MRoute(String path, Supplier<Component<?>> onLoad) {
+    public MRoute(String path, Supplier<Component<?,?>> onLoad) {
         super(path);
         this.onLoad = onLoad;
     }
 
     @Override
-    public Component<?> loadContent() {
+    public Component<?,?> loadContent() {
         return onLoad.get();
     }
 }

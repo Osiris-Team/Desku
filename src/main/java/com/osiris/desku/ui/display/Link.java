@@ -5,18 +5,19 @@ import com.osiris.desku.Route;
 import com.osiris.desku.ui.Component;
 import com.osiris.jlib.logger.AL;
 
-public class Router extends Component<Router> {
+public class Link extends Component<Link, String> {
 
-    public Router() {
-        super("a");
+    public Link() {
+        super("", "a");
     }
 
-    public Router set(String url) {
+    public Link setValue(String url) {
+        super.setValue(url);
         putAttribute("href", url);
         return this;
     }
 
-    public Router set(Class<? extends Route> routeClass) {
+    public Link setValue(Class<? extends Route> routeClass) {
         Route route = null;
         for (Route r : App.routes) {
             if (r.getClass().equals(routeClass)) {
@@ -29,7 +30,7 @@ public class Router extends Component<Router> {
                     + "' was not registered, aka not added to App.routes!", new Exception());
             return this;
         }
-        putAttribute("href", route.path);
+        setValue(route.path);
         return this;
     }
 }

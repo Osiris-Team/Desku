@@ -1,6 +1,7 @@
 package com.osiris.desku.ui.display;
 
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.utils.NoValue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -11,7 +12,7 @@ import java.util.function.Predicate;
 /**
  * Table with additional methods for reflection.
  */
-public class RTable extends Component<RTable> {
+public class RTable extends Component<RTable, NoValue> {
     public Table table = new Table();
     public Class<?> clazz;
     public Predicate<Field> fieldPredicate = field -> {
@@ -22,7 +23,7 @@ public class RTable extends Component<RTable> {
      * @param clazz uses this classes' fields for the headers.
      */
     public RTable(Class<?> clazz) {
-        super("rtable");
+        super(NoValue.GET, "rtable");
         add(this.table);
         this.clazz = clazz;
         headers(clazz);
@@ -33,7 +34,7 @@ public class RTable extends Component<RTable> {
      * @param fieldPredicate is used to determine which fields to use.
      */
     public RTable(Class<?> clazz, Predicate<Field> fieldPredicate) {
-        super("rtable");
+        super(NoValue.GET, "rtable");
         add(this.table);
         this.clazz = clazz;
         this.fieldPredicate = fieldPredicate;

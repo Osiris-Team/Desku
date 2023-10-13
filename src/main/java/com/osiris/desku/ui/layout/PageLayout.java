@@ -2,19 +2,21 @@ package com.osiris.desku.ui.layout;
 
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.input.Button;
+import com.osiris.desku.ui.utils.NoValue;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
-public class PageLayout extends Component<PageLayout> {
+public class PageLayout extends Component<PageLayout, NoValue> {
 
     public Vertical content = new Vertical().childGap(true);
     public Navigator navigator = new Navigator(content);
-    public Function<FetchDetails, List<Component<?>>> fetchChildComps;
+    public Function<FetchDetails, List<Component<?,?>>> fetchChildComps;
     public int iStart, maxFetchCount;
 
     public PageLayout() {
+        super(NoValue.GET);
         this.add(content, navigator);
         childVertical();
     }
@@ -25,13 +27,13 @@ public class PageLayout extends Component<PageLayout> {
      * Recommended if large amounts of data must be displayed,
      * but cannot be loaded all in at once.
      */
-    public PageLayout setDataProvider(int iStart, int maxFetchCount, Function<FetchDetails, List<Component<?>>> fetchChildComps) {
+    public PageLayout setDataProvider(int iStart, int maxFetchCount, Function<FetchDetails, List<Component<?,?>>> fetchChildComps) {
         this.iStart = iStart;
         this.maxFetchCount = maxFetchCount;
         this.fetchChildComps = fetchChildComps;
         content.laterWithOverlay((comp, overlay) -> {
             // Fetch data
-            List<Component<?>> childComps = fetchChildComps.apply(new FetchDetails(iStart, iStart + maxFetchCount));
+            List<Component<?,?>> childComps = fetchChildComps.apply(new FetchDetails(iStart, iStart + maxFetchCount));
             content.removeAll();
             content.add(childComps);
             navigator.next.enable(true);
@@ -40,12 +42,13 @@ public class PageLayout extends Component<PageLayout> {
         return _this;
     }
 
-    public class Navigator extends Component<Navigator> {
-        public Component<?> content;
+    public class Navigator extends Component<Navigator, NoValue> {
+        public Component<?,?> content;
         public Button previous;
         public Button next;
 
-        public Navigator(Component<?> content) {
+        public Navigator(Component<?,?> content) {
+            super(NoValue.GET);
             this.content = content;
 
             Button previous = new Button("Previous").secondary().width("100%").sizeS().childStart()
@@ -59,7 +62,7 @@ public class PageLayout extends Component<PageLayout> {
                     previous.laterWithOverlay((comp, overlay) -> {
                         // Fetch data
                         iStart -= maxFetchCount;
-                        List<Component<?>> childComps = fetchChildComps.apply(new FetchDetails(iStart, iStart + maxFetchCount));
+                        List<Component<?,?>> childComps = fetchChildComps.apply(new FetchDetails(iStart, iStart + maxFetchCount));
                         content.removeAll();
                         content.add(childComps);
                         loaded.set(true);
@@ -78,7 +81,7 @@ public class PageLayout extends Component<PageLayout> {
                     next.laterWithOverlay((comp, overlay) -> {
                         // Fetch data
                         iStart += maxFetchCount;
-                        List<Component<?>> childComps = fetchChildComps.apply(new FetchDetails(iStart, iStart + maxFetchCount));
+                        List<Component<?,?>> childComps = fetchChildComps.apply(new FetchDetails(iStart, iStart + maxFetchCount));
                         content.removeAll();
                         content.add(childComps);
                         loaded.set(true);

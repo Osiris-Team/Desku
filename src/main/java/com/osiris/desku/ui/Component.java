@@ -4,6 +4,7 @@ import com.osiris.desku.App;
 import com.osiris.desku.ui.css.CSS;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
+import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.event.ScrollEvent;
 import com.osiris.desku.ui.layout.Horizontal;
 import com.osiris.desku.ui.layout.Overlay;
@@ -12,10 +13,10 @@ import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
+import org.jetbrains.annotations.NotNull;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Element;
 
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -24,7 +25,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class Component<T extends Component<?>> {
+/**
+ * Graphical representation of a single value/object. <br>
+ * Can also be used as something else that doesn't require a value (like a container for example). <br>
+ * Can be added to any {@link com.osiris.desku.Route}. <br>
+ * @param <THIS> reference to itself to allow correct method-chaining in extending classes. See also {@link #_this} variable.
+ * @param <VALUE> type of the value/data this Component is representing. See also {@link #getValue(Consumer)}, {@link #setValue(Object)},
+ *               {@link #onValueChange(Consumer)}.
+ */
+public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     private static final AtomicInteger idCounter = new AtomicInteger();
 
     static {
@@ -46,34 +55,41 @@ public class Component<T extends Component<?>> {
      * </pre>
      */
     public final int id = idCounter.getAndIncrement();
-    public final CopyOnWriteArrayList<Component<?>> children = new CopyOnWriteArrayList<>();
+    public final CopyOnWriteArrayList<Component> children = new CopyOnWriteArrayList<>();
     /**
      * Executed when a child was added on the Java side. <br>
      *
      * @see AddedChildEvent
      */
-    public final Event<AddedChildEvent> onAddedChild = new Event<>();
+    public final Event<AddedChildEvent> onChildAdd = new Event<>();
     /**
      * Executed when a child was removed on the Java side.
      */
-    public final Event<Component<?>> onRemovedChild = new Event<>();
+    public final Event<Component<?,?>> onChildRemove = new Event<>();
     /**
      * Executed when a style change was made on the Java side.
      */
-    public final Event<Attribute> onStyleChanged = new Event<>();
+    public final Event<Attribute> onStyleChange = new Event<>();
     /**
      * Executed when a attribute change was made on the Java side. <br>
-     * Note that style changes are handled by {@link #onStyleChanged}. <br>
+     * Note that style changes are handled by {@link #onStyleChange}. <br>
      */
-    public final Event<AttributeChangeEvent> onAttributeChanged = new Event<>();
+    public final Event<AttributeChangeEvent> onAttributeChange = new Event<>();
     /**
-     * Do not add actions via this variable, use {@link #onClick(Consumer)} instead.
+     * Do not add actions via this variable because it needs additional UI-side JavaScript event registration,
+     * use {@link #onClick(Consumer)} instead.
      */
-    public final Event<ClickEvent> _onClick = new Event<>();
+    public final Event<ClickEvent> readOnlyOnClick = new Event<>();
     /**
-     * Do not add actions via this variable, use {@link #onScroll(Consumer)} instead.
+     * Do not add actions via this variable because it needs additional UI-side JavaScript event registration,
+     * use {@link #onScroll(Consumer)} instead.
      */
-    public final Event<ScrollEvent> _onScroll = new Event<>();
+    public final Event<ScrollEvent> readOnlyOnScroll = new Event<>();
+    /**
+     * Do not add actions via this variable because it needs additional UI-side JavaScript event registration,
+     * use {@link #onValueChange(Consumer)}} instead.
+     */
+    public final Event<ValueChangeEvent<THIS, VALUE>> readOnlyOnValueChange = new Event<>();
     /**
      * Gets executed when this component <br>
      * was attached to the UI.
@@ -89,7 +105,8 @@ public class Component<T extends Component<?>> {
      * Gets set to false if this component was removed. <br>
      */
     private boolean isAttached = false;
-    public T setAttached(boolean b){
+
+    public THIS setAttached(boolean b){
         isAttached = b;
         _onAttached.execute(null);
         return _this;
@@ -102,7 +119,9 @@ public class Component<T extends Component<?>> {
      * Is returned in pretty much all methods, to allow method chaining by returning
      * the extending class instead of {@link Component}.
      */
-    public T _this = (T) this;
+    public THIS _this = (THIS) this;
+    public VALUE internalValue;
+    public Class<VALUE> internalValueClass;
     /**
      * Jsoup {@link Element} that can be used to convert this
      * {@link Component} into an actual HTML string.
@@ -115,7 +134,7 @@ public class Component<T extends Component<?>> {
      * </u>
      */
     public MyElement element;
-    public Consumer<Component<?>> _remove = child -> {
+    public Consumer<Component> _remove = child -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (children.contains(child)) {
             children.remove(child);
@@ -128,7 +147,7 @@ public class Component<T extends Component<?>> {
                                 "comp.removeChild(childComp);\n",
                         "internal", 0);
             child.isAttached = false;
-            onRemovedChild.execute(child);
+            onChildRemove.execute(child);
         }
     };
     public Consumer<AddedChildEvent> _add = (e) -> {
@@ -163,10 +182,10 @@ public class Component<T extends Component<?>> {
         }
 
         // Execute listeners
-        onAddedChild.execute(e);
+        onChildAdd.execute(e);
         if (e.isReplace) _remove.accept(e.otherChildComp);// Removes from children, (node) children, and actual UI
     };
-    public Consumer<Attribute> _styleChange =  attribute -> {
+    public Consumer<Attribute> _styleChange = attribute -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (attribute.getValue().isEmpty()) {
 
@@ -198,7 +217,7 @@ public class Component<T extends Component<?>> {
                         + " = `" + attribute.getValue() + "`;\n"); // Change UI representation
             }
         }
-        onStyleChanged.execute(attribute);
+        onStyleChange.execute(attribute);
     };
     public Consumer<AttributeChangeEvent> _attributeChange = e -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
@@ -215,25 +234,79 @@ public class Component<T extends Component<?>> {
                 executeJS("comp.removeAttribute(`" + e.attribute.getKey() + "`);\n"); // Change UI representation
             }
         }
-        onAttributeChanged.execute(e);
+        onAttributeChange.execute(e);
     };
     boolean changedAddToSupportScroll = false;
 
-    public Component() {
-        this("c");
+    /**
+     * @see #Component(Object, Class, String)
+     */
+    public Component(@NotNull VALUE value) {
+        this(value, (Class<VALUE>) value.getClass(), "c");
     }
 
-    public Component(String tag) {
+    /**
+     * @see #Component(Object, Class, String)
+     */
+    public Component(@NotNull VALUE value, String tag) {
+        this(value, (Class<VALUE>) value.getClass(), tag);
+    }
+
+    /**
+     * @param value default starting value for this component.
+     * @param valueClass the class of the default value.
+     * @param tag html tag.
+     */
+    public Component(@NotNull VALUE value, @NotNull Class<VALUE> valueClass, @NotNull String tag) {
+        this.internalValue = value;
+        this.internalValueClass = valueClass;
         this.element = new MyElement(this, tag);
         element.attr("java-id", String.valueOf(id));
+        putAttribute("value", ValueChangeEvent.getStringFromValue(value, this));
+        // Do not use setValue since that might be overwritten by extending class and thus cause issues
     }
 
-    private static ArrayList<Component<?>> toList(Iterable<Component<?>> comps) {
-        ArrayList<Component<?>> list = new ArrayList<>();
-        for (Component<?> c : comps) {
-            list.add(c);
-        }
-        return list;
+    /**
+     * @param v executed when the value is got from the client-side.
+     */
+    public THIS getValue(Consumer<VALUE> v) {
+        if(isFirstAdd) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
+            v.accept(internalValue);
+        else
+            getAttributeValue("value", value -> {
+                v.accept(ValueChangeEvent.getValueFromString(value, this));
+            });
+        return _this;
+    }
+
+    /**
+     * Sets {@link #internalValue} AND triggers the {@link #readOnlyOnValueChange} event,
+     * meaning client-side is also affected.
+     */
+    public THIS setValue(VALUE v) {
+        this.internalValue = v;
+        putAttribute("value", ValueChangeEvent.getStringFromValue(v, this));
+        return _this;
+    }
+
+    /**
+     * Adds a listener that gets executed when the value was changed either programmatically via {@link #setValue(Object)}
+     * or by the user (by listening to the input event).
+     *
+     * @see UI#registerJSListener(String, Component, String, Consumer)
+     */
+    public THIS onValueChange(Consumer<ValueChangeEvent<THIS, VALUE>> code) {
+        readOnlyOnValueChange.addAction((event) -> code.accept(event));
+        UI.get().registerJSListener("input", this,
+                "message = `{\"newValue\": \"` + event.target.value.escapeSpecialChars() + `\", \"eventAsJson\":` + message + `}`;\n",
+                (msg) -> {
+                    ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(msg, _this, internalValue);
+                    VALUE newValue = event.value; // msg contains the new data and is parsed above in the event constructor
+                    internalValue = newValue; // Change in memory value, without triggering another change event
+                    element.attr("value", event.jsMessage.get("newValue").getAsString());
+                    readOnlyOnValueChange.execute(event); // Executes all listeners
+                });
+        return _this;
     }
 
     /**
@@ -244,14 +317,14 @@ public class Component<T extends Component<?>> {
      * A reference of this component will be added, thus you can access
      * this component via the "comp" variable in your provided JavaScript code.
      */
-    public T executeJS(String code){
+    public THIS executeJS(String code){
         return executeJS(UI.get(), code);
     }
 
     /**
      * @see #executeJS(String)
      */
-    public T executeJS(UI ui, String code){
+    public THIS executeJS(UI ui, String code){
         if(isAttached){
             ui.executeJavaScript(
                     "try{"+
@@ -275,17 +348,18 @@ public class Component<T extends Component<?>> {
     /**
      * Executes the provided JavaScript code now, or later if this component is not attached yet. <br>
      * Additional arguments make it possible to execute Java code, once your provided JavaScript code
-     * finishes execution. Also enables you to pass over Strings from JavaScript to Java. <br>
+     * finishes execution. Also enables you to pass over Strings from JavaScript to Java,
+     * by setting the message variable in JavaScript code. <br>
      * @see UI#jsAddPermanentCallback(String, Consumer, Consumer)
      */
-    public T executeJS(String code, Consumer<String> onSuccess, Consumer<String> onError){
+    public THIS executeJS(String code, Consumer<String> onSuccess, Consumer<String> onError){
         return executeJS(UI.get(), code, onSuccess, onError);
     }
 
     /**
      * @see #executeJS(String, Consumer, Consumer)
      */
-    public T executeJS(UI ui, String code, Consumer<String> onSuccess, Consumer<String> onError){
+    public THIS executeJS(UI ui, String code, Consumer<String> onSuccess, Consumer<String> onError){
         code = ui.jsAddPermanentCallback(code, onSuccess, onError);
         executeJS(code);
         return _this;
@@ -296,7 +370,7 @@ public class Component<T extends Component<?>> {
      *
      * @param code the code to be executed now, contains this component as parameter.
      */
-    public T now(Consumer<T> code) {
+    public THIS now(Consumer<THIS> code) {
         code.accept(_this);
         return _this;
     }
@@ -313,7 +387,7 @@ public class Component<T extends Component<?>> {
      *
      * @param code the code to be executed asynchronously, contains this component as parameter.
      */
-    public T later(Consumer<T> code) {
+    public THIS later(Consumer<THIS> code) {
         UI ui = UI.get();
         Objects.requireNonNull(ui);
         Thread t = new Thread() {
@@ -334,7 +408,7 @@ public class Component<T extends Component<?>> {
      * shows the text "Loading..." and dims/darkens this component,
      * until the async task finishes.
      */
-    public T laterWithOverlay(BiConsumer<T, Overlay> code) {
+    public THIS laterWithOverlay(BiConsumer<THIS, Overlay> code) {
         later(_this -> {
             Overlay overlay = new Overlay(this)
                     .childCenter().putStyle("background", "rgba(0,0,0,0.3)")
@@ -350,7 +424,7 @@ public class Component<T extends Component<?>> {
         return _this;
     }
 
-    public T add(Iterable<Component<?>> comps) {
+    public THIS add(Iterable<Component<?,?>> comps) {
         if (comps == null) return _this;
         GodIterator.forEach(comps, c -> {
             _add.accept(new AddedChildEvent(c, null, false, false));
@@ -358,7 +432,7 @@ public class Component<T extends Component<?>> {
         return _this;
     }
 
-    public T add(Component<?>... comps) {
+    public THIS add(Component<?,?>... comps) {
         if (comps == null) return _this;
         GodIterator.forEach(comps, c -> {
             _add.accept(new AddedChildEvent(c, null, false, false));
@@ -369,9 +443,9 @@ public class Component<T extends Component<?>> {
     /**
      * @throws IndexOutOfBoundsException
      */
-    public T addAt(int index, Component<?> comp) {
+    public THIS addAt(int index, Component<?,?> comp) {
         if (comp == null) return _this;
-        Component<?> otherChildComp = children.get(index);
+        Component<?,?> otherChildComp = children.get(index);
         _add.accept(new AddedChildEvent(comp, otherChildComp, true, false));
         return _this;
     }
@@ -379,9 +453,9 @@ public class Component<T extends Component<?>> {
     /**
      * @throws IndexOutOfBoundsException
      */
-    public T replaceAt(int index, Component<?> comp) {
+    public THIS replaceAt(int index, Component<?,?> comp) {
         if (comp == null) return _this;
-        Component<?> otherChildComp = children.get(index);
+        Component<?,?> otherChildComp = children.get(index);
         _add.accept(new AddedChildEvent(comp, otherChildComp, false, true));
         return _this;
     }
@@ -391,7 +465,7 @@ public class Component<T extends Component<?>> {
      *
      * @throws IndexOutOfBoundsException if oldComp does not exist in {@link #children}.
      */
-    public T replace(Component<?> oldComp, Component<?> newComp) {
+    public THIS replace(Component<?,?> oldComp, Component<?,?> newComp) {
         if (oldComp == null || newComp == null) return _this;
         if (!children.contains(oldComp))
             throw new IndexOutOfBoundsException("Provided old component to be replaced does not exist in children!");
@@ -399,20 +473,20 @@ public class Component<T extends Component<?>> {
         return _this;
     }
 
-    public T removeAll() {
-        for (Component<?> child : children) {
+    public THIS removeAll() {
+        for (Component<?,?> child : children) {
             _remove.accept(child);
         }
         return _this;
     }
 
-    public T remove(Component<?>... comps) {
+    public THIS remove(Component<?,?>... comps) {
         if (comps == null) return _this;
         GodIterator.forEach(comps, _remove);
         return _this;
     }
 
-    public T remove(Iterable<Component<?>> comps) {
+    public THIS remove(Iterable<Component> comps) {
         if (comps == null) return _this;
         GodIterator.forEach(comps, _remove);
         return _this;
@@ -425,18 +499,18 @@ public class Component<T extends Component<?>> {
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public T removeAt(int index) {
-        Component<?> child = children.get(index);
+    public THIS removeAt(int index) {
+        Component<?,?> child = children.get(index);
         _remove.accept(child);
         return _this;
     }
 
-    public T putStyle(String key, String val) {
+    public THIS putStyle(String key, String val) {
         _styleChange.accept(new Attribute(key, val));
         return _this;
     }
 
-    public T removeStyle(String key) {
+    public THIS removeStyle(String key) {
         _styleChange.accept(new Attribute(key, ""));
         return _this;
     }
@@ -444,19 +518,26 @@ public class Component<T extends Component<?>> {
     /**
      * Adds the attribute/key without its value.
      */
-    public T putAttribute(String key) {
+    public THIS putAttribute(String key) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), true));
         return _this;
     }
 
-    public T putAttribute(String key, String val) {
+    public THIS putAttribute(String key, String val) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, val), true));
         return _this;
     }
 
-    public T removeAttribute(String key) {
+    public THIS removeAttribute(String key) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), false));
         return _this;
+    }
+
+    /**
+     * Returns the value for the provided attribute key and an empty String if no key found or when value is null/undefined.
+     */
+    public void getAttributeValue(String key, Consumer<String> onValueReturned) {
+        executeJS("message = comp.getAttribute(`" + key + "`)", onValueReturned, AL::warn);
     }
 
     /**
@@ -464,7 +545,7 @@ public class Component<T extends Component<?>> {
      * otherwise the changes won't be visible. <br>
      * If child components also changed call {@link #updateAll()} instead. <br>
      */
-    public T update() {
+    public THIS update() {
         // Update element style
         StringBuilder sb = new StringBuilder();
         style.forEach((key, val) -> {
@@ -476,7 +557,7 @@ public class Component<T extends Component<?>> {
         for (Element child : element.children()) { // Clear children
             child.remove();
         }
-        for (Component<?> childComp : children) { // Set "new" children elements, from child components
+        for (Component<?,?> childComp : children) { // Set "new" children elements, from child components
             element.appendChild(childComp.element);
         }
         return _this;
@@ -487,12 +568,12 @@ public class Component<T extends Component<?>> {
      * Note that you don't have to call this function, since it already gets called before showing the window,
      * in {@link UI#getSnapshot()}.
      */
-    public T updateAll() {
+    public THIS updateAll() {
         // Update this style
         update();
 
         // Recursion for all children
-        for (Component<?> childComp : children) {
+        for (Component<?,?> childComp : children) {
             childComp.updateAll();
         }
 
@@ -503,8 +584,8 @@ public class Component<T extends Component<?>> {
      * Loops through all children recursively. <br>
      * Loop through {@link #children} instead if you only want the direct children of this component.
      */
-    public void forEachChildRecursive(Consumer<Component<?>> code) {
-        for (Component<?> child : this.children) {
+    public void forEachChildRecursive(Consumer<Component<?,?>> code) {
+        for (Component<?,?> child : this.children) {
             forEachChildRecursive(child, code);
         }
     }
@@ -513,9 +594,9 @@ public class Component<T extends Component<?>> {
      * Loops through all children recursively. <br>
      * Loop through {@link #children} instead if you only want the direct children of this component.
      */
-    public void forEachChildRecursive(Component<?> comp, Consumer<Component<?>> code) {
+    public void forEachChildRecursive(Component<?,?> comp, Consumer<Component<?,?>> code) {
         code.accept(comp);
-        for (Component<?> child : comp.children) {
+        for (Component<?,?> child : comp.children) {
             forEachChildRecursive(child, code);
         }
     }
@@ -523,7 +604,7 @@ public class Component<T extends Component<?>> {
     /**
      * @see Element#text(String)
      */
-    public T innerHTML(String text) {
+    public THIS innerHTML(String text) {
         remove(children);
         add(new Text(text));
         return _this;
@@ -532,13 +613,13 @@ public class Component<T extends Component<?>> {
     /**
      * @see Element#html(String)
      */
-    public T innerHTML(Component<?> comp) {
+    public THIS innerHTML(Component<?,?> comp) {
         remove(children);
         add(comp);
         return _this;
     }
 
-    public T sizeFull() {
+    public THIS sizeFull() {
         size("100%", "100%");
         return _this;
     }
@@ -546,7 +627,7 @@ public class Component<T extends Component<?>> {
     /**
      * Sets width and height of the target component and return it for method chaining.
      */
-    public T size(String width, String height) {
+    public THIS size(String width, String height) {
         putStyle("width", width);
         putStyle("height", height);
         return _this;
@@ -555,7 +636,7 @@ public class Component<T extends Component<?>> {
     /**
      * Sets width of the target component and return it for method chaining.
      */
-    public T width(String s) {
+    public THIS width(String s) {
         putStyle("width", s);
         return _this;
     }
@@ -563,43 +644,43 @@ public class Component<T extends Component<?>> {
     /**
      * Sets height of the target component and return it for method chaining.
      */
-    public T height(String s) {
+    public THIS height(String s) {
         putStyle("height", s);
         return _this;
     }
 
-    public T padding(boolean b) {
+    public THIS padding(boolean b) {
         if (b) putStyle("padding", "var(--space-s)");
         else removeStyle("padding");
         return _this;
     }
 
-    public T padding(String s) {
+    public THIS padding(String s) {
         putStyle("padding", s);
         return _this;
     }
 
-    public T paddingLeft(String s) {
+    public THIS paddingLeft(String s) {
         putStyle("padding-left", s);
         return _this;
     }
 
-    public T paddingRight(String s) {
+    public THIS paddingRight(String s) {
         putStyle("padding-right", s);
         return _this;
     }
 
-    public T paddingTop(String s) {
+    public THIS paddingTop(String s) {
         putStyle("padding-top", s);
         return _this;
     }
 
-    public T paddingBottom(String s) {
+    public THIS paddingBottom(String s) {
         putStyle("padding-bottom", s);
         return _this;
     }
 
-    public T margin(boolean b) {
+    public THIS margin(boolean b) {
         if (b) putStyle("margin", "var(--space-s)");
         else removeStyle("margin");
         return _this;
@@ -609,7 +690,7 @@ public class Component<T extends Component<?>> {
         return !style.containsKey("visibility");
     }
 
-    public T visible(boolean b) {
+    public THIS visible(boolean b) {
         if (b) {
             removeStyle("display");
             removeStyle("visibility");
@@ -627,7 +708,7 @@ public class Component<T extends Component<?>> {
      *
      * @param b if true this component will be scrollable, otherwise not.
      */
-    public T scrollable(boolean b, String width, String height, String minChildWidth, String minChildHeight) {
+    public THIS scrollable(boolean b, String width, String height, String minChildWidth, String minChildHeight) {
         // If we want to continue using flex display
         // together with scroll, items will be shrunk to 0pixel height
         // and thus making them invisible to the user and the scroll
@@ -639,7 +720,7 @@ public class Component<T extends Component<?>> {
         if (b) {
             if (!changedAddToSupportScroll) {
                 changedAddToSupportScroll = true;
-                for (Component<?> c : children) {
+                for (Component<?,?> c : children) {
                     c.putStyle("min-width", minChildWidth);
                     c.putStyle("min-height", minChildHeight);
                 }
@@ -661,7 +742,7 @@ public class Component<T extends Component<?>> {
      * Removes this style attribute from {@link #style},
      * thus enforcing its default state/style.
      */
-    public T overflowDefault() {
+    public THIS overflowDefault() {
         removeStyle("overflow");
         return _this;
     }
@@ -669,7 +750,7 @@ public class Component<T extends Component<?>> {
     /**
      * By default, the overflow is visible, meaning that it is not clipped and it renders outside the element's box.
      */
-    public T overflowVisible() {
+    public THIS overflowVisible() {
         putStyle("overflow", "visible");
         return _this;
     }
@@ -677,7 +758,7 @@ public class Component<T extends Component<?>> {
     /**
      * With the hidden value, the overflow is clipped, and the rest of the content is hidden.
      */
-    public T overflowHidden() {
+    public THIS overflowHidden() {
         putStyle("overflow", "hidden");
         return _this;
     }
@@ -687,7 +768,7 @@ public class Component<T extends Component<?>> {
      * Note that this will add a scrollbar both horizontally and vertically (even if you do not need it).
      * Thus {@link #overflowAuto()} might be better suited.
      */
-    public T overflowScroll() {
+    public THIS overflowScroll() {
         putStyle("overflow", "scroll");
         return _this;
     }
@@ -695,7 +776,7 @@ public class Component<T extends Component<?>> {
     /**
      * The auto value is similar to scroll, but it adds scrollbars only when necessary.
      */
-    public T overflowAuto() {
+    public THIS overflowAuto() {
         putStyle("overflow", "auto");
         return _this;
     }
@@ -706,7 +787,7 @@ public class Component<T extends Component<?>> {
      * Items with the same order revert to source order. <br>
      * Default: 0 <br>
      */
-    public T order(int i) {
+    public THIS order(int i) {
         putStyle("order", String.valueOf(i));
         return _this;
     }
@@ -715,7 +796,7 @@ public class Component<T extends Component<?>> {
      * Removes this style attribute from {@link #style},
      * thus enforcing its default state/style.
      */
-    public T orderDefault() {
+    public THIS orderDefault() {
         removeStyle("order");
         return _this;
     }
@@ -733,7 +814,7 @@ public class Component<T extends Component<?>> {
      * Negative numbers are invalid. <br>
      * Default: 0 <br>
      */
-    public T grow(int i) {
+    public THIS grow(int i) {
         putStyle("flex-grow", String.valueOf(i));
         return _this;
     }
@@ -742,7 +823,7 @@ public class Component<T extends Component<?>> {
      * Removes this style attribute from {@link #style},
      * thus enforcing its default state/style.
      */
-    public T growDefault() {
+    public THIS growDefault() {
         removeStyle("flex-grow");
         return _this;
     }
@@ -752,7 +833,7 @@ public class Component<T extends Component<?>> {
      * Negative numbers are invalid. <br>
      * Default: 1 <br>
      */
-    public T shrink(int i) {
+    public THIS shrink(int i) {
         putStyle("flex-shrink", String.valueOf(i));
         return _this;
     }
@@ -761,7 +842,7 @@ public class Component<T extends Component<?>> {
      * Removes this style attribute from {@link #style},
      * thus enforcing its default state/style.
      */
-    public T shrinkDefault() {
+    public THIS shrinkDefault() {
         removeStyle("flex-shrink");
         return _this;
     }
@@ -772,7 +853,7 @@ public class Component<T extends Component<?>> {
      * false/nowrap (default): all flex items will be on one line <br>
      * true/wrap: flex items will wrap onto multiple lines, from top to bottom. <br>
      */
-    public T wrap(boolean b) {
+    public THIS wrap(boolean b) {
         if (b) putStyle("flex-wrap", "wrap");
         else putStyle("flex-wrap", "nowrap");
         return _this;
@@ -785,7 +866,7 @@ public class Component<T extends Component<?>> {
      * to be overridden for individual flex items. <br>
      * Note that float, clear and vertical-align have no effect on a flex item.
      */
-    public T selfStart() {
+    public THIS selfStart() {
         putStyle("align-self", "flex-start");
         return _this;
     }
@@ -795,7 +876,7 @@ public class Component<T extends Component<?>> {
      *
      * @see #selfStart()
      */
-    public T selfEnd() {
+    public THIS selfEnd() {
         putStyle("align-self", "flex-end");
         return _this;
     }
@@ -805,7 +886,7 @@ public class Component<T extends Component<?>> {
      *
      * @see #selfStart()
      */
-    public T selfCenter() {
+    public THIS selfCenter() {
         putStyle("align-self", "center");
         return _this;
     }
@@ -816,7 +897,7 @@ public class Component<T extends Component<?>> {
      *
      * @see #selfStart()
      */
-    public T selfAuto() {
+    public THIS selfAuto() {
         putStyle("align-self", "auto");
         return _this;
     }
@@ -826,7 +907,7 @@ public class Component<T extends Component<?>> {
      *
      * @see #selfStart()
      */
-    public T selfStretch() {
+    public THIS selfStretch() {
         putStyle("align-self", "stretch");
         return _this;
     }
@@ -834,7 +915,7 @@ public class Component<T extends Component<?>> {
     /**
      * Aligns items top to bottom.
      */
-    public T childVertical() {
+    public THIS childVertical() {
         putStyle("flex-direction", "column");
         return _this;
     }
@@ -842,7 +923,7 @@ public class Component<T extends Component<?>> {
     /**
      * (Default) Aligns items left to right in ltr; right to left in rtl.
      */
-    public T childHorizontal() {
+    public THIS childHorizontal() {
         putStyle("flex-direction", "row");
         return _this;
     }
@@ -881,7 +962,7 @@ public class Component<T extends Component<?>> {
      * justify-content (along primary axis) <br>
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
-    public T childStart() {
+    public THIS childStart() {
         putStyle("justify-content", "flex-start");
         return _this;
     }
@@ -890,7 +971,7 @@ public class Component<T extends Component<?>> {
      * justify-content (along primary axis) <br>
      * flex-end: items are packed toward the end of the flex-direction.
      */
-    public T childEnd() {
+    public THIS childEnd() {
         putStyle("justify-content", "flex-end");
         return _this;
     }
@@ -899,7 +980,7 @@ public class Component<T extends Component<?>> {
      * justify-content (along primary axis) <br>
      * center: items are centered along the line
      */
-    public T childCenter() {
+    public THIS childCenter() {
         putStyle("justify-content", "center");
         return _this;
     }
@@ -908,7 +989,7 @@ public class Component<T extends Component<?>> {
      * justify-content (along primary axis) <br>
      * space-between: items are evenly distributed in the line; first item is on the start line, last item on the end line
      */
-    public T childSpaceBetween() {
+    public THIS childSpaceBetween() {
         putStyle("justify-content", "space-between");
         return _this;
     }
@@ -921,7 +1002,7 @@ public class Component<T extends Component<?>> {
      * against the container edge, but two units of space between
      * the next item because that next item has its own spacing that applies.
      */
-    public T childSpaceAround() {
+    public THIS childSpaceAround() {
         putStyle("justify-content", "space-around");
         return _this;
     }
@@ -931,7 +1012,7 @@ public class Component<T extends Component<?>> {
      * space-evenly: items are distributed so that the spacing
      * between any two items (and the space to the edges) is equal.
      */
-    public T childSpaceEvenly() {
+    public THIS childSpaceEvenly() {
         putStyle("justify-content", "space-around");
         return _this;
     }
@@ -940,7 +1021,7 @@ public class Component<T extends Component<?>> {
      * align-items (along secondary axis) <br>
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
-    public T childStart2() {
+    public THIS childStart2() {
         putStyle("align-items", "flex-start");
         return _this;
     }
@@ -949,7 +1030,7 @@ public class Component<T extends Component<?>> {
      * align-items (along secondary axis) <br>
      * flex-end: items are packed toward the end of the flex-direction.
      */
-    public T childEnd2() {
+    public THIS childEnd2() {
         putStyle("align-items", "flex-end");
         return _this;
     }
@@ -958,7 +1039,7 @@ public class Component<T extends Component<?>> {
      * align-items (along secondary axis) <br>
      * center: items are centered along the line
      */
-    public T childCenter2() {
+    public THIS childCenter2() {
         putStyle("align-items", "center");
         return _this;
     }
@@ -967,7 +1048,7 @@ public class Component<T extends Component<?>> {
      * align-items (along secondary axis) <br>
      * stretch: stretch to fill the container (still respect min-width/max-width)
      */
-    public T childStretch2() {
+    public THIS childStretch2() {
         putStyle("align-items", "stretch");
         return _this;
     }
@@ -976,7 +1057,7 @@ public class Component<T extends Component<?>> {
      * The gap property explicitly controls the space between flex items.
      * It applies that spacing only between items not on the outer edges.
      */
-    public T childGap(boolean b) {
+    public THIS childGap(boolean b) {
         if (b) putStyle("gap", "var(--space-s)");
         else removeStyle("gap");
         return _this;
@@ -986,7 +1067,7 @@ public class Component<T extends Component<?>> {
      * The gap property explicitly controls the space between flex items.
      * It applies that spacing only between items not on the outer edges.
      */
-    public T childGap(String s) {
+    public THIS childGap(String s) {
         putStyle("gap", s);
         return _this;
     }
@@ -996,7 +1077,7 @@ public class Component<T extends Component<?>> {
      * It applies that spacing only between items not on the outer edges. <br>
      * Gap between rows/Y-Axis/height.
      */
-    public T childGapY(String s) {
+    public THIS childGapY(String s) {
         putStyle("row-gap", s);
         return _this;
     }
@@ -1006,7 +1087,7 @@ public class Component<T extends Component<?>> {
      * It applies that spacing only between items not on the outer edges. <br>
      * Gap between columns/X-Axis/width.
      */
-    public T childGapX(String s) {
+    public THIS childGapX(String s) {
         putStyle("column-gap", s);
         return _this;
     }
@@ -1014,7 +1095,7 @@ public class Component<T extends Component<?>> {
     /**
      * Adds a CSS class to this component.
      */
-    public T addClass(String s) {
+    public THIS addClass(String s) {
         String classes = element.attr("class");
         classes += " " + s;
         putAttribute("class", classes);
@@ -1024,7 +1105,7 @@ public class Component<T extends Component<?>> {
     /**
      * Removes a CSS class from this component.
      */
-    public T removeClass(String s) {
+    public THIS removeClass(String s) {
         String classes = element.attr("class");
         classes = classes.replace(s, "");
         putAttribute("class", classes);
@@ -1037,11 +1118,11 @@ public class Component<T extends Component<?>> {
      *
      * @see UI#registerJSListener(String, Component, Consumer)
      */
-    public T onClick(Consumer<ClickEvent<T>> code) {
-        _onClick.addAction((event) -> code.accept(event));
-        Component<T> _this = this;
+    public THIS onClick(Consumer<ClickEvent<THIS>> code) {
+        readOnlyOnClick.addAction((event) -> code.accept(event));
+        Component<THIS, VALUE> _this = this;
         UI.get().registerJSListener("click", _this, (msg) -> {
-            _onClick.execute(new ClickEvent<T>(msg, (T) _this)); // Executes all listeners
+            readOnlyOnClick.execute(new ClickEvent<THIS>(msg, (THIS) _this)); // Executes all listeners
         });
         return this._this;
     }
@@ -1052,7 +1133,7 @@ public class Component<T extends Component<?>> {
      *
      * @see UI#registerJSListener(String, Component, Consumer)
      */
-    public T onDoubleClick(Consumer<ClickEvent<T>> code) {
+    public THIS onDoubleClick(Consumer<ClickEvent<THIS>> code) {
         AtomicLong msLastClick = new AtomicLong();
         onClick(e -> {
             long msCurrentClick = System.currentTimeMillis();
@@ -1071,9 +1152,9 @@ public class Component<T extends Component<?>> {
      *
      * @see UI#registerJSListener(String, Component, Consumer)
      */
-    public T onScroll(Consumer<ScrollEvent<T>> code) {
-        _onScroll.addAction((event) -> code.accept(event));
-        Component<T> _this = this;
+    public THIS onScroll(Consumer<ScrollEvent<THIS>> code) {
+        readOnlyOnScroll.addAction((event) -> code.accept(event));
+        Component<THIS, VALUE> _this = this;
         UI.get().registerJSListener("scroll", _this,
                 "message = `{\"isReachedEnd\": \"` + (Math.abs(event.target.scrollHeight - event.target.scrollTop - event.target.clientHeight) < 1) + `\"," +
                         " \"scrollHeight\": \"` + event.target.scrollHeight + `\"," +
@@ -1081,16 +1162,16 @@ public class Component<T extends Component<?>> {
                         " \"clientHeight\": \"` + event.target.clientHeight + `\"," +
                         " \"eventAsJson\":` + message + `}`;\n",
                 (msg) -> {
-                    _onScroll.execute(new ScrollEvent<T>(msg, (T) _this)); // Executes all listeners
+                    readOnlyOnScroll.execute(new ScrollEvent<THIS>(msg, (THIS) _this)); // Executes all listeners
                 });
         return this._this;
     }
 
-    public Component<?> firstChild() {
+    public Component<?,?> firstChild() {
         return children.get(0);
     }
 
-    public Component<?> lastChild() {
+    public Component<?,?> lastChild() {
         return children.get(children.size() - 1);
     }
 
@@ -1098,15 +1179,15 @@ public class Component<T extends Component<?>> {
         return this.getClass().getSimpleName()+"_"+id;
     }
 
-    public T scrollIntoView(){
+    public THIS scrollIntoView(){
         return scrollIntoView(true, "start", "nearest");
     }
 
-    public T scrollIntoView(boolean smooth){
+    public THIS scrollIntoView(boolean smooth){
         return scrollIntoView(smooth, "start", "nearest");
     }
 
-    public T enable(boolean b) {
+    public THIS enable(boolean b) {
         if (b) removeAttribute("disabled");
         else putAttribute("disabled");
         return _this;
@@ -1117,7 +1198,7 @@ public class Component<T extends Component<?>> {
      * @param block defines vertical alignment. One of start, center, end, or nearest. Defaults to start.
      * @param inline defines horizontal alignment. One of start, center, end, or nearest. Defaults to nearest.
      */
-    public T scrollIntoView(boolean smooth, String block, String inline){
+    public THIS scrollIntoView(boolean smooth, String block, String inline){
         executeJS("comp.scrollIntoView({ behavior: \"" +
                 (smooth ? "smooth" : "instant") +
                 "\", block: \"" +
@@ -1145,12 +1226,12 @@ public class Component<T extends Component<?>> {
         /**
          * Component that got added.
          */
-        public Component<?> childComp;
+        public Component<?,?> childComp;
         /**
          * Should only be relevant and not null when either
          * {@link #isInsert} or {@link #isReplace} is true.
          */
-        public Component<?> otherChildComp;
+        public Component<?,?> otherChildComp;
         /**
          * If true, then {@link #otherChildComp} should now be the next child in the list after {@link #childComp}.
          */
@@ -1164,7 +1245,7 @@ public class Component<T extends Component<?>> {
          */
         public boolean isFirstAdd;
 
-        public AddedChildEvent(Component<?> childComp, Component<?> otherChildComp, boolean isInsert, boolean isReplace) {
+        public AddedChildEvent(Component<?,?> childComp, Component<?,?> otherChildComp, boolean isInsert, boolean isReplace) {
             this.childComp = childComp;
             this.isFirstAdd = childComp.isFirstAdd;
             childComp.isFirstAdd = false;

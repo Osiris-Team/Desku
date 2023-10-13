@@ -2,11 +2,12 @@ package com.osiris.desku;
 
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.UI;
+import com.osiris.desku.ui.utils.NoValue;
 
 /**
  * Example for a custom component.
  */
-public class VerticalLayout extends Component<VerticalLayout> {
+public class VerticalLayout extends Component<VerticalLayout, NoValue> {
 
     static { // Executed only once
         try {
@@ -24,7 +25,7 @@ public class VerticalLayout extends Component<VerticalLayout> {
     }
 
     public VerticalLayout() {
-        super("vl");
+        super(NoValue.GET, "vl");
         // Make sure to call init before anything else!
 
         // You can get the window this component is loaded in, like so:

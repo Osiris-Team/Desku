@@ -11,7 +11,7 @@ public class About extends Route {
     }
 
     @Override
-    public Component<?> loadContent() {
+    public Component<?,?> loadContent() {
         return new Vertical().add(new Text("Currently at " + path));
     }
 }

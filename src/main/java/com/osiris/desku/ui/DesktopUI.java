@@ -74,6 +74,11 @@ public class DesktopUI extends UI {
                 return null;
             });
             browser.loadURL(startURL);
+            try{
+                Thread.sleep(10); // Otherwise below JS is not executed bc its to fast after loadURL() somehow?
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             browser.eval("const event = new Event(\"pageloaded\");\n" +
                     "async function notifyOnPageLoad() {\n" +
                     "  setTimeout(function() {  \n" +
@@ -88,7 +93,6 @@ public class DesktopUI extends UI {
                     "}\n" +
                     "console.log('Waiting for page to finish loading...')\n" +
                     "notifyOnPageLoad()\n");
-
             // Resize browser window too
             frame.addComponentListener(new ComponentAdapter() {
                 @Override

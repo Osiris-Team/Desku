@@ -37,7 +37,7 @@ public class Home extends Route {
     }
 
     @Override
-    public Component<?> loadContent() {
+    public Component<?,?> loadContent() {
         Vertical ly = vertical().childGap(true).padding(true);
 
         //
@@ -57,7 +57,7 @@ public class Home extends Route {
         // Events
         //
         ly.add(text("Build Desktop Apps with Java/JS, HTML and CSS today! I am clickable text! Click me!").selfCenter().onClick(event -> {
-            event.comp.set("Thank you for clicking!");
+            event.comp.setValue("Thank you for clicking!");
         }));
 
         //
@@ -68,7 +68,7 @@ public class Home extends Route {
             try {
                 for (int i = 1; i <= 100; i++) {
                     Thread.sleep(1000);
-                    txt.set("Asynchronously update a component: Loading... " + i + "%");
+                    txt.setValue("Asynchronously update a component: Loading... " + i + "%");
                 }
             } catch (Exception e) {
                 AL.warn(e);
@@ -79,7 +79,7 @@ public class Home extends Route {
                 Text txt = text("Waiting 10 seconds...");
                 comp.add(txt);
                 Thread.sleep(10000);
-                txt.set("Finished after 10 seconds!");
+                txt.setValue("Finished after 10 seconds!");
                 comp.putStyle("background", "#32a852");
             } catch (Exception e) {
                 AL.warn(e);
@@ -138,7 +138,7 @@ public class Home extends Route {
         }
         ly.add(
                 pagelayout().childGap(true).setDataProvider(0, 3, (details) -> {
-                    List<Component<?>> comps = new ArrayList<>();
+                    List<Component<?,?>> comps = new ArrayList<>();
                     for (int i = Math.max(details.iStart, 0); i < Math.min(details.iEnd, data.length - 1); i++) {
                         comps.add(text("Index: "+data[i]).width("100%").putStyle("background-color", "lightgray"));
                     }
@@ -156,9 +156,9 @@ public class Home extends Route {
         // Navigate between routes
         //
         ly.add(text("Navigate between routes").sizeXXL());
-        ly.add(router().set(About.class).add(text("Go to About page!")));
-        ly.add(router().set("/about").add(text("Go to About page!")));
-        ly.add(router().set("https://google.com").add(text("Go to Google page!")));
+        ly.add(link().setValue(About.class).add(text("Go to About page!")));
+        ly.add(link().setValue("/about").add(text("Go to About page!")));
+        ly.add(link().setValue("https://google.com").add(text("Go to Google page!")));
 
         //
         // Overlays
@@ -178,15 +178,15 @@ public class Home extends Route {
                 .add(button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
             AL.info(s);
-            e.comp.text.set(s);
+            e.comp.label.setValue(s);
         }), button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
             AL.info(s);
-            e.comp.text.set(s);
+            e.comp.label.setValue(s);
         }), button("Click me!").grow(1).onClick(e -> {
             String s = "Clicked " + i.incrementAndGet() + " times";
             AL.info(s);
-            e.comp.text.set(s);
+            e.comp.label.setValue(s);
         }));
         // Button variants
         ly.horizontalCL().childGap(true).add(button("Primary").primary(), button("Secondary").secondary(), button("Success").success(),
@@ -289,7 +289,7 @@ public class Home extends Route {
                         UI.get().maximize(e.value);
                     } catch (Exception ex) {
                         AL.warn(ex);
-                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                        e.comp.label.setValue("Failed, see log for details. "+ex.getMessage());
                     }
                 }),
                 checkbox("minimize").onValueChange(e -> {
@@ -297,7 +297,7 @@ public class Home extends Route {
                         UI.get().minimize(e.value);
                     } catch (Exception ex) {
                         AL.warn(ex);
-                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                        e.comp.label.setValue("Failed, see log for details. "+ex.getMessage());
                     }
                 }),
                 checkbox("fullscreen").onValueChange(e -> {
@@ -305,7 +305,7 @@ public class Home extends Route {
                         UI.get().fullscreen(e.value);
                     } catch (Exception ex) {
                         AL.warn(ex);
-                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                        e.comp.label.setValue("Failed, see log for details. "+ex.getMessage());
                     }
                 }),
                 checkbox("decorate").onValueChange(e -> {
@@ -313,7 +313,7 @@ public class Home extends Route {
                         UI.get().decorate(e.value);
                     } catch (Exception ex) {
                         AL.warn(ex);
-                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                        e.comp.label.setValue("Failed, see log for details. "+ex.getMessage());
                     }
                 }),
                 checkbox("allwaysOnTop").onValueChange(e -> {
@@ -321,7 +321,7 @@ public class Home extends Route {
                         UI.get().allwaysOnTop(e.value);
                     } catch (Exception ex) {
                         AL.warn(ex);
-                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                        e.comp.label.setValue("Failed, see log for details. "+ex.getMessage());
                     }
                 }),
                 checkbox("focus").onValueChange(e -> {
@@ -329,7 +329,7 @@ public class Home extends Route {
                         UI.get().focus(e.value);
                     } catch (Exception ex) {
                         AL.warn(ex);
-                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                        e.comp.label.setValue("Failed, see log for details. "+ex.getMessage());
                     }
                 }),
                 checkbox("transparent background").onValueChange(e -> {
@@ -338,7 +338,7 @@ public class Home extends Route {
                         else UI.get().background("#FFFFFFFF");
                     } catch (Exception ex) {
                         AL.warn(ex);
-                        e.comp.label.set("Failed, see log for details. "+ex.getMessage());
+                        e.comp.label.setValue("Failed, see log for details. "+ex.getMessage());
                     }
                 })
         );
@@ -357,7 +357,7 @@ public class Home extends Route {
                 lyElements.add(image(Home.class,"/images/desku_banner.png"));
             }
             long msTook = System.currentTimeMillis() - ms.get();
-            e.comp.text.set("Click to add elements below (took "+msTook+"ms, total elements: "+lyElements.children.size()+")");
+            e.comp.label.setValue("Click to add elements below (took "+msTook+"ms, total elements: "+lyElements.children.size()+")");
         });
 
         ly.add(

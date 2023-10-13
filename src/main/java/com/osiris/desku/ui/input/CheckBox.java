@@ -3,20 +3,16 @@ package com.osiris.desku.ui.input;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.display.Text;
-import com.osiris.desku.ui.event.BooleanChangeEvent;
-import com.osiris.events.Event;
+import com.osiris.desku.ui.event.ValueChangeEvent;
 
 import java.util.function.Consumer;
 
-public class CheckBox extends Component<CheckBox> {
+public class CheckBox extends Component<CheckBox, Boolean> {
 
     // Layout
     public Text label;
-    public Input input = new Input("checkbox")
+    public Input<Boolean> input = new Input<>("checkbox", false)
             .addClass("form-check-input").addClass("mt-0");
-
-    // Events
-    public Event<BooleanChangeEvent<CheckBox>> _onValueChange = new Event<>();
 
     public CheckBox() {
         this("", false);
@@ -31,23 +27,26 @@ public class CheckBox extends Component<CheckBox> {
     }
 
     public CheckBox(Text label, boolean defaultValue) {
+        super(defaultValue);
         this.label = label;
         add(this.input, this.label);
         childGap(true);
-        setValue(defaultValue);
         childCenter2();
     }
 
-    public boolean getValue() {
-        return Boolean.parseBoolean(this.input.element.attr("value"));
+    @Override
+    public CheckBox getValue(Consumer<Boolean> v) {
+        getAttributeValue("checked", value -> {
+            if (value.isEmpty()) v.accept(false);
+            else v.accept(true);
+        });
+        return _this;
     }
 
-    /**
-     * Triggers {@link #_onValueChange} event.
-     */
-    public CheckBox setValue(boolean val) {
-        this.input.putAttribute("value", String.valueOf(val));
-        if(val) input.putAttribute("checked");
+    @Override
+    public CheckBox setValue(Boolean v) {
+        input.setValue(v);
+        if (v) input.putAttribute("checked");
         else input.removeAttribute("checked");
         return this;
     }
@@ -58,18 +57,21 @@ public class CheckBox extends Component<CheckBox> {
      *
      * @see UI#registerJSListener(String, Component, String, Consumer)
      */
-    public CheckBox onValueChange(Consumer<BooleanChangeEvent<CheckBox>> code) {
-        _onValueChange.addAction((event) -> code.accept(event));
+    @Override
+    public CheckBox onValueChange(Consumer<ValueChangeEvent<CheckBox, Boolean>> code) {
+        // Custom implementation of onValueChange, because
+        readOnlyOnValueChange.addAction((event) -> code.accept(event));
         UI.get().registerJSListener("input", input, "message = `{\"newValue\": \"` + event.target.checked + `\", \"eventAsJson\":` + message + `}`;\n",
                 (msg) -> {
-                    BooleanChangeEvent<CheckBox> e = new BooleanChangeEvent<>(msg, this, getValue());
-                    input.element.attr("value", String.valueOf(e.value)); // Change in memory value, without triggering another change event
-                    if(e.value) input.element.attr("checked","");
+                    ValueChangeEvent<CheckBox, Boolean> e = new ValueChangeEvent<>(msg, this, internalValue);
+                    // Change in memory value, without triggering another change event
+                    this.internalValue = e.value;
+                    input.element.attr("value", String.valueOf(e.value));
+                    if (e.value) input.element.attr("checked", "");
                     else input.element.removeAttr("checked");
-                    _onValueChange.execute(e); // Executes all listeners
+                    readOnlyOnValueChange.execute(e); // Executes all listeners
                 });
-        return _this;
+        return this;
     }
-
 
 }

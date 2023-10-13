@@ -2,11 +2,12 @@ package com.osiris.desku.ui.layout;
 
 import com.osiris.desku.App;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.utils.NoValue;
 import com.osiris.jlib.logger.AL;
 
 import java.util.function.Consumer;
 
-public class SmartLayout extends Component<SmartLayout> {
+public class SmartLayout extends Component<SmartLayout, NoValue> {
 
     static {
         try {
@@ -34,6 +35,7 @@ public class SmartLayout extends Component<SmartLayout> {
      * @param minChildWidth the min width of a child component.
      */
     public SmartLayout(boolean childGrow, String minChildWidth) {
+        super(NoValue.GET);
         addClass("smart-layout");
         wrap(true);
         removeStyle("flex-direction");

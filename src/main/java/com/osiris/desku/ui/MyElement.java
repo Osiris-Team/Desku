@@ -8,18 +8,18 @@ public class MyElement extends Element {
     /**
      * Reference to component of this element.
      */
-    public final Component<?> comp;
-    public MyElement(Component<?> comp, String tag) {
+    public final Component<?,?> comp;
+    public MyElement(Component<?,?> comp, String tag) {
         super(tag);
         this.comp = comp;
     }
 
-    public MyElement(Component<?> comp,Tag tag, String baseUri, Attributes attributes) {
+    public MyElement(Component<?,?> comp,Tag tag, String baseUri, Attributes attributes) {
         super(tag, baseUri, attributes);
         this.comp = comp;
     }
 
-    public MyElement(Component<?> comp,Tag tag, String baseUri) {
+    public MyElement(Component<?,?> comp,Tag tag, String baseUri) {
         super(tag, baseUri);
         this.comp = comp;
     }

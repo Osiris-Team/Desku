@@ -110,7 +110,7 @@ public class App {
             if (javascript.exists()) javascript.delete();
             javascript.createNewFile();
 
-            // Append Bootstrap v5.3.0
+            // Append default extra CSS and JS "libraries"
             appendToGlobalCSS(getCSS(Bootstrap.class));
             appendToGlobalJS(getJS(Bootstrap.class));
 

@@ -2,14 +2,16 @@ package com.osiris.desku.ui.display;
 
 import com.osiris.desku.App;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.utils.NoValue;
 import com.osiris.events.Event;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
-public class Table extends Component<Table> {
+public class Table extends Component<Table, NoValue> {
     static {
         try {
             App.appendToGlobalCSS(App.getCSS(Table.class));
@@ -21,30 +23,32 @@ public class Table extends Component<Table> {
     public Row headers = new Row().addClass("desku-table-header");
     public Rows rows = new Rows(this);
     /**
-     * Gets recalculated in {@link #headers(Row...)}. <br>
+     * Gets recalculated in {@link #headers(String...)}. <br>
      * Set to -1 or smaller, to disable.
      */
     public double maxColumnWidthPercent = 100;
     public void recalcMaxColumnWidthPercent(){
         if(maxColumnWidthPercent < 0) return;
         maxColumnWidthPercent = (1.0 / headers.children.size()) * 100.0;
-        for (Component<?> header : headers.children) {
+        for (Component<?,?> header : headers.children) {
             header.putStyle("max-width", maxColumnWidthPercent+"%");
         }
-        for (Component<?> row : rows.children) {
-            for (Component<?> rowColumn : row.children.get(0).children) {
+        for (Component<?,?> row : rows.children) {
+            CopyOnWriteArrayList<Component<?,?>> children1 = row.children.get(0).children;
+            for (Component<?,?> rowColumn : children1) {
                 rowColumn.putStyle("max-width", maxColumnWidthPercent+"%");
             }
         }
     }
 
     public Table() {
+        super(NoValue.GET);
         add(headers, rows);
         addClass("desku-table");
-        rows.onAddedChild.addAction(e -> {
+        rows.onChildAdd.addAction(e -> {
            if(maxColumnWidthPercent > 0 && e.childComp instanceof Row){
                Row row = (Row) e.childComp;
-               for (Component<?> rowColumn : row.children) {
+               for (Component<?,?> rowColumn : row.children) {
                    rowColumn.putStyle("max-width", maxColumnWidthPercent+"%");
                }
            }
@@ -67,9 +71,9 @@ public class Table extends Component<Table> {
     /**
      * Easily set/replace the headers.
      */
-    public Table headers(Component<?>... headers) {
+    public Table headers(Component<?,?>... headers) {
         this.headers.removeAll();
-        for (Component<?> header : headers) {
+        for (Component<?,?> header : headers) {
             this.headers.add(header);
         }
         recalcMaxColumnWidthPercent();
@@ -122,11 +126,11 @@ public class Table extends Component<Table> {
         return this;
     }
 
-    public Component<?> getHeaderAt(int index){
+    public Component<?,?> getHeaderAt(int index){
         return headers.children.get(index);
     }
 
-    public static class Headers extends Component<Headers> {
+    public static class Headers extends Component<Headers, NoValue> {
         /**
          * Reference to parent table if needed for method chaining.
          */
@@ -134,7 +138,7 @@ public class Table extends Component<Table> {
         public Event<Row> _onHeaderClick = new Event<>();
 
         public Headers(Table table) {
-            super("headers");
+            super(NoValue.GET, "headers");
             this.t = table;
             width("100%");
             Consumer<AddedChildEvent> superAdd = this._add;
@@ -154,7 +158,7 @@ public class Table extends Component<Table> {
         }
     }
 
-    public static class Rows extends Component<Rows> {
+    public static class Rows extends Component<Rows, NoValue> {
         /**
          * Reference to parent table if needed for method chaining.
          */
@@ -162,7 +166,7 @@ public class Table extends Component<Table> {
         public Event<Row> _onRowClick = new Event<>();
 
         public Rows(Table table) {
-            super("rows");
+            super(NoValue.GET, "rows");
             childVertical();
             this.t = table;
             width("100%"); // Children grow height of this layout
@@ -183,8 +187,9 @@ public class Table extends Component<Table> {
         }
     }
 
-    public static class Row extends Component<Row> {
+    public static class Row extends Component<Row, NoValue> {
         public Row() {
+            super(NoValue.GET);
             addClass("desku-table-row");
 
             // Wrap all added children first into cell
@@ -199,14 +204,14 @@ public class Table extends Component<Table> {
 
         public List<Cell> getCells(){
             List<Cell> cells = new ArrayList<>();
-            for (Component<?> child : children) {
+            for (Component<?,?> child : children) {
                 cells.add((Cell) child);
             }
             return cells;
         }
 
-        public List<Component<?>> getContents(){
-            List<Component<?>> contents = new ArrayList<>();
+        public List<Component<?,?>> getContents(){
+            List<Component<?,?>> contents = new ArrayList<>();
             for (Cell cell : getCells()) {
                 contents.add(cell.getContent());
             }
@@ -214,13 +219,14 @@ public class Table extends Component<Table> {
         }
     }
 
-    public static class Cell extends Component<Cell> {
+    public static class Cell extends Component<Cell, NoValue> {
 
         public Cell(){
+            super(NoValue.GET);
             addClass("desku-table-cell");
         }
 
-        public Component<?> getContent(){
+        public Component<?,?> getContent(){
             return children.get(0);
         }
     }

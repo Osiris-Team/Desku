@@ -3,6 +3,7 @@ package com.osiris.desku;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.*;
 import com.osiris.desku.ui.input.*;
+import com.osiris.desku.ui.input.fileuploader.FileUploader;
 import com.osiris.desku.ui.layout.*;
 
 import java.awt.image.BufferedImage;
@@ -56,8 +57,8 @@ public class Statics {
 
     /**
      */
-    static public Router router() {
-        return new Router();
+    static public Link link() {
+        return new Link();
     }
 
     /**
@@ -192,14 +193,14 @@ public class Statics {
 
     /**
      */
-    static public FileUploader fileuploader(Text label, String defaultValue) {
-        return new FileUploader(label, defaultValue);
+    static public FileUploader fileuploader(Text label, String defaultFileName) {
+        return new FileUploader(label, defaultFileName);
     }
 
     /**
      */
-    static public Input input(String type) {
-        return new Input(type);
+    static public <VALUE> Input input(String type, VALUE defaultValue) {
+        return new Input(type, defaultValue);
     }
 
     /**
@@ -314,7 +315,7 @@ public class Statics {
      * @param parent if null, this overlay will be placed over the complete page,
      *               otherwise only over the provided parent component.
      */
-    static public Overlay overlay(Component<?> parent) {
+    static public Overlay overlay(Component<?, ?> parent) {
         return new Overlay(parent);
     }
 

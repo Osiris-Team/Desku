@@ -3,6 +3,7 @@ package com.osiris.desku.ui.display;
 
 import com.osiris.desku.App;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.utils.NoValue;
 import com.osiris.jlib.logger.AL;
 
 import javax.imageio.ImageIO;
@@ -11,7 +12,7 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.nio.file.Files;
 
-public class Image extends Component<Image> {
+public class Image extends Component<Image, NoValue> {
     /**
      * Java integration of the HTML img tag. <br>
      * <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img">https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img</a>
@@ -23,7 +24,7 @@ public class Image extends Component<Image> {
      * @param name for example "image.png" or "/image.jpg" or "/folder/image.jpg".
      */
     public Image(RenderedImage image, String name) {
-        super("img");
+        super(NoValue.GET, "img");
         // Paths
         String src = name;
         if (!src.startsWith("/")) src = "/" + src;
@@ -70,7 +71,7 @@ public class Image extends Component<Image> {
      * @param src   examples: "/image.png" or "image.png" or "/sub-dir/image.png" or "sub-dir/image.png"
      */
     public Image(String packagePath, String src) {
-        super("img");
+        super(NoValue.GET, "img");
 
         // Paths
         if (!src.startsWith("/")) src = "/" + src;

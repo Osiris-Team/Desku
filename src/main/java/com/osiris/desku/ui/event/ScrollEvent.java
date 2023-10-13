@@ -3,7 +3,7 @@ package com.osiris.desku.ui.event;
 
 import com.osiris.desku.ui.Component;
 
-public class ScrollEvent<T extends Component<?>> extends JavaScriptEvent<T> {
+public class ScrollEvent<T extends Component<?,?>> extends JavaScriptEvent<T> {
 
     private final boolean isReachedEnd;
     private final double scrollHeight;

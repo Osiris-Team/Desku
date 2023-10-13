@@ -1,9 +1,11 @@
 package com.osiris.desku.ui.display;
 
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.utils.NoValue;
 
-public class Spinner extends Component<Spinner> {
+public class Spinner extends Component<Spinner, NoValue> {
     public Spinner() {
+        super(NoValue.GET);
         typeBorder();
         primary();
     }

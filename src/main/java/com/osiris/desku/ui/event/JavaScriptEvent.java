@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.osiris.desku.ui.Component;
 import com.osiris.jlib.json.JsonFile;
 
-public abstract class JavaScriptEvent<T extends Component<?>> {
+public abstract class JavaScriptEvent<T extends Component<?,?>> {
     /**
      * Raw event information that is passed over from JavaScript to Java.
      */
@@ -15,22 +15,18 @@ public abstract class JavaScriptEvent<T extends Component<?>> {
      */
     public final transient T comp;
 
+    /**
+     * @param rawJSMessage must be a clean and parseable JSON-Object. No additional cleaning will be done on the server-side.
+     */
     public JavaScriptEvent(String rawJSMessage, T comp) {
         this.rawJSMessage = rawJSMessage;
+        this.jsMessage = JsonFile.parser.fromJson(rawJSMessage, JsonObject.class);
         this.comp = comp;
-        try{
-            this.jsMessage = JsonFile.parser.fromJson(rawJSMessage, JsonObject.class);
-        } catch (Exception e) {
-            System.err.println("JS MESSAGE RELATED TO ERROR BELOW: "+ rawJSMessage);
-            throw e;
-        }
     }
 
-    public JsonObject toJson() {
-        return JsonFile.parser.fromJson(toJsonString(), JsonObject.class);
-    }
-
-    public String toJsonString() {
-        return JsonFile.parser.toJson(this);
+    public JavaScriptEvent(String rawJSMessage, JsonObject jsMessage, T comp) {
+        this.rawJSMessage = rawJSMessage;
+        this.jsMessage = jsMessage;
+        this.comp = comp;
     }
 }

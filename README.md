@@ -59,6 +59,7 @@ bindings, thus making simple/complex layout creation faster and easier than ever
 - Contains cross-platform desktop WebView implementation already. 
 Android and iOS implementations are provided in the starter repo.
 - Uses [Bootstrap v5.3.0](https://getbootstrap.com/docs/5.3/components) for styling and [Jsoup](https://jsoup.org/) for handling the HTML of components.
+- Core philosophy: Developer convenience comes first, performance (CPU/RAM usage) of Desku comes second.
 
 ### Extensions
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
@@ -83,6 +84,10 @@ the `Statics` class.
 ```
 ./gradlew build :test --tests "com.osiris.desku.GenerateStatics"
 ```
+
+- Try to code in the existing style.
+- 99% of the variables should be public, avoid getters/setters.
+- Keep it low-code/simple for the developers using your new feature.
 
 
 ### Documentation

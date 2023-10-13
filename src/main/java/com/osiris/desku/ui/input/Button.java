@@ -2,21 +2,54 @@ package com.osiris.desku.ui.input;
 
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Text;
+import com.osiris.desku.ui.event.ValueChangeEvent;
 
-public class Button extends Component<Button> {
+import java.util.function.Consumer;
 
-    public final Text text = new Text("Button").putStyle("color", "var(--color-contrast)");
+public class Button extends Component<Button, String> {
+
+    public final Text label;
 
     /**
      * https://getbootstrap.com/docs/5.3/components/buttons/
      */
     public Button(String txt) {
-        super("button");
-        add(text);
+        super(txt, "button");
+        this.label = new Text(txt).putStyle("color", "var(--color-contrast)");
+        add(label);
         childCenter();
-        text.set(txt);
         putAttribute("class", "btn");
         primary();
+    }
+
+    /**
+     * @return button label as string.
+     */
+    @Override
+    public Button getValue(Consumer<String> v) {
+        label.getValue(v);
+        return this;
+    }
+
+    /**
+     * Set button label string.
+     */
+    public Button setValue(String v) {
+        label.setValue(v);
+        return this;
+    }
+
+    /**
+     * Executed when button label string changed.
+     */
+    @Override
+    public Button onValueChange(Consumer<ValueChangeEvent<Button, String>> code) {
+        // Forward label text change event to this button
+        label.onValueChange(e -> {
+            ValueChangeEvent<Button, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore);
+            code.accept(e2);
+        });
+        return this;
     }
 
     // SIZES

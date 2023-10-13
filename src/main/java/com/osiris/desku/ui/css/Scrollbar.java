@@ -1,6 +1,6 @@
 package com.osiris.desku.ui.css;
 
-public class Scrollbar extends CSS{
+public class Scrollbar extends CSS {
 
     public Attribute width = new Attribute("width", "0.5rem");
     public Attribute height = new Attribute("height", "0.5rem");
@@ -19,7 +19,7 @@ public class Scrollbar extends CSS{
         return super.toCSS() + thumb.toCSS();
     }
 
-    public class Thumb extends CSS{
+    public class Thumb extends CSS {
 
         public Attribute boxShadow = new Attribute("box-shadow", "inset 0 0 0 10px");
 

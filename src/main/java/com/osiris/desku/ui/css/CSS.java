@@ -18,20 +18,20 @@ public class CSS {
      * Replaces all hyphens by their uppercase version
      * of their next char.
      */
-    public static String getJSCompatibleCSSKey(String s){
+    public static String getJSCompatibleCSSKey(String s) {
         int indexOfHyphen = 0;
-        while(true){
+        while (true) {
             indexOfHyphen = s.indexOf("-");
-            if(indexOfHyphen == -1) break;
+            if (indexOfHyphen == -1) break;
             String c = String.valueOf(s.charAt(indexOfHyphen + 1));
-            s = s.replaceAll("-"+c, c.toUpperCase());
+            s = s.replaceAll("-" + c, c.toUpperCase());
         }
         return s;
     }
 
     public String toCSS() {
         StringBuilder sb = new StringBuilder();
-        sb.append(selector+"{\n");
+        sb.append(selector + "{\n");
         for (Attribute attr : attributes) {
             sb.append("  ").append(attr.getKey()).append(": ").append(attr.getValue()).append(";\n");
         }

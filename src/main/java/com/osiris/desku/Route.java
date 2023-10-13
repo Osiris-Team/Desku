@@ -15,7 +15,7 @@ public abstract class Route {
         this.path = path;
     }
 
-    public abstract Component<?> loadContent();
+    public abstract Component<?,?> loadContent();
 
     /**
      * @return the default HTML layout for this route. Content should be added to div with

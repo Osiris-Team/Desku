@@ -34,11 +34,11 @@ public abstract class UI {
      * Last loaded html.
      */
     public Route route;
-    public Component<?> content;
+    public Component<?,?> content;
     /**
      * Not thread safe, access inside synchronized block.
      */
-    public HashMap<String, List<Component<?>>> listenersAndComps = new HashMap<>();
+    public HashMap<String, List<Component<?,?>>> listenersAndComps = new HashMap<>();
     public WSServer webSocketServer = null;
     public HTTPServer httpServer;
 
@@ -348,10 +348,14 @@ public abstract class UI {
 
     /**
      * Returns new JS (JavaScript) code, that when executed in client browser
-     * results in onJSFunctionExecuted being executed. <br>
-     * It wraps around your jsCode and adds callback related stuff, as well as error handling. <br>
+     * results in onJSFunctionExecuted being executed. <br><br>
+     *
+     * It wraps around your jsCode and adds callback related stuff, as well as error handling. <br><br>
+     *
      * Its a permanent callback, because the returned JS code can be executed multiple times
-     * which results in onJSFunctionExecuted or onJSFuntionFailed to get executed multiple times too. <br>
+     * which results in onJSFunctionExecuted or onJSFuntionFailed to get executed multiple times too. <br><br>
+     *
+     * Also appends a check to the JS code that sets message="" if it was null/undefined.<br><br>
      *
      * @param jsCode               modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
      *                             Your JS code could look like this: <br>
@@ -360,9 +364,9 @@ public abstract class UI {
      * @param onError   executed when the provided jsCode threw an exception. String contains details about the exception/error.
      */
     public String jsAddPermanentCallback(String jsCode, Consumer<String> onSuccess, Consumer<String> onError) {
-        // 1. execute js code
-        // 2. execute callback in java with params from js code
-        // 3. return success to js code and execute it
+        // 1. execute client JS
+        // 2. execute callback in java with params from client JS
+        // 3. return success to client JS and execute it
         int id = webSocketServer.counter.getAndIncrement();
         synchronized (webSocketServer.javaScriptCallbacks) {
             PendingJavaScriptResult pendingJavaScriptResult = new PendingJavaScriptResult(id, onSuccess, onError);
@@ -370,7 +374,9 @@ public abstract class UI {
         }
         return "var message = '';\n" + // Separated by space
                 "var error = null;\n" +
-                "try{" + jsCode + "} catch (e) { error = e; console.error(e);}\n" +
+                "try{" + jsCode + "\n" +
+                "if(message==null) message = '';\n" +
+                "} catch (e) { error = e; console.error(e);}\n" +
                 jsClientSendWebSocketMessage("(error == null ? ('" + id + " '+message) : ('!" + id + " '+error))");
     }
 
@@ -411,7 +417,7 @@ public abstract class UI {
     /**
      * @see #registerJSListener(String, Component, String, Consumer)
      */
-    public <T extends Component<?>> UI registerJSListener(String eventName, Component<T> comp, Consumer<String> onEvent) {
+    public UI registerJSListener(String eventName, Component comp, Consumer<String> onEvent) {
         return registerJSListener(eventName, comp, "", onEvent);
     }
 
@@ -427,9 +433,9 @@ public abstract class UI {
      *                  event: which is the event object. <br>
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
-    public <T extends Component<?>> UI registerJSListener(String eventName, Component<T> comp, String jsOnEvent, Consumer<String> onEvent) {
+    public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent) {
         synchronized (listenersAndComps) {
-            List<Component<?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
+            List<Component<?,?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
                 alreadyRegisteredComps = new ArrayList<>();
                 listenersAndComps.put(eventName, alreadyRegisteredComps);
@@ -444,7 +450,8 @@ public abstract class UI {
                                 "  var json = '{';\n" +
                                 "  for (const key in obj) {\n" +
                                 "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
-                                "      json += (`\"${key}\": \"${obj[key]}\",`);\n" +
+                                "      if(key == 'data') continue;\n" + // Skip data since it's the same as value
+                                "      json += (`\"${key}\": \"${obj[key]}\",`);\n" + // Also hope that values do not contain JSON breaking chars
                                 "    }\n" +
                                 "  }\n" +
                                 "  if(json[json.length-1] == ',') json = json.slice(0, json.length-1);" + // Remove last ,
@@ -593,13 +600,13 @@ public abstract class UI {
         }
     }
 
-    public void attachWhenAccessEnds(Component<?> parent, Component<?> child, Component.AddedChildEvent e) {
+    public void attachWhenAccessEnds(Component<?,?> parent, Component<?,?> child, Component.AddedChildEvent e) {
         synchronized (pendingAppends){
             pendingAppends.add(new PendingAppend(parent, child, e));
         }
     }
 
-    public <T extends Component<?>> void attachToParent(Component<?> parent, Component<?> child, Component.AddedChildEvent e) {
+    public <T extends Component<?,?>> void attachToParent(Component<?,?> parent, Component<?,?> child, Component.AddedChildEvent e) {
         //AL.info("attachToParent() "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached()+") ++++ "+
         //        child.getClass().getSimpleName()+"("+child.id+") ");
 
@@ -623,7 +630,7 @@ public abstract class UI {
         }
     }
 
-    public String jsAttachToParent(Component<?> parent, Component<?> child) {
+    public String jsAttachToParent(Component<?,?> parent, Component<?,?> child) {
         return "try{"+jsGetComp("parentComp", parent.id) +
                         "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
                         "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +
@@ -632,11 +639,11 @@ public abstract class UI {
     }
 
     private class PendingAppend{
-        public Component<?> parent;
-        public Component<?> child;
+        public Component<?,?> parent;
+        public Component<?,?> child;
         public Component.AddedChildEvent e;
 
-        public PendingAppend(Component<?> parent, Component<?> child, Component.AddedChildEvent e) {
+        public PendingAppend(Component<?,?> parent, Component<?,?> child, Component.AddedChildEvent e) {
             this.parent = parent;
             this.child = child;
             this.e = e;
