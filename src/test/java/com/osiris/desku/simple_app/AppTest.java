@@ -6,7 +6,6 @@ import com.osiris.desku.simple_app.about.About;
 import com.osiris.desku.simple_app.home.Home;
 import com.osiris.desku.ui.DesktopUI;
 import com.osiris.desku.ui.DesktopUIManager;
-import com.osiris.desku.ui.UIManager;
 
 class AppTest {
 
@@ -28,7 +27,7 @@ class AppTest {
         // Exit main thread once all windows closed
         // Note that this is only required in this test
         // On your regular application it should be fine to exit the main thread
-        while (!UIManager.all.isEmpty())
+        while (!App.uis.all.isEmpty())
             Thread.sleep(1000);
     }
 }

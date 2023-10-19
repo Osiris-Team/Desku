@@ -244,7 +244,7 @@ public abstract class UI {
         try {
             AL.info("Starting new window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
             AL.info("Please stand by...");
-            UIManager.all.add(this);
+            App.uis.all.add(this);
             long ms = System.currentTimeMillis();
             init(startURL, isTransparent, isDecorated, widthPercent, heightPercent);
             AL.info("Init took " + (System.currentTimeMillis() - ms) + "ms for " + this);
@@ -254,7 +254,7 @@ public abstract class UI {
     }
 
     public void close() {
-        UIManager.all.remove(this);
+        App.uis.all.remove(this);
         try {
             webSocketServer.stop();
             AL.info("Closed WebSocketServer " + webSocketServer.domain + ":" + webSocketServer.port + " for UI: " + this);
@@ -461,12 +461,14 @@ public abstract class UI {
                                 "message = getObjProps(event)\n" +
                                 jsOnEvent,
                         (message) -> {
-                            access(() -> {
-                                try {
-                                    onEvent.accept(message); // Should execute all listeners
-                                } catch (Exception e) {
-                                    AL.warn(e);
-                                }
+                            App.executor.execute(() -> { // async
+                                access(() -> {
+                                    try {
+                                        onEvent.accept(message); // Should execute all listeners
+                                    } catch (Exception e) {
+                                        AL.warn(e);
+                                    }
+                                });
                             });
                         },
                         (error) -> {

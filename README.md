@@ -10,6 +10,12 @@ In addition, it is also highly beginner-friendly, making it accessible to everyo
 
 ### What does it look like?
 ```java
+vertical().add(text("Hello World!"))
+```
+<details>
+<summary>Minimal example</summary>
+
+```java
 import com.osiris.desku.App;
 import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 
@@ -30,6 +36,7 @@ public class Main {
     }
 }
 ```
+</details>
 <details>
 <summary>Screenshots</summary>
 

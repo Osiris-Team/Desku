@@ -4,8 +4,8 @@ import com.osiris.desku.App;
 import com.osiris.desku.ui.css.CSS;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
-import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.event.ScrollEvent;
+import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.layout.Horizontal;
 import com.osiris.desku.ui.layout.Overlay;
 import com.osiris.desku.ui.layout.SmartLayout;
@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -267,6 +268,19 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     /**
+     * Util method to get the value directly. <br>
+     * Thus override {@link #getValue(Consumer)} instead if needed.
+     */
+    public VALUE getValue() {
+        AtomicReference<VALUE> atomicValue = new AtomicReference<>();
+        getValue(val -> {
+            atomicValue.set(val);
+        });
+        while(atomicValue.get() == null) Thread.yield(); // Wait until value returned
+        return atomicValue.get();
+    }
+
+    /**
      * @param v executed when the value is got from the client-side.
      */
     public THIS getValue(Consumer<VALUE> v) {
@@ -390,15 +404,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     public THIS later(Consumer<THIS> code) {
         UI ui = UI.get();
         Objects.requireNonNull(ui);
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                code.accept(_this);
-                UI.remove(this);
-            }
-        };
-        UI.set(ui, t);
-        t.start();
+        App.executor.execute(() -> {
+            ui.access(() -> code.accept(_this));
+        });
         return _this;
     }
 

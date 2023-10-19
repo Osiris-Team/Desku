@@ -19,6 +19,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -74,6 +76,7 @@ public class App {
     public static Theme theme = new Theme();
 
     public static UIManager uis = null;
+    public static ExecutorService executor = Executors.newCachedThreadPool();
 
     public static void init(UIManager uiManager) {
         if (uiManager == null) {

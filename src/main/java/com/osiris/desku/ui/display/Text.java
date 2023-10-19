@@ -8,6 +8,8 @@ import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jsoup.nodes.TextNode;
 
+import java.util.function.Consumer;
+
 public class Text extends Component<Text, String> {
     /**
      * Executed when a child was added on the Java side.
@@ -44,6 +46,13 @@ public class Text extends Component<Text, String> {
         }, AL::warn);
     }
 
+    @Override
+    public Text getValue(Consumer<String> v) {
+        // We do not expect the user to change the text, thus we can directly return the internal value
+        // which can only be changed programmatically
+        v.accept(internalValue);
+        return this;
+    }
 
     public Text setValue(String v) {
         String oldValue = internalValue;
@@ -53,6 +62,7 @@ public class Text extends Component<Text, String> {
     }
 
     public Text clear() {
+        internalValue = "";
         for (TextNode txt : element.textNodes()) {
             txt.remove(); // Remove all text nodes from parent
         }
@@ -61,20 +71,19 @@ public class Text extends Component<Text, String> {
     }
 
     public Text append(String v) {
-        getValue(oldV -> {
-            append(oldV, v);
-        });
+        append(getValue(), v);
         return this;
     }
 
     public Text append(String oldV, String v) {
+        internalValue += v;
         element.appendText(v);
-        _onAddedString.execute(v); // Updates the UI
+        _onAddedString.execute(internalValue); // Updates the UI
         JsonObject obj = new JsonObject();
-        obj.addProperty("newValue", v);
+        obj.addProperty("newValue", internalValue);
         obj.add("eventAsJson", new JsonObject());
         readOnlyOnValueChange.execute(new ValueChangeEvent<>("", obj,
-                this, v, oldV));
+                this, internalValue, oldV));
         return this;
     }
 

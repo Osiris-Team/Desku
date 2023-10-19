@@ -157,7 +157,7 @@ public class DesktopUI extends UI {
         browser.close();
         frame.dispose();
         super.close();
-        if (com.osiris.desku.ui.UIManager.all.isEmpty()) System.exit(0);
+        if (App.uis.all.isEmpty()) System.exit(0);
     }
 
     /**
