@@ -13,7 +13,24 @@ In addition, it is also highly beginner-friendly, making it accessible to everyo
 vertical().add(text("Hello World!"))
 ```
 <details>
-<summary>Minimal example</summary>
+<summary>3 lines example</summary>
+
+```java
+import com.osiris.desku.App;
+import static com.osiris.desku.Statics;
+public class Main {
+    public static void main(String[] args) throws Exception {
+        App.init(new DesktopUIManager());
+        App.name = "My-App";
+        App.uis.create(() -> {
+            return vertical().add(text("Hello World!")); 
+        });
+    }
+}
+```
+</details>
+<details>
+<summary>Commented minimal example</summary>
 
 ```java
 import com.osiris.desku.App;
@@ -21,17 +38,24 @@ import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Setup app details
-        App.init(new DesktopUIManager());
+        
+        // Setup app details.
+        App.init(new DesktopUIManager()); // Not needed when using the Desku-Gradle-Starter-App
         App.name = "My-App";
 
-        // Create routes
-        // For larger UIs create a new class and extend Route instead
+        // Create routes.
+        // This is only for demonstration. 
+        // Normally you'd create a new class and extend Route instead.
+        // In the "3 lines example" a new random Route is created in App.uis.create().
+        // All routes names/paths must start with a "/".
         Route home = new MRoute("/", () -> { 
             return vertical().add(text("Hello World!")); // Low-code Java UI via static methods
         });
 
-        // Create and show windows
+        // Create and show the window, with the content
+        // loaded by the provided route, in this case "home".
+        // The content is a tree of components which gets "translated" into HTML
+        // and then displayed by the users default webview.
         App.uis.create(home);
     }
 }
