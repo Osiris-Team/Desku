@@ -78,7 +78,26 @@ public class App {
     public static UIManager uis = null;
     public static ExecutorService executor = Executors.newCachedThreadPool();
 
+    public static class LoggerParams{
+        public String name = "Logger";
+        public boolean debug = true;
+        public File logsDir = new File(workingDir+"/logs");
+        public File latestLogFile = new File(logsDir + "/latest.log");
+        public File mirrorOutFile = new File(logsDir + "/mirror-out.log");
+        public File mirrorErrFile = new File(logsDir + "/mirror-err.log");
+        public boolean ansi = true;
+        public boolean forceAnsi = false;
+
+        public LoggerParams() {
+            logsDir.mkdirs();
+        }
+    }
+
     public static void init(UIManager uiManager) {
+        init(uiManager, new LoggerParams());
+    }
+
+    public static void init(UIManager uiManager, LoggerParams loggerParams) {
         if (uiManager == null) {
             throw new NullPointerException("Provided UI factory is null!" +
                     " Make sure to provide an implementation for the platform this app is running in.");
@@ -87,8 +106,8 @@ public class App {
         try {
             Logger.getGlobal().setLevel(Level.SEVERE);
             if (!AL.isStarted) {
-                AL.start("Logger", true, new File(workingDir + "/latest.log"), false);
-                AL.mirrorSystemStreams(new File(workingDir + "/mirror-out.log"), new File(workingDir + "/mirror-err.log"));
+                AL.start(loggerParams.name, loggerParams.debug, loggerParams.latestLogFile, loggerParams.ansi, loggerParams.forceAnsi);
+                AL.mirrorSystemStreams(loggerParams.mirrorOutFile, loggerParams.mirrorErrFile);
             }
             AL.info("Starting application...");
             AL.info("workingDir = " + workingDir);
