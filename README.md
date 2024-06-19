@@ -2,8 +2,6 @@
 Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
-### Desku is in early development, thus critical bugs and incomplete features are to be expected.
-
 ### Who is it for?
 Mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
 In addition, it is also highly beginner-friendly, making it accessible to everyone that is new to coding due to its simplicity.
@@ -99,6 +97,10 @@ way, its pretty easy to create a Desku-Extension:
 1. Start with the [Desku-Gradle-Starter-Extension](https://github.com/Osiris-Team/Desku-Gradle-Starter-Extension) template.
 2. Publish your repo on GitHub with the #desku-extension tag/topic (also mention the Desku version your extension supports / was built with).
 3. Create a release and use JitPack or Maven to host the files.
+
+### State
+The base features are implemented, however the default UI component library
+still needs components, so feel free to contribute if you find something missing.
 
 ### Todo
 - Native notifications and in-app overlay notifications.

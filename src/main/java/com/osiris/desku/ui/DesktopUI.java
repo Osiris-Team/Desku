@@ -52,13 +52,7 @@ public class DesktopUI extends UI {
      * @param heightPercent
      */
     public void init(String startURL, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception {
-        AtomicBoolean isLoaded = new AtomicBoolean(false);
-        onLoadStateChanged.addAction((action, isLoading) -> {
-            if (!isLoading) {
-                action.remove();
-                isLoaded.set(true);
-            }
-        }, Exception::printStackTrace);
+        AtomicBoolean isBrowserReady = new AtomicBoolean(false);
 
         frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -69,30 +63,12 @@ public class DesktopUI extends UI {
         browserContainer = (Canvas) Webview.createAWT(true, (browser) -> {
             this.browser = browser;
 
-            browser.bind("tellJavaThatIsLoaded", e -> {
-                onLoadStateChanged.execute(false); // stopped loading
-                return null;
-            });
             browser.loadURL(startURL);
             try{
                 Thread.sleep(10); // Otherwise below JS is not executed bc its to fast after loadURL() somehow?
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            browser.eval("const event = new Event(\"pageloaded\");\n" +
-                    "async function notifyOnPageLoad() {\n" +
-                    "  setTimeout(function() {  \n" +
-                    "    if (document.readyState === 'complete') {\n" +
-                    "        console.log('Page finished loading.');\n" +
-                    "        window.tellJavaThatIsLoaded().then(result => {});\n" +
-                    "        document.dispatchEvent(event);\n" +
-                    "    } else {\n" +
-                    "      notifyOnPageLoad();\n" +
-                    "    }\n" +
-                    "  }, 100) // 100ms\n" +
-                    "}\n" +
-                    "console.log('Waiting for page to finish loading...')\n" +
-                    "notifyOnPageLoad()\n");
             // Resize browser window too
             frame.addComponentListener(new ComponentAdapter() {
                 @Override
@@ -125,6 +101,7 @@ public class DesktopUI extends UI {
             });
 
             // Run the webview event loop, the webview is fully disposed when this returns.
+            isBrowserReady.set(true);
             browser.run();
         });
 
@@ -148,8 +125,7 @@ public class DesktopUI extends UI {
         frame.setVisible(true);
         frame.requestFocus();
 
-        // JavaScript cannot be executed before the page is loaded
-        while (!isLoaded.get()) Thread.yield();
+        while(!isBrowserReady.get()) Thread.yield();
     }
 
     @Override
@@ -361,7 +337,7 @@ public class DesktopUI extends UI {
             frame.setBackground(color);
             //frame.getContentPane().setBackground(color); TODO find out why this makes the frame clickthorugh
             //browserContainer.setBackground(color);
-            if(content != null) content.putStyle("background-color", hexColor);
+            if(content != null) content.s("background-color", hexColor);
 
             if(hexColor.equals("#00000000")){
                 //frame.setOpacity(0.99f); // Slightly transparent to allow mouse events

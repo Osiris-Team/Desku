@@ -36,7 +36,7 @@ public class CheckBox extends Component<CheckBox, Boolean> {
 
     @Override
     public CheckBox getValue(Consumer<Boolean> v) {
-        getAttributeValue("checked", value -> {
+        ga("checked", value -> {
             if (value.isEmpty()) v.accept(false);
             else v.accept(true);
         });
@@ -46,8 +46,8 @@ public class CheckBox extends Component<CheckBox, Boolean> {
     @Override
     public CheckBox setValue(Boolean v) {
         input.setValue(v);
-        if (v) input.putAttribute("checked");
-        else input.removeAttribute("checked");
+        if (v) input.a("checked");
+        else input.ra("checked");
         return this;
     }
 

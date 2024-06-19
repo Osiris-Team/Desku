@@ -13,7 +13,7 @@ public class Link extends Component<Link, String> {
 
     public Link setValue(String url) {
         super.setValue(url);
-        putAttribute("href", url);
+        a("href", url);
         return this;
     }
 

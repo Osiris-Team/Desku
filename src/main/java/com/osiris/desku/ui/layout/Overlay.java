@@ -17,17 +17,17 @@ public class Overlay extends Component<Overlay, NoValue> {
         _add = layout._add;
         _remove = layout._remove;
         if (parent == null)
-            this.putStyle("position", "fixed"); // Sit on top of page
+            this.s("position", "fixed"); // Sit on top of page
         else {
-            parent.putStyle("position", "relative"); // Sit on top of parent
-            this.putStyle("position", "absolute");
+            parent.s("position", "relative"); // Sit on top of parent
+            this.s("position", "absolute");
         }
-        putStyle("background-color", "rgba(0,0,0,0)"); // Transparent background
-        putStyle("top", "0");
-        putStyle("bottom", "0");
-        putStyle("left", "0");
-        putStyle("right", "0");
-        putStyle("width", "fit-content");
-        putStyle("height", "fit-content");
+        s("background-color", "rgba(0,0,0,0)"); // Transparent background
+        s("top", "0");
+        s("bottom", "0");
+        s("left", "0");
+        s("right", "0");
+        s("width", "fit-content");
+        s("height", "fit-content");
     }
 }

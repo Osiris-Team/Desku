@@ -21,7 +21,7 @@ public abstract class Route {
      * @return the default HTML layout for this route. Content should be added to div with
      * the id "outlet".
      */
-    public Document getDocument() {
+    public Document getBaseDocument() {
         return Jsoup.parse("<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +
                 "<head>\n" +

@@ -38,14 +38,14 @@ public class SmartLayout extends Component<SmartLayout, NoValue> {
         super(NoValue.GET);
         addClass("smart-layout");
         wrap(true);
-        removeStyle("flex-direction");
+        rs("flex-direction");
         childGap(true);
         Consumer<AddedChildEvent> superAdd = _add;
         _add = (e) -> {
             if (childGrow) {
                 e.childComp.grow(1);
             }
-            e.childComp.putStyle("min-width", minChildWidth);
+            e.childComp.s("min-width", minChildWidth);
             superAdd.accept(e);
         };
     }

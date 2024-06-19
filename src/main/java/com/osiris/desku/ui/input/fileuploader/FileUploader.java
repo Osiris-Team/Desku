@@ -45,7 +45,7 @@ public class FileUploader extends Component<FileUploader, File> {
      * Example: .doc,.docx,.xml,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document
      */
     public FileUploader accept(String s) {
-        putAttribute("accept", s);
+        a("accept", s);
         return this;
     }
 

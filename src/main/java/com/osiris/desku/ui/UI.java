@@ -5,6 +5,8 @@ import com.osiris.desku.Route;
 import com.osiris.desku.ui.utils.Rectangle;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -27,7 +29,8 @@ public abstract class UI {
     private static final Map<Thread, UI> threadsAndUIs = new HashMap<>();
     public final AtomicBoolean isLoading = new AtomicBoolean(true);
     /**
-     * Relevant when wanting HTML load state, since we cant run JavaScript before the page is fully loaded.
+     * Relevant when wanting HTML load state, since we cant run JavaScript before the page is fully loaded.<br>
+     * Boolean parameter isLoading, is true if still loading or false if finished loading.
      */
     public final Event<Boolean> onLoadStateChanged = new Event<>();
     /**
@@ -52,9 +55,9 @@ public abstract class UI {
 
         //load(route.getClass()); // Done in HTTPServer
 
-        priv_init("http://" + App.domainName + ":" + httpServer.serverPort + (route.path.startsWith("/") ? "" : "/") + route.path,
+        safeInit("http://" + App.domainName + ":" + httpServer.serverPort + (route.path.startsWith("/") ? "" : "/") + route.path,
                 isTransparent, isDecorated, widthPercent, heightPercent);
-        startWebSocketClient(webSocketServer.domain, webSocketServer.port);
+
     }
 
     //
@@ -200,7 +203,7 @@ public abstract class UI {
 
     /**
      * Executes JavaScript to navigate to another route. <br>
-     * Note that {@link #z_internal_load(Class)} will be called by {@link #httpServer}
+     * Note that {@link #z_internal_load(Class)} will be called by {@link #startWebSocketServer()}
      * and thus the content of this UI modified.
      */
     public void navigate(Class<? extends Route> routeClass) {
@@ -217,6 +220,10 @@ public abstract class UI {
             return;
         }
         executeJavaScript("window.location.href = `" + route.path + "`;", "internal", 0);
+    }
+
+    public void reload(){
+        executeJavaScript("window.location.reload();", "internal", 0);
     }
 
     /**
@@ -240,13 +247,28 @@ public abstract class UI {
         return this;
     }
 
-    private void priv_init(String startURL, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) {
+    public void safeInit(String startURL, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) {
         try {
-            AL.info("Starting new window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
-            AL.info("Please stand by...");
-            App.uis.all.add(this);
+            AL.info("Starting new UI/window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
+            AL.info("Waiting for it to finish loading... Please stand by...");
             long ms = System.currentTimeMillis();
+
+            AtomicBoolean isLoaded = new AtomicBoolean(false);
+            /**
+             * {@link #startWebSocketServer()}
+             */
+            onLoadStateChanged.addAction((action, isLoading) -> {
+                if (!isLoading) {
+                    action.remove();
+                    isLoaded.set(true);
+                }
+            }, Exception::printStackTrace);
+
+            App.uis.all.add(this);
             init(startURL, isTransparent, isDecorated, widthPercent, heightPercent);
+
+            while (!isLoaded.get()) Thread.yield();
+
             AL.info("Init took " + (System.currentTimeMillis() - ms) + "ms for " + this);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -276,21 +298,40 @@ public abstract class UI {
     public Document getSnapshot() {
         if (content.element.parent() == null) {
             // First load
-            Document html = route.getDocument();
+            Document html = route.getBaseDocument();
             // Append styles
             Element elGlobalCSSLink = new Element("link");
             elGlobalCSSLink.attr("rel", "stylesheet");
             elGlobalCSSLink.attr("href", App.styles.getName());
             html.getElementsByTag("head").get(0).appendChild(elGlobalCSSLink);
 
-            Element elGlobalJSLink = new Element("script");
-            elGlobalJSLink.attr("src", App.javascript.getName());
-            html.getElementsByTag("head").get(0).appendChild(elGlobalJSLink);
-
             // Append actual content
             Element outlet = html.getElementById("outlet");
             content.updateAll();
             outlet.appendChild(content.element);
+
+            // Execute JS at the end, after all HTML was loaded
+            Element elJSConnectToBackendWS = new Element("script");
+            elJSConnectToBackendWS.html(
+                    "function onPageLoaded(callback) {\n" +
+                            "  async function notifyOnPageLoad() {\n" +
+                            "    if (document.readyState === 'complete') {\n" +
+                            //"      console.log('Page finished loading.');\n" +
+                            "      callback();\n" +
+                            "    } else {\n" +
+                            "      setTimeout(notifyOnPageLoad, 100); // 100ms\n" +
+                            "    }\n" +
+                            "  }\n" +
+                            "\n" +
+                            //"  console.log('Waiting for page to finish loading...');\n" +
+                            "  notifyOnPageLoad(); // Perform the initial check immediately\n" +
+                            "}\n\n" +
+                    startWebSocketClient(webSocketServer.domain, webSocketServer.port));
+            html.getElementsByTag("body").get(0).appendChild(elJSConnectToBackendWS);
+
+            Element elGlobalJSLink = new Element("script");
+            elGlobalJSLink.attr("src", App.javascript.getName());
+            html.getElementsByTag("body").get(0).appendChild(elGlobalJSLink);
             return html;
         } else {
             content.updateAll();
@@ -298,6 +339,29 @@ public abstract class UI {
             while ((html = html.parent()) != null) ;
             return (Document) html;
         }
+    }
+
+    public String startWebSocketClient(String serverDomain, int serverPort) {
+        String url = "ws://" + serverDomain + ":" + serverPort;
+        String jsCode = "try{    var webSocketServer = new WebSocket('" + url + "');\n" +
+                "window.webSocketServer = webSocketServer;\n" + // Make globally accessible
+                "console.log(\"Connecting to WebSocket server...\")\n"+
+                "\n" +
+                "    webSocketServer.addEventListener(\"open\", (event) => {\n" +
+                "      console.log('WebSocket connection established.');\n" +
+                "    });\n" +
+                "\n" +
+                "    webSocketServer.addEventListener(\"message\", (event) => {\n" +
+                "      // Receive a message from the server\n" +
+                "      var receivedMessage = event.data;\n" +
+                "      console.log('Received message from server:', receivedMessage);\n" +
+                "    });\n" +
+                "\n" +
+                "    webSocketServer.addEventListener(\"close\", (event) => {\n" +
+                "      console.log('WebSocket connection closed.');\n" +
+                "    });\n" +
+                "} catch (e) {console.error(e)}\n";
+        return jsCode;
     }
 
     /**
@@ -414,11 +478,20 @@ public abstract class UI {
         UI.remove(Thread.currentThread());
     }
 
+    public UI registerDocJSListener(String eventName, String jsOnEvent, Consumer<String> onEvent,
+                                 boolean waitUntilLoaded) {
+        return registerJSListener(eventName, null, jsOnEvent, onEvent, waitUntilLoaded);
+    }
+
     /**
-     * @see #registerJSListener(String, Component, String, Consumer)
+     * @see #registerJSListener(String, Component, String, Consumer, boolean)
      */
     public UI registerJSListener(String eventName, Component comp, Consumer<String> onEvent) {
-        return registerJSListener(eventName, comp, "", onEvent);
+        return registerJSListener(eventName, comp, "", onEvent, true);
+    }
+
+    public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent) {
+        return registerJSListener(eventName, comp, jsOnEvent, onEvent, true);
     }
 
     /**
@@ -426,14 +499,15 @@ public abstract class UI {
      * otherwise adds an action to {@link #onLoadStateChanged} to register the listener later.
      *
      * @param eventName name of the JavaScript event to listen for.
-     * @param comp      component to register the listener on.
+     * @param comp      component to register the listener on. If null, document will be used as component.
      * @param jsOnEvent additional JavaScript code that is run when the event is triggered and has access
      *                  to the variables:  <br>
      *                  message: which is the string that is returned to Java and contains the event as json object. <br>
      *                  event: which is the event object. <br>
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
-    public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent) {
+    public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent,
+                                 boolean waitUntilLoaded) {
         synchronized (listenersAndComps) {
             List<Component<?,?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
@@ -476,13 +550,19 @@ public abstract class UI {
                         }) + // JS code that triggers Java function gets executed on a click event for this component
                 "});\n";
 
-        if (!isLoading.get()) {
-            comp.executeJS(this, jsNow);
+        if(!waitUntilLoaded){
+            if (comp == null) executeJavaScript("let comp = document\n"+jsNow, "internal", 0);
+            else comp.executeJS(this, jsNow, false);
+        }
+        else if (!isLoading.get()) {
+            if (comp == null) executeJavaScript("let comp = document\n"+jsNow, "internal", 0);
+            else comp.executeJS(this, jsNow, true);
         }
         else onLoadStateChanged.addAction((action, isLoading) -> {
             if (isLoading) return;
             action.remove();
-            comp.executeJS(this, jsNow);
+                if (comp == null) executeJavaScript("let comp = document\n"+jsNow, "internal", 0);
+                else comp.executeJS(this, jsNow, true);
         }, AL::warn);
         return this;
     }
@@ -526,38 +606,27 @@ public abstract class UI {
      * @return
      */
     public synchronized void startWebSocketServer(String serverDomain, int serverPort) throws Exception {
-        webSocketServer = new WSServer(serverDomain, serverPort);
+        webSocketServer = new WSServer(serverDomain, serverPort){
+            @Override
+            public void onOpen(WebSocket conn, ClientHandshake handshake) {
+                super.onOpen(conn, handshake);
+                // Executed when client connects, since its executed at the end of the HTML body
+                // this tells us that the page is loaded for the first time too
+                AL.info(this+" init success!");
+                onLoadStateChanged.execute(false);
+            }
+        };
         serverPort = webSocketServer.port;
         AL.info("Started WebSocketServer " + serverDomain + ":" + serverPort + " for UI: " + this);
     }
 
-    public void startWebSocketClient(String serverDomain, int serverPort) {
-        String url = "ws://" + serverDomain + ":" + serverPort;
-        String jsCode = "    var webSocketServer = new WebSocket('" + url + "');\n" +
-                "window.webSocketServer = webSocketServer;\n" + // Make globally accessible
-                "\n" +
-                "    webSocketServer.onOpen = function(event) {\n" +
-                "      console.log('WebSocket connection established.');\n" +
-                "\n" +
-                "      // Send a message to the server\n" +
-                "      var message = 'Hello from the client!';\n" +
-                "      socket.send(message);\n" +
-                "    };\n" +
-                "\n" +
-                "    webSocketServer.onMessage = function(event) {\n" +
-                "      // Receive a message from the server\n" +
-                "      var receivedMessage = event.data;\n" +
-                "      console.log('Received message from server:', receivedMessage);\n" +
-                "    };\n" +
-                "\n" +
-                "    webSocketServer.onClose = function(event) {\n" +
-                "      console.log('WebSocket connection closed.');\n" +
-                "    };";
-        executeJavaScript(jsCode, "internal", 0);
-    }
-
     public String jsClientSendWebSocketMessage(String message) {
-        return "webSocketServer.send(" + message + ");\n";
+        return "if(webSocketServer.readyState != 1) {\n" +
+                "console.log(`Frontend and Backend are connected!`)\n" + // 1 == OPEN
+                "  webSocketServer.addEventListener(\"open\", (event) => {\n" +
+                "      webSocketServer.send(" + message + ");\n"+
+                "  });\n" +
+                "} else webSocketServer.send(" + message + ");\n";
     }
 
     public boolean isOpen() {
@@ -636,7 +705,7 @@ public abstract class UI {
         return "try{"+jsGetComp("parentComp", parent.id) +
                         "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
                         "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +
-                        "console.log('ADDED CHILD: ');\n"+
+                        //"console.log('ADDED CHILD: ');\n"+
                         "console.log(child);\n}catch(e){console.error(e)}";
     }
 

@@ -31,12 +31,12 @@ public class Table extends Component<Table, NoValue> {
         if(maxColumnWidthPercent < 0) return;
         maxColumnWidthPercent = (1.0 / headers.children.size()) * 100.0;
         for (Component<?,?> header : headers.children) {
-            header.putStyle("max-width", maxColumnWidthPercent+"%");
+            header.s("max-width", maxColumnWidthPercent+"%");
         }
         for (Component<?,?> row : rows.children) {
             CopyOnWriteArrayList<Component<?,?>> children1 = row.children.get(0).children;
             for (Component<?,?> rowColumn : children1) {
-                rowColumn.putStyle("max-width", maxColumnWidthPercent+"%");
+                rowColumn.s("max-width", maxColumnWidthPercent+"%");
             }
         }
     }
@@ -49,7 +49,7 @@ public class Table extends Component<Table, NoValue> {
            if(maxColumnWidthPercent > 0 && e.childComp instanceof Row){
                Row row = (Row) e.childComp;
                for (Component<?,?> rowColumn : row.children) {
-                   rowColumn.putStyle("max-width", maxColumnWidthPercent+"%");
+                   rowColumn.s("max-width", maxColumnWidthPercent+"%");
                }
            }
         });

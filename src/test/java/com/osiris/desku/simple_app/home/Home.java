@@ -80,7 +80,7 @@ public class Home extends Route {
                 comp.add(txt);
                 Thread.sleep(10000);
                 txt.setValue("Finished after 10 seconds!");
-                comp.putStyle("background", "#32a852");
+                comp.s("background", "#32a852");
             } catch (Exception e) {
                 AL.warn(e);
             }
@@ -113,11 +113,11 @@ public class Home extends Route {
         // Smart, mobile friendly layout
         ly.add(text("Smart, mobile friendly layout").sizeXXL());
         ly.add(smartlayout().add(
-                text("1").putStyle("background-color", "var(--color-primary-50)"),
-                text("2").putStyle("background-color", "var(--color-primary-50)"),
-                text("3").putStyle("background-color", "var(--color-primary-50)"),
-                text("4").putStyle("background-color", "var(--color-primary-50)"),
-                text("5").putStyle("background-color", "var(--color-primary-50)")));
+                text("1").s("background-color", "var(--color-primary-50)"),
+                text("2").s("background-color", "var(--color-primary-50)"),
+                text("3").s("background-color", "var(--color-primary-50)"),
+                text("4").s("background-color", "var(--color-primary-50)"),
+                text("5").s("background-color", "var(--color-primary-50)")));
         // Scroll layout
         ly.add(text("Scroll layout").sizeXXL());
         ly.add(
@@ -128,7 +128,7 @@ public class Home extends Route {
                         })
         );
         for (int i = 0; i < 20; i++) {
-            ly.lastChild().add(vertical().putStyle("background-color", "gray"));
+            ly.lastChild().add(vertical().s("background-color", "gray"));
         }
         // Page layout
         ly.add(text("Page layout").sizeXXL());
@@ -140,7 +140,7 @@ public class Home extends Route {
                 pagelayout().childGap(true).setDataProvider(0, 3, (details) -> {
                     List<Component<?,?>> comps = new ArrayList<>();
                     for (int i = Math.max(details.iStart, 0); i < Math.min(details.iEnd, data.length - 1); i++) {
-                        comps.add(text("Index: "+data[i]).width("100%").putStyle("background-color", "lightgray"));
+                        comps.add(text("Index: "+data[i]).width("100%").s("background-color", "lightgray"));
                     }
                     try{Thread.sleep(1000);} catch (Exception e) {}
                     return comps;
@@ -165,8 +165,8 @@ public class Home extends Route {
         //
         ly.add(text("Overlays").sizeXXL());
         ly.add(overlay(null).add(text("Overlay over the page")));
-        ly.verticalCL().putStyle("background-color", "blue").size("100px", "100px").add(
-                overlay(ly.lastChild()).putStyle("background-color", "red")
+        ly.verticalCL().s("background-color", "blue").size("100px", "100px").add(
+                overlay(ly.lastChild()).s("background-color", "red")
                         .add(text("Overlay over another component.")));
 
         //

@@ -19,7 +19,7 @@ public class TabLayout extends Component<TabLayout, NoValue> {
         Consumer<AddedChildEvent> superTabsAdd = tabs._add;
         tabs._add = e -> {
             e.childComp.addClass("nav-link");
-            e.childComp.putStyle("cursor", "pointer");
+            e.childComp.s("cursor", "pointer");
             e.childComp.onClick(c -> {
                 selectTab(e.childComp);
             });

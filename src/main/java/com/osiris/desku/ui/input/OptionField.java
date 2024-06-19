@@ -42,7 +42,7 @@ public class OptionField extends Component<OptionField, String> {
         // Lastly change add function:
         Consumer<AddedChildEvent> superItemsAdd = this.items._add;
         this._add = e -> {
-            e.childComp.putStyle("cursor", "pointer");
+            e.childComp.s("cursor", "pointer");
             e.childComp.onClick(click -> {
                 items.visible(false);
                 setValue(click.comp.element.text());

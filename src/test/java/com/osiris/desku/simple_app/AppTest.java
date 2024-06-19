@@ -21,7 +21,7 @@ class AppTest {
 
         // Create windows
         DesktopUI winHome = (DesktopUI) App.uis.create(home);
-        DesktopUI winHomeTransparent = (DesktopUI) App.uis.create(home, true, false, 30, 50);
+        //DesktopUI winHomeTransparent = (DesktopUI) App.uis.create(home, true, false, 30, 50);
         //new NativeWindow(about).plusX(20).plusY(20);
 
         // Exit main thread once all windows closed
