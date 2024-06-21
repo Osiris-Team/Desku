@@ -3,6 +3,7 @@ package com.osiris.desku.ui;
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.ui.utils.Rectangle;
+import com.osiris.desku.ui.utils.UnsafePortChrome;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.java_websocket.WebSocket;
@@ -569,11 +570,14 @@ public abstract class UI {
 
     public void startHTTPServer() throws Exception {
         int freePort = App.httpServerPort;
-        if (freePort == -1)
+        while (freePort == -1){
             try (ServerSocket serverSocket = new ServerSocket(0)) {
                 // Set the port to 0 to let the system allocate a free port
                 freePort = serverSocket.getLocalPort();
             }
+            if(new UnsafePortChrome().getPorts().contains(freePort)) freePort = -1;
+        }
+
         startHTTPServer(App.domainName, freePort);
     }
 

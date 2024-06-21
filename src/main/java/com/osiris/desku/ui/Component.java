@@ -6,14 +6,12 @@ import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.desku.ui.event.ScrollEvent;
 import com.osiris.desku.ui.event.ValueChangeEvent;
-import com.osiris.desku.ui.layout.Horizontal;
-import com.osiris.desku.ui.layout.Overlay;
-import com.osiris.desku.ui.layout.SmartLayout;
-import com.osiris.desku.ui.layout.Vertical;
+import com.osiris.desku.ui.layout.*;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Element;
 
@@ -328,13 +326,16 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * if this component is not attached yet. <br>
      * Your code will be encapsulated in a try/catch block and errors logged to
      * the clients JavaScript console. <br>
-     * A reference of this component will be added, thus you can access
+     * A reference of this component will be added before your code, thus you can access
      * this component via the "comp" variable in your provided JavaScript code.
      */
     public THIS executeJS(String code){
         return executeJS(UI.get(), code);
     }
 
+    /**
+     * @see #executeJS(String)
+     */
     public THIS executeJS(UI ui, String code){
         return executeJS(ui, code, true);
     }
@@ -1232,6 +1233,21 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 "\", inline: \"" +
                 inline +
                 "\" });");
+        return _this;
+    }
+
+    public @Nullable Tooltip tooltip = null;
+
+    public THIS setTooltip(String content){
+        this.tooltip = new Tooltip(this, content);
+        tooltip.attachToParent();
+        return _this;
+    }
+
+    public THIS setTooltip(Tooltip tooltip){
+        this.tooltip = tooltip;
+        tooltip.parent = this;
+        tooltip.attachToParent();
         return _this;
     }
 

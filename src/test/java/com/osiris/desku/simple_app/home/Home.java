@@ -10,6 +10,7 @@ import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.input.Button;
 import com.osiris.desku.ui.input.TextField;
 import com.osiris.desku.ui.layout.Horizontal;
+import com.osiris.desku.ui.layout.Popup;
 import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.jlib.logger.AL;
 
@@ -168,6 +169,12 @@ public class Home extends Route {
         ly.verticalCL().s("background-color", "blue").size("100px", "100px").add(
                 overlay(ly.lastChild()).s("background-color", "red")
                         .add(text("Overlay over another component.")));
+        ly.add(button("Show Popup").onClick(e -> {
+            var p = new Popup();
+            p.add(text("Hello from inside an popup!"));
+            ly.add(p);
+        }));
+        ly.add(button("Hover over me!").setTooltip("This is a tooltip!"));
 
         //
         // Inputs
