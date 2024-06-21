@@ -1,8 +1,5 @@
 package com.osiris.desku;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseResult;
-import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -14,8 +11,7 @@ import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import com.github.javaparser.ast.type.Type;
-import com.github.javaparser.ast.type.VarType;
+import com.github.javaparser.ast.type.TypeParameter;
 import com.osiris.desku.ui.Component;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -61,13 +57,8 @@ public class GenerateStatics {
                     return;
                 }
                 ClassOrInterfaceDeclaration fileCLASS = _fileCLASS.get();
-                boolean isComponent = false;
-                for (ClassOrInterfaceType extendedType : fileCLASS.getExtendedTypes()) {
-                    if(extendedType.getName().asString().equals(Component.class.getSimpleName())){
-                        isComponent = true;
-                        break;
-                    }
-                }
+                boolean isComponent = isComponent(fileCU, fileCLASS);
+
                 if(!isComponent) return;
                 System.out.println("Found Desku Component: "+f);
 
@@ -98,6 +89,13 @@ public class GenerateStatics {
                                     .setStatic(true).setPublic(true)
                                     .setJavadocComment(constructor.getJavadocComment().orElse(new JavadocComment("")))
                                     .setParameters(cparams);
+
+                            // Handle generic types
+                            NodeList<TypeParameter> typeParameters = fileCLASS.getTypeParameters();
+                            if (!typeParameters.isEmpty()) {
+                                staticMethod.setTypeParameters(typeParameters);
+                            }
+
                             countStaticMethods.incrementAndGet();
                             //System.out.println("Constructor to static method with params: "+cparams);
 
@@ -131,4 +129,66 @@ public class GenerateStatics {
         Files.write(staticsFile.toPath(), staticsCU.toString().getBytes(StandardCharsets.UTF_8));
         System.out.println("Finished successfully! Generated/Updated "+countStaticMethods.get()+" static methods. ");
     }
+
+    private boolean isComponent(CompilationUnit fileCU, ClassOrInterfaceDeclaration fileCLASS) {
+        for (ClassOrInterfaceType extendedType : fileCLASS.getExtendedTypes()) {
+            if (extendedType.getName().asString().equals(Component.class.getSimpleName())) {
+                return true;
+            }
+
+            String extendedClassName = extendedType.asClassOrInterfaceType().getNameWithScope();
+            Optional<ClassOrInterfaceDeclaration> extendedClass = findClassDeclaration(extendedClassName, fileCU);
+            if (extendedClass.isPresent() && isComponent(fileCU, extendedClass.get())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Optional<ClassOrInterfaceDeclaration> findClassDeclaration(String className, CompilationUnit currentCU) {
+        // Check if class is in the current compilation unit
+        Optional<ClassOrInterfaceDeclaration> classDecl = currentCU.getClassByName(className);
+        if (classDecl.isPresent()) {
+            return classDecl;
+        }
+
+        // Check if class is in imported packages
+        for (ImportDeclaration importDecl : currentCU.getImports()) {
+            String importName = importDecl.getNameAsString();
+            if (importName.endsWith("." + className)) {
+                try {
+                    Path classPath = findFileForClass(importName);
+                    if (classPath != null) {
+                        CompilationUnit importedCU = StaticJavaParser.parse(classPath);
+                        return importedCU.getClassByName(className);
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error parsing imported file: " + importName);
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // Check if class is in the same package
+        String packageName = currentCU.getPackageDeclaration().map(pd -> pd.getNameAsString() + ".").orElse("");
+        try {
+            Path classPath = findFileForClass(packageName + className);
+            if (classPath != null) {
+                CompilationUnit packageCU = StaticJavaParser.parse(classPath);
+                return packageCU.getClassByName(className);
+            }
+        } catch (IOException e) {
+            System.err.println("Error parsing file in same package: " + packageName + className);
+            e.printStackTrace();
+        }
+
+        return Optional.empty();
+    }
+
+    private Path findFileForClass(String className) {
+        String classPath = className.replace('.', '/') + ".java";
+        Path path = Paths.get(System.getProperty("user.dir"), "src/main/java", classPath);
+        return Files.exists(path) ? path : null;
+    }
+
 }

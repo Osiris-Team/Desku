@@ -57,7 +57,7 @@ public class Home extends Route {
         //
         // Events
         //
-        ly.add(text("Build Desktop Apps with Java/JS, HTML and CSS today! I am clickable text! Click me!").selfCenter().onClick(event -> {
+        ly.add(text("Build Desktop Apps with Java/JS, HTML and CSS today! I am clickable text! Click me!").selfCenter2().onClick(event -> {
             event.comp.setValue("Thank you for clicking!");
         }));
 
@@ -81,7 +81,7 @@ public class Home extends Route {
                 comp.add(txt);
                 Thread.sleep(10000);
                 txt.setValue("Finished after 10 seconds!");
-                comp.s("background", "#32a852");
+                comp.sty("background", "#32a852");
             } catch (Exception e) {
                 AL.warn(e);
             }
@@ -114,11 +114,11 @@ public class Home extends Route {
         // Smart, mobile friendly layout
         ly.add(text("Smart, mobile friendly layout").sizeXXL());
         ly.add(smartlayout().add(
-                text("1").s("background-color", "var(--color-primary-50)"),
-                text("2").s("background-color", "var(--color-primary-50)"),
-                text("3").s("background-color", "var(--color-primary-50)"),
-                text("4").s("background-color", "var(--color-primary-50)"),
-                text("5").s("background-color", "var(--color-primary-50)")));
+                text("1").sty("background-color", "var(--color-primary-50)"),
+                text("2").sty("background-color", "var(--color-primary-50)"),
+                text("3").sty("background-color", "var(--color-primary-50)"),
+                text("4").sty("background-color", "var(--color-primary-50)"),
+                text("5").sty("background-color", "var(--color-primary-50)")));
         // Scroll layout
         ly.add(text("Scroll layout").sizeXXL());
         ly.add(
@@ -129,7 +129,7 @@ public class Home extends Route {
                         })
         );
         for (int i = 0; i < 20; i++) {
-            ly.lastChild().add(vertical().s("background-color", "gray"));
+            ly.lastChild().add(vertical().sty("background-color", "gray"));
         }
         // Page layout
         ly.add(text("Page layout").sizeXXL());
@@ -141,7 +141,7 @@ public class Home extends Route {
                 pagelayout().childGap(true).setDataProvider(0, 3, (details) -> {
                     List<Component<?,?>> comps = new ArrayList<>();
                     for (int i = Math.max(details.iStart, 0); i < Math.min(details.iEnd, data.length - 1); i++) {
-                        comps.add(text("Index: "+data[i]).width("100%").s("background-color", "lightgray"));
+                        comps.add(text("Index: "+data[i]).width("100%").sty("background-color", "lightgray"));
                     }
                     try{Thread.sleep(1000);} catch (Exception e) {}
                     return comps;
@@ -166,8 +166,8 @@ public class Home extends Route {
         //
         ly.add(text("Overlays").sizeXXL());
         ly.add(overlay(null).add(text("Overlay over the page")));
-        ly.verticalCL().s("background-color", "blue").size("100px", "100px").add(
-                overlay(ly.lastChild()).s("background-color", "red")
+        ly.verticalCL().sty("background-color", "blue").size("100px", "100px").add(
+                overlay(ly.lastChild()).sty("background-color", "red")
                         .add(text("Overlay over another component.")));
         ly.add(button("Show Popup").onClick(e -> {
             var p = new Popup();
@@ -202,6 +202,9 @@ public class Home extends Route {
         // Fields
         ly.add(textfield("Text field label", "Def").onValueChange(e -> {
             AL.info("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
+        }));
+        ly.add(textarea("Text area label", "Def").onValueChange(e -> {
+            AL.info("Input of textarea changed: "+e.value+" before: "+e.valueBefore);
         }));
         ly.add(passwordfield("Password field label").onValueChange(e -> {
             AL.info("Input of passwordfield changed: "+e.value+" before: "+e.valueBefore);
@@ -290,7 +293,7 @@ public class Home extends Route {
         // UI
         //
         ly.add(text("UI/Window").sizeXXL());
-        ly.horizontalCL().childSpaceEvenly().add(
+        ly.horizontalCL().childSpaceEvenly1().add(
                 checkbox("maximize").onValueChange(e -> {
                     try{
                         UI.get().maximize(e.value);

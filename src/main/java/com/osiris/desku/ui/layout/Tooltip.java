@@ -12,8 +12,8 @@ public class Tooltip{
     }
 
     public Tooltip attachToParent(){
-        parent.a("data-bs-toggle", "tooltip");
-        parent.a("data-bs-title", content);
+        parent.atr("data-bs-toggle", "tooltip");
+        parent.atr("data-bs-title", content);
 
         parent.executeJS("new bootstrap.Tooltip(comp)");
         return this;

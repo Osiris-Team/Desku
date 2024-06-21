@@ -12,7 +12,7 @@ public class CheckBox extends Component<CheckBox, Boolean> {
     // Layout
     public Text label;
     public Input<Boolean> input = new Input<>("checkbox", false)
-            .addClass("form-check-input").addClass("mt-0");
+            .addClass("form-check-input").addClass("mt-0").sty("max-width", "20px");
 
     public CheckBox() {
         this("", false);
@@ -28,6 +28,7 @@ public class CheckBox extends Component<CheckBox, Boolean> {
 
     public CheckBox(Text label, boolean defaultValue) {
         super(defaultValue);
+        addClass("input-group");
         this.label = label;
         add(this.input, this.label);
         childGap(true);
@@ -36,7 +37,7 @@ public class CheckBox extends Component<CheckBox, Boolean> {
 
     @Override
     public CheckBox getValue(Consumer<Boolean> v) {
-        ga("checked", value -> {
+        gatr("checked", value -> {
             if (value.isEmpty()) v.accept(false);
             else v.accept(true);
         });
@@ -46,8 +47,8 @@ public class CheckBox extends Component<CheckBox, Boolean> {
     @Override
     public CheckBox setValue(Boolean v) {
         input.setValue(v);
-        if (v) input.a("checked");
-        else input.ra("checked");
+        if (v) input.atr("checked");
+        else input.ratr("checked");
         return this;
     }
 

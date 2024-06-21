@@ -34,21 +34,26 @@ public abstract class UI {
      * Boolean parameter isLoading, is true if still loading or false if finished loading.
      */
     public final Event<Boolean> onLoadStateChanged = new Event<>();
+    private final List<PendingAppend> pendingAppends = new ArrayList<>();
     /**
      * Last loaded html.
      */
     public Route route;
-    public Component<?,?> content;
+    public Component<?, ?> content;
     /**
      * Not thread safe, access inside synchronized block.
      */
-    public HashMap<String, List<Component<?,?>>> listenersAndComps = new HashMap<>();
+    public HashMap<String, List<Component<?, ?>>> listenersAndComps = new HashMap<>();
     public WSServer webSocketServer = null;
     public HTTPServer httpServer;
 
     public UI(Route route) throws Exception {
         this(route, false, true, 70, 60);
     }
+
+    //
+    // Abstract methods that require implementation
+    //
 
     public UI(Route route, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) throws Exception {
         startHTTPServer();
@@ -61,9 +66,39 @@ public abstract class UI {
 
     }
 
-    //
-    // Abstract methods that require implementation
-    //
+    /**
+     * Always null, except when code is running inside... <br>
+     * - {@link #access(Runnable)} <br>
+     * - constructor {@link #UI(Route, boolean, boolean, int, int)} when generating this UIs' HTML  for the first time. <br>
+     * - any triggered JavaScript event that was registered via {@link #registerJSListener(String, Component, Consumer)}. <br>
+     * or {@link #set(UI, Thread...)} was called before.
+     */
+    public static UI get() {
+        // Current code is not inside access(), thus we check the thread
+        synchronized (threadsAndUIs) {
+            return threadsAndUIs.get(Thread.currentThread());
+        }
+    }
+
+    /**
+     * Maps the provided threads to the provided UI, so that when calling
+     * {@link UI#get()} inside those threads it returns the provided UI.
+     */
+    public static void set(UI ui, Thread... threads) {
+        synchronized (threadsAndUIs) {
+            for (Thread t : threads) {
+                threadsAndUIs.put(t, ui);
+            }
+        }
+    }
+
+    public static void remove(Thread... threads) {
+        synchronized (threadsAndUIs) {
+            for (Thread t : threads) {
+                threadsAndUIs.remove(t);
+            }
+        }
+    }
 
     /**
      * Initialises/Displays the window and loads the HTML from the provided startURL.
@@ -107,11 +142,22 @@ public abstract class UI {
     public abstract void plusY(int y) throws InterruptedException, InvocationTargetException;
 
     /**
+     * Executes {@link #executeJavaScript(String, String, int)} (String, String, int)} only once the UI is loaded and after
+     * some internals JS dependencies are loaded.
+     *
+     * @see #getSnapshot() internal JS dependencies are added here.
+     */
+    public void executeJavaScriptSafely(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber) {
+        runIfReadyOrLater(() -> executeJavaScript(jsCode, jsCodeSourceName, jsCodeStartingLineNumber));
+    }
+
+    /**
      * Executes JavaScript code now. Method may wait until execution finishes, or not.
      * However, it must ensure that the code is executed in an orderly, synchronous fashion.
      * Meaning that the JavaScript code in the second call of this method, gets executed after the code in the first call.
-     * @param jsCode JavaScript (JS) code.
-     * @param jsCodeSourceName file name containing the JS code.
+     *
+     * @param jsCode                   JavaScript (JS) code.
+     * @param jsCodeSourceName         file name containing the JS code.
      * @param jsCodeStartingLineNumber line number/position the JS code starts in.
      */
     public abstract void executeJavaScript(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber);
@@ -140,6 +186,10 @@ public abstract class UI {
 
     public abstract Rectangle getScreenSizeWithoutTaskBar() throws InterruptedException, InvocationTargetException;
 
+    //
+    // Utility methods
+    //
+
     /**
      * If true decorates the window, otherwise removes the decoration.
      */
@@ -158,49 +208,10 @@ public abstract class UI {
     /**
      * Changes the windows background color. <br>
      * Also changes the background color of {@link #content} if not null. <br>
+     *
      * @param hexColor example: "#FF0000FF" (first 2 digits are red, then green, then blue, then alpha/opacity where 00 is transparent and FF fully visible).
      */
     public abstract void background(String hexColor) throws InterruptedException, InvocationTargetException;
-
-    //
-    // Utility methods
-    //
-
-    /**
-     * Always null, except when code is running inside... <br>
-     * - {@link #access(Runnable)} <br>
-     * - constructor {@link #UI(Route, boolean, boolean, int, int)} when generating this UIs' HTML  for the first time. <br>
-     * - any triggered JavaScript event that was registered via {@link #registerJSListener(String, Component, Consumer)}. <br>
-     * or {@link #set(UI, Thread...)} was called before.
-     */
-    public static UI get() {
-        // Current code is not inside access(), thus we check the thread
-        synchronized (threadsAndUIs) {
-            return threadsAndUIs.get(Thread.currentThread());
-        }
-    }
-
-    /**
-     * Maps the provided threads to the provided UI, so that when calling
-     * {@link UI#get()} inside those threads it returns the provided UI.
-     */
-    public static void set(UI ui, Thread... threads) {
-        synchronized (threadsAndUIs) {
-            for (Thread t : threads) {
-                threadsAndUIs.put(t, ui);
-            }
-        }
-    }
-
-    public static void remove(Thread... threads) {
-        synchronized (threadsAndUIs) {
-            for (Thread t : threads) {
-                threadsAndUIs.remove(t);
-            }
-        }
-    }
-
-    private final List<PendingAppend> pendingAppends = new ArrayList<>();
 
     /**
      * Executes JavaScript to navigate to another route. <br>
@@ -220,11 +231,11 @@ public abstract class UI {
                     + "' was not registered, aka not added to App.routes!", new Exception());
             return;
         }
-        executeJavaScript("window.location.href = `" + route.path + "`;", "internal", 0);
+        executeJavaScriptSafely("window.location.href = `" + route.path + "`;", "internal", 0);
     }
 
-    public void reload(){
-        executeJavaScript("window.location.reload();", "internal", 0);
+    public void reload() {
+        executeJavaScriptSafely("window.location.reload();", "internal", 0);
     }
 
     /**
@@ -235,9 +246,9 @@ public abstract class UI {
         code.run();
         UI.remove(Thread.currentThread());
 
-        synchronized (pendingAppends){
+        synchronized (pendingAppends) {
             for (PendingAppend pendingAppend : pendingAppends) {
-                try{
+                try {
                     attachToParentSafely(pendingAppend);
                 } catch (Exception e) {
                     AL.warn(e);
@@ -254,21 +265,23 @@ public abstract class UI {
             AL.info("Waiting for it to finish loading... Please stand by...");
             long ms = System.currentTimeMillis();
 
-            AtomicBoolean isLoaded = new AtomicBoolean(false);
             /**
              * {@link #startWebSocketServer()}
              */
-            onLoadStateChanged.addAction((action, isLoading) -> {
-                if (!isLoading) {
-                    action.remove();
-                    isLoaded.set(true);
+            onLoadStateChanged.addAction((action, isLoading2) -> {
+                synchronized (isLoading) {
+                    if (!isLoading2) {
+                        action.remove();
+                        isLoading.set(false);
+                    }
                 }
+
             }, Exception::printStackTrace);
 
             App.uis.all.add(this);
             init(startURL, isTransparent, isDecorated, widthPercent, heightPercent);
 
-            while (!isLoaded.get()) Thread.yield();
+            while (isLoading.get()) Thread.yield();
 
             AL.info("Init took " + (System.currentTimeMillis() - ms) + "ms for " + this);
         } catch (Exception e) {
@@ -311,7 +324,13 @@ public abstract class UI {
             content.updateAll();
             outlet.appendChild(content.element);
 
-            // Execute JS at the end, after all HTML was loaded
+            // Execute global JS code to ensure dependencies are loaded
+            Element elGlobalJSLink = new Element("script");
+            elGlobalJSLink.attr("src", App.javascript.getName());
+            html.getElementsByTag("body").get(0).appendChild(elGlobalJSLink);
+
+            // Execute JS at the end, after all HTML was loaded, which
+            // notify Java that we are ready to execute JavaScript
             Element elJSConnectToBackendWS = new Element("script");
             elJSConnectToBackendWS.html(
                     "function onPageLoaded(callback) {\n" +
@@ -327,12 +346,8 @@ public abstract class UI {
                             //"  console.log('Waiting for page to finish loading...');\n" +
                             "  notifyOnPageLoad(); // Perform the initial check immediately\n" +
                             "}\n\n" +
-                    startWebSocketClient(webSocketServer.domain, webSocketServer.port));
+                            startWebSocketClient(webSocketServer.domain, webSocketServer.port));
             html.getElementsByTag("body").get(0).appendChild(elJSConnectToBackendWS);
-
-            Element elGlobalJSLink = new Element("script");
-            elGlobalJSLink.attr("src", App.javascript.getName());
-            html.getElementsByTag("body").get(0).appendChild(elGlobalJSLink);
             return html;
         } else {
             content.updateAll();
@@ -346,7 +361,7 @@ public abstract class UI {
         String url = "ws://" + serverDomain + ":" + serverPort;
         String jsCode = "try{    var webSocketServer = new WebSocket('" + url + "');\n" +
                 "window.webSocketServer = webSocketServer;\n" + // Make globally accessible
-                "console.log(\"Connecting to WebSocket server...\")\n"+
+                "console.log(\"Connecting to WebSocket server...\")\n" +
                 "\n" +
                 "    webSocketServer.addEventListener(\"open\", (event) => {\n" +
                 "      console.log('WebSocket connection established.');\n" +
@@ -414,17 +429,17 @@ public abstract class UI {
     /**
      * Returns new JS (JavaScript) code, that when executed in client browser
      * results in onJSFunctionExecuted being executed. <br><br>
-     *
+     * <p>
      * It wraps around your jsCode and adds callback related stuff, as well as error handling. <br><br>
-     *
+     * <p>
      * Its a permanent callback, because the returned JS code can be executed multiple times
      * which results in onJSFunctionExecuted or onJSFuntionFailed to get executed multiple times too. <br><br>
-     *
+     * <p>
      * Also appends a check to the JS code that sets message="" if it was null/undefined.<br><br>
      *
-     * @param jsCode               modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
-     *                             Your JS code could look like this: <br>
-     *                             message = 'first second third etc...';
+     * @param jsCode    modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
+     *                  Your JS code could look like this: <br>
+     *                  message = 'first second third etc...';
      * @param onSuccess executed when the provided jsCode executes successfully. String contains the message variable that can be set in your jsCode.
      * @param onError   executed when the provided jsCode threw an exception. String contains details about the exception/error.
      */
@@ -472,15 +487,11 @@ public abstract class UI {
             child.setAttached(true);
         });
         this.content.setAttached(true);
-        onLoadStateChanged.addAction((isLoading) -> {
-            if (isLoading) return;
-            this.isLoading.set(false);
-        });
         UI.remove(Thread.currentThread());
     }
 
     public UI registerDocJSListener(String eventName, String jsOnEvent, Consumer<String> onEvent,
-                                 boolean waitUntilLoaded) {
+                                    boolean waitUntilLoaded) {
         return registerJSListener(eventName, null, jsOnEvent, onEvent, waitUntilLoaded);
     }
 
@@ -510,7 +521,7 @@ public abstract class UI {
     public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent,
                                  boolean waitUntilLoaded) {
         synchronized (listenersAndComps) {
-            List<Component<?,?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
+            List<Component<?, ?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
                 alreadyRegisteredComps = new ArrayList<>();
                 listenersAndComps.put(eventName, alreadyRegisteredComps);
@@ -521,61 +532,59 @@ public abstract class UI {
         }
         String jsNow =
                 "comp.addEventListener(\"" + eventName + "\", (event) => {\n" +
-                jsAddPermanentCallback("function getObjProps(obj) {\n" +
-                                "  var json = '{';\n" +
-                                "  for (const key in obj) {\n" +
-                                "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
-                                "      if(key == 'data') continue;\n" + // Skip data since it's the same as value
-                                "      json += (`\"${key}\": \"${obj[key]}\",`);\n" + // Also hope that values do not contain JSON breaking chars
-                                "    }\n" +
-                                "  }\n" +
-                                "  if(json[json.length-1] == ',') json = json.slice(0, json.length-1);" + // Remove last ,
-                                "  json += '}';\n" +
-                                "  return json;\n" +
-                                "}" +
-                                "message = getObjProps(event)\n" +
-                                jsOnEvent,
-                        (message) -> {
-                            App.executor.execute(() -> { // async
-                                access(() -> {
-                                    try {
-                                        onEvent.accept(message); // Should execute all listeners
-                                    } catch (Exception e) {
-                                        AL.warn(e);
-                                    }
-                                });
-                            });
-                        },
-                        (error) -> {
-                            throw new RuntimeException(error);
-                        }) + // JS code that triggers Java function gets executed on a click event for this component
-                "});\n";
+                        jsAddPermanentCallback("function getObjProps(obj) {\n" +
+                                        "  var json = '{';\n" +
+                                        "  for (const key in obj) {\n" +
+                                        "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
+                                        "      if(key == 'data') continue;\n" + // Skip data since it's the same as value
+                                        "      json += (`\"${key}\": \"${obj[key]}\",`);\n" + // Also hope that values do not contain JSON breaking chars
+                                        "    }\n" +
+                                        "  }\n" +
+                                        "  if(json[json.length-1] == ',') json = json.slice(0, json.length-1);" + // Remove last ,
+                                        "  json += '}';\n" +
+                                        "  return json;\n" +
+                                        "}" +
+                                        "message = getObjProps(event)\n" +
+                                        jsOnEvent,
+                                (message) -> {
+                                    App.executor.execute(() -> { // async
+                                        access(() -> {
+                                            try {
+                                                onEvent.accept(message); // Should execute all listeners
+                                            } catch (Exception e) {
+                                                AL.warn(e);
+                                            }
+                                        });
+                                    });
+                                },
+                                (error) -> {
+                                    throw new RuntimeException(error);
+                                }) + // JS code that triggers Java function gets executed on a click event for this component
+                        "});\n";
 
-        if(!waitUntilLoaded){
-            if (comp == null) executeJavaScript("let comp = document\n"+jsNow, "internal", 0);
-            else comp.executeJS(this, jsNow, false);
-        }
-        else if (!isLoading.get()) {
-            if (comp == null) executeJavaScript("let comp = document\n"+jsNow, "internal", 0);
-            else comp.executeJS(this, jsNow, true);
-        }
-        else onLoadStateChanged.addAction((action, isLoading) -> {
+        if (!waitUntilLoaded) {
+            if (comp == null) executeJavaScript("let comp = document\n" + jsNow, "internal", 0);
+            else comp.executeJS(this, jsNow);
+        } else if (!isLoading.get()) {
+            if (comp == null) executeJavaScriptSafely("let comp = document\n" + jsNow, "internal", 0);
+            else comp.executeJS(this, jsNow);
+        } else onLoadStateChanged.addAction((action, isLoading) -> {
             if (isLoading) return;
             action.remove();
-                if (comp == null) executeJavaScript("let comp = document\n"+jsNow, "internal", 0);
-                else comp.executeJS(this, jsNow, true);
+            if (comp == null) executeJavaScriptSafely("let comp = document\n" + jsNow, "internal", 0);
+            else comp.executeJS(this, jsNow);
         }, AL::warn);
         return this;
     }
 
     public void startHTTPServer() throws Exception {
         int freePort = App.httpServerPort;
-        while (freePort == -1){
+        while (freePort == -1) {
             try (ServerSocket serverSocket = new ServerSocket(0)) {
                 // Set the port to 0 to let the system allocate a free port
                 freePort = serverSocket.getLocalPort();
             }
-            if(new UnsafePortChrome().getPorts().contains(freePort)) freePort = -1;
+            if (new UnsafePortChrome().getPorts().contains(freePort)) freePort = -1;
         }
 
         startHTTPServer(App.domainName, freePort);
@@ -610,13 +619,13 @@ public abstract class UI {
      * @return
      */
     public synchronized void startWebSocketServer(String serverDomain, int serverPort) throws Exception {
-        webSocketServer = new WSServer(serverDomain, serverPort){
+        webSocketServer = new WSServer(serverDomain, serverPort) {
             @Override
             public void onOpen(WebSocket conn, ClientHandshake handshake) {
                 super.onOpen(conn, handshake);
                 // Executed when client connects, since its executed at the end of the HTML body
                 // this tells us that the page is loaded for the first time too
-                AL.info(this+" init success!");
+                AL.info(this + " init success!");
                 onLoadStateChanged.execute(false);
             }
         };
@@ -628,7 +637,7 @@ public abstract class UI {
         return "if(webSocketServer.readyState != 1) {\n" +
                 "console.log(`Frontend and Backend are connected!`)\n" + // 1 == OPEN
                 "  webSocketServer.addEventListener(\"open\", (event) => {\n" +
-                "      webSocketServer.send(" + message + ");\n"+
+                "      webSocketServer.send(" + message + ");\n" +
                 "  });\n" +
                 "} else webSocketServer.send(" + message + ");\n";
     }
@@ -646,18 +655,18 @@ public abstract class UI {
      * performing the pending append operation.
      */
     private void attachToParentSafely(PendingAppend pendingAppend) {
-        if(pendingAppend.child.isAttached()) return;
+        if (pendingAppend.child.isAttached()) return;
 
         List<MyElement> parents = new ArrayList<>();
         MyElement parent = pendingAppend.parent.element;
-        while(parent != null && parent instanceof MyElement){
+        while (parent != null && parent instanceof MyElement) {
             parents.add(parent); // Make sure that the last attached parent is given too
-            if(parent.comp.isAttached()) break;
+            if (parent.comp.isAttached()) break;
             Element p = parent.parent();
-            if(p instanceof MyElement) parent = (MyElement) p;
+            if (p instanceof MyElement) parent = (MyElement) p;
             else break;
         }
-        if(parents.size() >= 2){
+        if (parents.size() >= 2) {
             MyElement rootParentParent = parents.get(parents.size() - 1); // attached
             MyElement rootParent = parents.get(parents.size() - 2); // not attached yet
             // If this gets appended, there is no need of
@@ -669,19 +678,19 @@ public abstract class UI {
             // thus next attachToParentSafely() will return directly without doing nothing,
             // and thus all pending appends for those children will not be executed,
             // since otherwise that would cause duplicate components
-        } else{
+        } else {
             pendingAppend.child.updateAll();
             attachToParent(pendingAppend.parent, pendingAppend.child, pendingAppend.e);
         }
     }
 
-    public void attachWhenAccessEnds(Component<?,?> parent, Component<?,?> child, Component.AddedChildEvent e) {
-        synchronized (pendingAppends){
+    public void attachWhenAccessEnds(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
+        synchronized (pendingAppends) {
             pendingAppends.add(new PendingAppend(parent, child, e));
         }
     }
 
-    public <T extends Component<?,?>> void attachToParent(Component<?,?> parent, Component<?,?> child, Component.AddedChildEvent e) {
+    public <T extends Component<?, ?>> void attachToParent(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
         //AL.info("attachToParent() "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached()+") ++++ "+
         //        child.getClass().getSimpleName()+"("+child.id+") ");
 
@@ -694,7 +703,7 @@ public abstract class UI {
             });
         } else if (e.isInsert || e.isReplace) { // for replace, remove() must be executed after this function returns
             executeJavaScript(
-                            jsGetComp("otherChildComp", e.otherChildComp.id) +
+                    jsGetComp("otherChildComp", e.otherChildComp.id) +
                             "var child = `" + e.childComp.element.outerHtml() + "`;\n" +
                             "otherChildComp.insertAdjacentHTML(\"beforebegin\", child);\n",
                     "internal", 0);
@@ -705,20 +714,32 @@ public abstract class UI {
         }
     }
 
-    public String jsAttachToParent(Component<?,?> parent, Component<?,?> child) {
-        return "try{"+jsGetComp("parentComp", parent.id) +
-                        "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
-                        "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +
-                        //"console.log('ADDED CHILD: ');\n"+
-                        "console.log(child);\n}catch(e){console.error(e)}";
+    public String jsAttachToParent(Component<?, ?> parent, Component<?, ?> child) {
+        return "try{" + jsGetComp("parentComp", parent.id) +
+                "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
+                "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +
+                //"console.log('ADDED CHILD: ');\n"+
+                //"console.log(child);\n" +
+                "\n}catch(e){console.error(e)}";
     }
 
-    private class PendingAppend{
-        public Component<?,?> parent;
-        public Component<?,?> child;
+    public void runIfReadyOrLater(Runnable code) {
+        synchronized (isLoading){
+            if (!isLoading.get()) code.run();
+            else onLoadStateChanged.addAction((action, isLoading) -> {
+                if (isLoading) return;
+                action.remove();
+                code.run();
+            }, AL::warn);
+        }
+    }
+
+    private class PendingAppend {
+        public Component<?, ?> parent;
+        public Component<?, ?> child;
         public Component.AddedChildEvent e;
 
-        public PendingAppend(Component<?,?> parent, Component<?,?> child, Component.AddedChildEvent e) {
+        public PendingAppend(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
             this.parent = parent;
             this.child = child;
             this.e = e;

@@ -140,8 +140,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             if (child.element.parent() != null)
                 child.element.remove();
             child.update();
-            if (!ui.isLoading.get())
-                ui.executeJavaScript(ui.jsGetComp("comp", id) +
+            ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
                                 ui.jsGetComp("childComp", child.id) +
                                 "comp.removeChild(childComp);\n",
                         "internal", 0);
@@ -261,7 +260,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         this.internalValueClass = valueClass;
         this.element = new MyElement(this, tag);
         element.attr("java-id", String.valueOf(id));
-        a("value", ValueChangeEvent.getStringFromValue(value, this));
+        atr("value", ValueChangeEvent.getStringFromValue(value, this));
         // Do not use setValue since that might be overwritten by extending class and thus cause issues
     }
 
@@ -285,7 +284,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         if(isFirstAdd) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
         else
-            ga("value", value -> {
+            gatr("value", value -> {
                 v.accept(ValueChangeEvent.getValueFromString(value, this));
             });
         return _this;
@@ -297,7 +296,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public THIS setValue(VALUE v) {
         this.internalValue = v;
-        a("value", ValueChangeEvent.getStringFromValue(v, this));
+        atr("value", ValueChangeEvent.getStringFromValue(v, this));
         return _this;
     }
 
@@ -337,15 +336,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * @see #executeJS(String)
      */
     public THIS executeJS(UI ui, String code){
-        return executeJS(ui, code, true);
-    }
-
-    /**
-     * @see #executeJS(String)
-     */
-    public THIS executeJS(UI ui, String code, boolean waitUntilLoaded){
-        if(isAttached || !waitUntilLoaded){
-            ui.executeJavaScript(
+        if(isAttached){
+            ui.executeJavaScriptSafely(
                     "try{"+
                             ui.jsGetComp("comp", id) +
                             code+
@@ -353,7 +345,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                     "internal", 0);
         } else{ // Execute code once attached
             _onAttached.addOneTimeAction((event, action) -> {
-                ui.executeJavaScript(
+                ui.executeJavaScriptSafely(
                         "try{"+
                                 ui.jsGetComp("comp", id) +
                                 code+
@@ -424,13 +416,13 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     public THIS laterWithOverlay(BiConsumer<THIS, Overlay> code) {
         later(_this -> {
             Overlay overlay = new Overlay(this)
-                    .childCenter().s("background", "rgba(0,0,0,0.3)")
+                    .childCenter1().sty("background", "rgba(0,0,0,0.3)")
                     .sizeFull();
             add(overlay);
             overlay.add(new Text("Loading...")
-                    .s("color", "white").sizeXL().selfCenter());
+                    .sty("color", "white").sizeXL().selfCenter2());
             overlay.add(new Text("This might take a while, please be patient.")
-                    .s("color", "white").sizeS().selfCenter());
+                    .sty("color", "white").sizeS().selfCenter2());
             code.accept(this._this, overlay);
             remove(overlay);
         });
@@ -521,7 +513,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Short for put style. <br>
      */
-    public THIS s(String key, String val) {
+    public THIS sty(String key, String val) {
         _styleChange.accept(new Attribute(key, val));
         return _this;
     }
@@ -529,7 +521,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Short for remove style. <br>
      */
-    public THIS rs(String key) {
+    public THIS rsty(String key) {
         _styleChange.accept(new Attribute(key, ""));
         return _this;
     }
@@ -538,7 +530,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Short for put attribute. <br>
      * Adds the attribute/key without its value.
      */
-    public THIS a(String key) {
+    public THIS atr(String key) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), true));
         return _this;
     }
@@ -546,7 +538,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Short for put attribute and value. <br>
      */
-    public THIS a(String key, String val) {
+    public THIS atr(String key, String val) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, val), true));
         return _this;
     }
@@ -554,7 +546,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Short for remove attribute. <br>
      */
-    public THIS ra(String key) {
+    public THIS ratr(String key) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), false));
         return _this;
     }
@@ -563,7 +555,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Short for get attribute value. <br>
      * Returns the value for the provided attribute key and an empty String if no key found or when value is null/undefined.
      */
-    public void ga(String key, Consumer<String> onValueReturned) {
+    public void gatr(String key, Consumer<String> onValueReturned) {
         executeJS("message = comp.getAttribute(`" + key + "`)", onValueReturned, AL::warn);
     }
 
@@ -655,8 +647,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Sets width and height of the target component and return it for method chaining.
      */
     public THIS size(String width, String height) {
-        s("width", width);
-        s("height", height);
+        sty("width", width);
+        sty("height", height);
         return _this;
     }
 
@@ -664,7 +656,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Sets width of the target component and return it for method chaining.
      */
     public THIS width(String s) {
-        s("width", s);
+        sty("width", s);
         return _this;
     }
 
@@ -672,44 +664,44 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Sets height of the target component and return it for method chaining.
      */
     public THIS height(String s) {
-        s("height", s);
+        sty("height", s);
         return _this;
     }
 
     public THIS padding(boolean b) {
-        if (b) s("padding", "var(--space-s)");
-        else rs("padding");
+        if (b) sty("padding", "var(--space-s)");
+        else rsty("padding");
         return _this;
     }
 
     public THIS padding(String s) {
-        s("padding", s);
+        sty("padding", s);
         return _this;
     }
 
     public THIS paddingLeft(String s) {
-        s("padding-left", s);
+        sty("padding-left", s);
         return _this;
     }
 
     public THIS paddingRight(String s) {
-        s("padding-right", s);
+        sty("padding-right", s);
         return _this;
     }
 
     public THIS paddingTop(String s) {
-        s("padding-top", s);
+        sty("padding-top", s);
         return _this;
     }
 
     public THIS paddingBottom(String s) {
-        s("padding-bottom", s);
+        sty("padding-bottom", s);
         return _this;
     }
 
     public THIS margin(boolean b) {
-        if (b) s("margin", "var(--space-s)");
-        else rs("margin");
+        if (b) sty("margin", "var(--space-s)");
+        else rsty("margin");
         return _this;
     }
 
@@ -719,11 +711,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     public THIS visible(boolean b) {
         if (b) {
-            rs("display");
-            rs("visibility");
+            rsty("display");
+            rsty("visibility");
         } else {
-            s("display", "none");
-            s("visibility", "hidden");
+            sty("display", "none");
+            sty("visibility", "hidden");
         }
         return _this;
     }
@@ -748,19 +740,19 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             if (!changedAddToSupportScroll) {
                 changedAddToSupportScroll = true;
                 for (Component<?,?> c : children) {
-                    c.s("min-width", minChildWidth);
-                    c.s("min-height", minChildHeight);
+                    c.sty("min-width", minChildWidth);
+                    c.sty("min-height", minChildHeight);
                 }
                 Consumer<AddedChildEvent> superAdd = _add;
                 _add = e -> {
-                    e.childComp.s("min-width", minChildWidth);
-                    e.childComp.s("min-height", minChildHeight);
+                    e.childComp.sty("min-width", minChildWidth);
+                    e.childComp.sty("min-height", minChildHeight);
                     superAdd.accept(e);
                 };
             }
             overflowAuto();
         } else {
-            rs("overflow");
+            rsty("overflow");
         }
         return _this;
     }
@@ -770,7 +762,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * thus enforcing its default state/style.
      */
     public THIS overflowDefault() {
-        rs("overflow");
+        rsty("overflow");
         return _this;
     }
 
@@ -778,7 +770,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * By default, the overflow is visible, meaning that it is not clipped and it renders outside the element's box.
      */
     public THIS overflowVisible() {
-        s("overflow", "visible");
+        sty("overflow", "visible");
         return _this;
     }
 
@@ -786,7 +778,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * With the hidden value, the overflow is clipped, and the rest of the content is hidden.
      */
     public THIS overflowHidden() {
-        s("overflow", "hidden");
+        sty("overflow", "hidden");
         return _this;
     }
 
@@ -796,7 +788,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Thus {@link #overflowAuto()} might be better suited.
      */
     public THIS overflowScroll() {
-        s("overflow", "scroll");
+        sty("overflow", "scroll");
         return _this;
     }
 
@@ -804,7 +796,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * The auto value is similar to scroll, but it adds scrollbars only when necessary.
      */
     public THIS overflowAuto() {
-        s("overflow", "auto");
+        sty("overflow", "auto");
         return _this;
     }
 
@@ -815,7 +807,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Default: 0 <br>
      */
     public THIS order(int i) {
-        s("order", String.valueOf(i));
+        sty("order", String.valueOf(i));
         return _this;
     }
 
@@ -824,7 +816,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * thus enforcing its default state/style.
      */
     public THIS orderDefault() {
-        rs("order");
+        rsty("order");
         return _this;
     }
 
@@ -842,7 +834,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Default: 0 <br>
      */
     public THIS grow(int i) {
-        s("flex-grow", String.valueOf(i));
+        sty("flex-grow", String.valueOf(i));
         return _this;
     }
 
@@ -851,7 +843,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * thus enforcing its default state/style.
      */
     public THIS growDefault() {
-        rs("flex-grow");
+        rsty("flex-grow");
         return _this;
     }
 
@@ -861,7 +853,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Default: 1 <br>
      */
     public THIS shrink(int i) {
-        s("flex-shrink", String.valueOf(i));
+        sty("flex-shrink", String.valueOf(i));
         return _this;
     }
 
@@ -870,7 +862,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * thus enforcing its default state/style.
      */
     public THIS shrinkDefault() {
-        rs("flex-shrink");
+        rsty("flex-shrink");
         return _this;
     }
 
@@ -881,10 +873,61 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * true/wrap: flex items will wrap onto multiple lines, from top to bottom. <br>
      */
     public THIS wrap(boolean b) {
-        if (b) s("flex-wrap", "wrap");
-        else s("flex-wrap", "nowrap");
+        if (b) sty("flex-wrap", "wrap");
+        else sty("flex-wrap", "nowrap");
         return _this;
     }
+
+    /**
+     * justify-self <br>
+     * The element is positioned at the beginning of the container. <br>
+     */
+    public THIS selfStart1() {
+        sty("justify-self", "flex-start");
+        return _this;
+    }
+
+    /**
+     * The element is positioned at the end of the container.
+     *
+     * @see #selfStart1()
+     */
+    public THIS selfEnd1() {
+        sty("justify-self", "flex-end");
+        return _this;
+    }
+
+    /**
+     * The element is positioned at the center of the container.
+     *
+     * @see #selfStart1()
+     */
+    public THIS selfCenter1() {
+        sty("justify-self", "center");
+        return _this;
+    }
+
+    /**
+     * Default. The element inherits its parent container's align-items property,
+     * or "stretch" if it has no parent container.
+     *
+     * @see #selfStart1()
+     */
+    public THIS selfAuto1() {
+        sty("justify-self", "auto");
+        return _this;
+    }
+
+    /**
+     * The element is positioned to fit the container.
+     *
+     * @see #selfStart1()
+     */
+    public THIS selfStretch1() {
+        sty("justify-self", "stretch");
+        return _this;
+    }
+
 
     /**
      * align-self <br>
@@ -893,28 +936,28 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * to be overridden for individual flex items. <br>
      * Note that float, clear and vertical-align have no effect on a flex item.
      */
-    public THIS selfStart() {
-        s("align-self", "flex-start");
+    public THIS selfStart2() {
+        sty("align-self", "flex-start");
         return _this;
     }
 
     /**
      * The element is positioned at the end of the container.
      *
-     * @see #selfStart()
+     * @see #selfStart2()
      */
-    public THIS selfEnd() {
-        s("align-self", "flex-end");
+    public THIS selfEnd2() {
+        sty("align-self", "flex-end");
         return _this;
     }
 
     /**
      * The element is positioned at the center of the container.
      *
-     * @see #selfStart()
+     * @see #selfStart2()
      */
-    public THIS selfCenter() {
-        s("align-self", "center");
+    public THIS selfCenter2() {
+        sty("align-self", "center");
         return _this;
     }
 
@@ -922,20 +965,20 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Default. The element inherits its parent container's align-items property,
      * or "stretch" if it has no parent container.
      *
-     * @see #selfStart()
+     * @see #selfStart2()
      */
-    public THIS selfAuto() {
-        s("align-self", "auto");
+    public THIS selfAuto2() {
+        sty("align-self", "auto");
         return _this;
     }
 
     /**
      * The element is positioned to fit the container.
      *
-     * @see #selfStart()
+     * @see #selfStart2()
      */
-    public THIS selfStretch() {
-        s("align-self", "stretch");
+    public THIS selfStretch2() {
+        sty("align-self", "stretch");
         return _this;
     }
 
@@ -943,7 +986,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Aligns items top to bottom.
      */
     public THIS childVertical() {
-        s("flex-direction", "column");
+        sty("flex-direction", "column");
         return _this;
     }
 
@@ -951,7 +994,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * (Default) Aligns items left to right in ltr; right to left in rtl.
      */
     public THIS childHorizontal() {
-        s("flex-direction", "row");
+        sty("flex-direction", "row");
         return _this;
     }
 
@@ -989,8 +1032,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * justify-content (along primary axis) <br>
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
-    public THIS childStart() {
-        s("justify-content", "flex-start");
+    public THIS childStart1() {
+        sty("justify-content", "flex-start");
         return _this;
     }
 
@@ -998,8 +1041,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * justify-content (along primary axis) <br>
      * flex-end: items are packed toward the end of the flex-direction.
      */
-    public THIS childEnd() {
-        s("justify-content", "flex-end");
+    public THIS childEnd1() {
+        sty("justify-content", "flex-end");
         return _this;
     }
 
@@ -1007,8 +1050,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * justify-content (along primary axis) <br>
      * center: items are centered along the line
      */
-    public THIS childCenter() {
-        s("justify-content", "center");
+    public THIS childCenter1() {
+        sty("justify-content", "center");
         return _this;
     }
 
@@ -1016,8 +1059,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * justify-content (along primary axis) <br>
      * space-between: items are evenly distributed in the line; first item is on the start line, last item on the end line
      */
-    public THIS childSpaceBetween() {
-        s("justify-content", "space-between");
+    public THIS childSpaceBetween1() {
+        sty("justify-content", "space-between");
         return _this;
     }
 
@@ -1029,8 +1072,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * against the container edge, but two units of space between
      * the next item because that next item has its own spacing that applies.
      */
-    public THIS childSpaceAround() {
-        s("justify-content", "space-around");
+    public THIS childSpaceAround1() {
+        sty("justify-content", "space-around");
         return _this;
     }
 
@@ -1039,8 +1082,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * space-evenly: items are distributed so that the spacing
      * between any two items (and the space to the edges) is equal.
      */
-    public THIS childSpaceEvenly() {
-        s("justify-content", "space-around");
+    public THIS childSpaceEvenly1() {
+        sty("justify-content", "space-around");
         return _this;
     }
 
@@ -1049,7 +1092,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * flex-start (default): items are packed toward the start of the flex-direction.
      */
     public THIS childStart2() {
-        s("align-items", "flex-start");
+        sty("align-items", "flex-start");
         return _this;
     }
 
@@ -1058,7 +1101,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * flex-end: items are packed toward the end of the flex-direction.
      */
     public THIS childEnd2() {
-        s("align-items", "flex-end");
+        sty("align-items", "flex-end");
         return _this;
     }
 
@@ -1067,7 +1110,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * center: items are centered along the line
      */
     public THIS childCenter2() {
-        s("align-items", "center");
+        sty("align-items", "center");
         return _this;
     }
 
@@ -1076,7 +1119,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * stretch: stretch to fill the container (still respect min-width/max-width)
      */
     public THIS childStretch2() {
-        s("align-items", "stretch");
+        sty("align-items", "stretch");
         return _this;
     }
 
@@ -1085,8 +1128,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * It applies that spacing only between items not on the outer edges.
      */
     public THIS childGap(boolean b) {
-        if (b) s("gap", "var(--space-s)");
-        else rs("gap");
+        if (b) sty("gap", "var(--space-s)");
+        else rsty("gap");
         return _this;
     }
 
@@ -1095,7 +1138,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * It applies that spacing only between items not on the outer edges.
      */
     public THIS childGap(String s) {
-        s("gap", s);
+        sty("gap", s);
         return _this;
     }
 
@@ -1105,7 +1148,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Gap between rows/Y-Axis/height.
      */
     public THIS childGapY(String s) {
-        s("row-gap", s);
+        sty("row-gap", s);
         return _this;
     }
 
@@ -1115,7 +1158,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Gap between columns/X-Axis/width.
      */
     public THIS childGapX(String s) {
-        s("column-gap", s);
+        sty("column-gap", s);
         return _this;
     }
 
@@ -1125,7 +1168,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     public THIS addClass(String s) {
         String classes = element.attr("class");
         classes += " " + s;
-        a("class", classes);
+        atr("class", classes);
         return _this;
     }
 
@@ -1135,7 +1178,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     public THIS removeClass(String s) {
         String classes = element.attr("class");
         classes = classes.replace(s, "");
-        a("class", classes);
+        atr("class", classes);
         return _this;
     }
 
@@ -1215,8 +1258,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     public THIS enable(boolean b) {
-        if (b) ra("disabled");
-        else a("disabled");
+        if (b) ratr("disabled");
+        else atr("disabled");
         return _this;
     }
 

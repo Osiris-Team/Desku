@@ -15,11 +15,11 @@ public class TickTackToe {
         App.init(new DesktopUIManager());
         App.name = "TickTackToe";
         App.uis.create(() -> {
-            Vertical ly = vertical().sizeFull().childSpaceEvenly();
+            Vertical ly = vertical().sizeFull().childSpaceEvenly1();
             AtomicReference<String> player = new AtomicReference<>("x");
             Button[][] buttons = new Button[3][3];
             for (int y = 0; y < 3; y++) { // 3 rows
-                Horizontal row = ly.horizontalCL().childSpaceEvenly();
+                Horizontal row = ly.horizontalCL().childSpaceEvenly1();
                 for (int x = 0; x < 3; x++) { // 3 buttons per row
                     int finalY = y; int finalX = x;
                     Button button = button("").onClick(e -> {

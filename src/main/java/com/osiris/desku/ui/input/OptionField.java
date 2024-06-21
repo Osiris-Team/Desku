@@ -29,10 +29,11 @@ public class OptionField extends Component<OptionField, String> {
 
     public OptionField(Text label, String defaultValue) {
         super(defaultValue);
+        addClass("input-group");
         this.label = label;
         this.button = new Button(defaultValue).secondary()
                 .width("100%")
-                .childStart().childGap("0.5vw").onClick(e -> {
+                .childStart1().childGap("0.5vw").onClick(e -> {
                     items.visible(!items.isVisible());
                 });
         this.items.visible(false);
@@ -42,7 +43,7 @@ public class OptionField extends Component<OptionField, String> {
         // Lastly change add function:
         Consumer<AddedChildEvent> superItemsAdd = this.items._add;
         this._add = e -> {
-            e.childComp.s("cursor", "pointer");
+            e.childComp.sty("cursor", "pointer");
             e.childComp.onClick(click -> {
                 items.visible(false);
                 setValue(click.comp.element.text());

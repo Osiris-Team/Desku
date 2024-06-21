@@ -15,10 +15,10 @@ public class Button extends Component<Button, String> {
      */
     public Button(String txt) {
         super(txt, "button");
-        this.label = new Text(txt).s("color", "var(--color-contrast)");
+        this.label = new Text(txt).sty("color", "var(--color-contrast)");
         add(label);
-        childCenter();
-        a("class", "btn");
+        childCenter1();
+        addClass("btn");
         primary();
     }
 

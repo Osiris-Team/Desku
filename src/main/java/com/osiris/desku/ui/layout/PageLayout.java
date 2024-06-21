@@ -51,9 +51,9 @@ public class PageLayout extends Component<PageLayout, NoValue> {
             super(NoValue.GET);
             this.content = content;
 
-            Button previous = new Button("Previous").secondary().width("100%").sizeS().childStart()
-                    .s("border-top-right-radius", "0px")
-                    .s("border-bottom-right-radius", "0px");
+            Button previous = new Button("Previous").secondary().width("100%").sizeS().childStart1()
+                    .sty("border-top-right-radius", "0px")
+                    .sty("border-bottom-right-radius", "0px");
             AtomicBoolean loaded = new AtomicBoolean(true);
             previous.onClick(e -> {
                 synchronized (loaded) {
@@ -71,9 +71,9 @@ public class PageLayout extends Component<PageLayout, NoValue> {
                 }
             });
 
-            Button next = new Button("Next").secondary().width("100%").sizeS().childEnd()
-                    .s("border-top-left-radius", "0px")
-                    .s("border-bottom-left-radius", "0px");
+            Button next = new Button("Next").secondary().width("100%").sizeS().childEnd1()
+                    .sty("border-top-left-radius", "0px")
+                    .sty("border-bottom-left-radius", "0px");
             next.onClick(e -> {
                 synchronized (loaded) {
                     if (!loaded.get()) return; // Do not accept other clicks, until below is resolved

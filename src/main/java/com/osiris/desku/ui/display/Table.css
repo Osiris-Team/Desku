@@ -25,6 +25,6 @@
   padding-top: 6px;
   padding-bottom: 6px;
   text-align: left;
-  background-color: #000000a1;
+  background-color: var(--bs-primary);
   color: white;
 }

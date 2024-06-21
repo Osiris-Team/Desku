@@ -6,7 +6,17 @@ public class Input<VALUE> extends Component<Input<VALUE>, VALUE> {
 
     public Input(String type, VALUE defaultValue) {
         super(defaultValue, (Class<VALUE>) defaultValue.getClass(), "input");
-        a("slot", "input");
-        a("type", type);
+        atr("slot", "input");
+        atr("type", type);
+        addClass("form-control");
+        width("100%");
+    }
+
+    public Input(String type, VALUE defaultValue, String tag) {
+        super(defaultValue, (Class<VALUE>) defaultValue.getClass(), tag);
+        atr("slot", "input");
+        atr("type", type);
+        addClass("form-control");
+        width("100%");
     }
 }

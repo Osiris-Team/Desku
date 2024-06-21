@@ -6,32 +6,31 @@ import com.osiris.desku.ui.event.ValueChangeEvent;
 
 import java.util.function.Consumer;
 
-public class TextField extends Component<TextField, String> {
+public class TextArea extends Component<TextArea, String> {
 
     // Layout
     public Text label;
     public String defaultValue;
     public Input<String> input;
 
-    public TextField() {
+    public TextArea() {
         this("", "");
     }
 
-    public TextField(String label) {
+    public TextArea(String label) {
         this(label, "");
     }
 
-    public TextField(String label, String defaultValue) {
+    public TextArea(String label, String defaultValue) {
         this(new Text(label).sizeS(), defaultValue);
     }
 
-    public TextField(Text label, String defaultValue) { // TODO defaultValue is not visible in UI
+    public TextArea(Text label, String defaultValue) { // TODO defaultValue is not visible in UI
         super(defaultValue);
-        addClass("textfield");
         addClass("input-group");
         this.label = label;
         this.defaultValue = defaultValue;
-        this.input = new Input<>("text", defaultValue);
+        this.input = new Input<>("textarea", defaultValue, "textarea");
         add(this.label, this.input);
         childVertical();
     }
@@ -40,22 +39,22 @@ public class TextField extends Component<TextField, String> {
         return this.input.element.attr("value");
     }
 
-    public TextField setValue(String v) {
+    public TextArea setValue(String v) {
         input.setValue(v);
         return this;
     }
 
     @Override
-    public TextField getValue(Consumer<String> v) {
+    public TextArea getValue(Consumer<String> v) {
         input.getValue(v);
         return this;
     }
 
     @Override
-    public TextField onValueChange(Consumer<ValueChangeEvent<TextField, String>> code) {
+    public TextArea onValueChange(Consumer<ValueChangeEvent<TextArea, String>> code) {
         // Forward input text change event to this component
         input.onValueChange(e -> {
-            ValueChangeEvent<TextField, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore);
+            ValueChangeEvent<TextArea, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore);
             code.accept(e2);
         });
         return this;

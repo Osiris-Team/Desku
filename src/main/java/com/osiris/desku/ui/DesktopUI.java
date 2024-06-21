@@ -337,7 +337,7 @@ public class DesktopUI extends UI {
             frame.setBackground(color);
             //frame.getContentPane().setBackground(color); TODO find out why this makes the frame clickthorugh
             //browserContainer.setBackground(color);
-            if(content != null) content.s("background-color", hexColor);
+            if(content != null) content.sty("background-color", hexColor);
 
             if(hexColor.equals("#00000000")){
                 //frame.setOpacity(0.99f); // Slightly transparent to allow mouse events

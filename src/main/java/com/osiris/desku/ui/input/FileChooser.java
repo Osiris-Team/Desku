@@ -178,8 +178,8 @@ public class FileChooser extends Component<FileChooser, String> {
             String selectWidth = "5%", iconWidth = "5%", nameWidth = "70%", modifiedWidth = "20%";
             table.getHeaderAt(0).width(selectWidth);
             table.getHeaderAt(1).width(iconWidth);
-            table.getHeaderAt(2).width(nameWidth).childStart();
-            table.getHeaderAt(3).width(modifiedWidth).childStart();
+            table.getHeaderAt(2).width(nameWidth).childStart1();
+            table.getHeaderAt(3).width(modifiedWidth).childStart1();
 
             try {
                 List<File> _files = new ArrayList<>();
@@ -241,8 +241,8 @@ public class FileChooser extends Component<FileChooser, String> {
                     table.row(fileAsRow);
                     fileAsRow.children.get(0).width(selectWidth);
                     fileAsRow.children.get(1).width(iconWidth);
-                    fileAsRow.children.get(2).width(nameWidth).childStart();
-                    fileAsRow.children.get(3).width(modifiedWidth).childStart();
+                    fileAsRow.children.get(2).width(nameWidth).childStart1();
+                    fileAsRow.children.get(3).width(modifiedWidth).childStart1();
                 }
                 if (dir != null) {
                     // Since firstRow is always parent, also set its text to ..

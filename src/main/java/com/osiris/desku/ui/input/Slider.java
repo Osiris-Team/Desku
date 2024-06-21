@@ -31,10 +31,10 @@ public class Slider extends Component<Slider, Double> {
         this.input = new Input<>("range", defaultValue);
         add(this.label, this.input);
         childVertical();
-        this.input.a("value", String.valueOf(defaultValue));
-        this.input.a("min", String.valueOf(minValue));
-        this.input.a("max", String.valueOf(maxValue));
-        this.input.a("step", String.valueOf(stepValue));
+        this.input.atr("value", String.valueOf(defaultValue));
+        this.input.atr("min", String.valueOf(minValue));
+        this.input.atr("max", String.valueOf(maxValue));
+        this.input.atr("step", String.valueOf(stepValue));
     }
 
     @Override

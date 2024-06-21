@@ -5,6 +5,7 @@ import com.osiris.desku.ui.display.*;
 import com.osiris.desku.ui.input.*;
 import com.osiris.desku.ui.input.fileuploader.FileUploader;
 import com.osiris.desku.ui.layout.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -277,6 +278,30 @@ public class Statics {
 
     /**
      */
+    static public TextArea textarea() {
+        return new TextArea();
+    }
+
+    /**
+     */
+    static public TextArea textarea(String label) {
+        return new TextArea(label);
+    }
+
+    /**
+     */
+    static public TextArea textarea(String label, String defaultValue) {
+        return new TextArea(label, defaultValue);
+    }
+
+    /**
+     */
+    static public TextArea textarea(Text label, String defaultValue) {
+        return new TextArea(label, defaultValue);
+    }
+
+    /**
+     */
     static public TextField textfield() {
         return new TextField();
     }
@@ -323,6 +348,21 @@ public class Statics {
      */
     static public PageLayout pagelayout() {
         return new PageLayout();
+    }
+
+    /**
+     */
+    static public Popup popup() {
+        return new Popup();
+    }
+
+    /**
+     * @param title
+     * @param btn1 closes the popup on click through data-bs-dismiss="modal"
+     * @param btn2 closes the popup on click throguh data-bs-dismiss="modal"
+     */
+    static public Popup popup(@Nullable Text title, @Nullable Button btn1, @Nullable Button btn2) {
+        return new Popup(title, btn1, btn2);
     }
 
     /**
