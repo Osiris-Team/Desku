@@ -194,7 +194,7 @@ public class FileChooser extends Component<FileChooser, String> {
                         for (File f : files1) {
                             if (f.isDirectory()) _files.add(f);
                         }
-                        for (File f : dir.listFiles()) {
+                        for (File f : files1) {
                             if (f.isFile()) _files.add(f);
                         }
                     }
