@@ -185,14 +185,18 @@ public class FileChooser extends Component<FileChooser, String> {
                 List<File> _files = new ArrayList<>();
                 if (dir != null) {
                     // Add parent dir first, or drives view if parent dir is null
-                    File parentDir = dir.getParentFile();
-                    _files.add(parentDir);
+                    File parentDir = dir.getParentFile(); // will be displayed with name ".."
+                    if(parentDir == null) Collections.addAll(_files, File.listRoots());
+                    else _files.add(parentDir);
                     // First half is directories, then actual files
-                    for (File f : dir.listFiles()) {
-                        if (f.isDirectory()) _files.add(f);
-                    }
-                    for (File f : dir.listFiles()) {
-                        if (f.isFile()) _files.add(f);
+                    File[] files1 = dir.listFiles();
+                    if(files1 != null && files1.length > 0){
+                        for (File f : files1) {
+                            if (f.isDirectory()) _files.add(f);
+                        }
+                        for (File f : dir.listFiles()) {
+                            if (f.isFile()) _files.add(f);
+                        }
                     }
                 } else {
                     // show drives
