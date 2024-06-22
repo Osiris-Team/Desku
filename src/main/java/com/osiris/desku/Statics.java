@@ -3,12 +3,15 @@ package com.osiris.desku;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.*;
 import com.osiris.desku.ui.input.*;
+import com.osiris.desku.ui.input.filechooser.DirectoryView;
+import com.osiris.desku.ui.input.filechooser.FileChooser;
 import com.osiris.desku.ui.input.fileuploader.FileUploader;
 import com.osiris.desku.ui.layout.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.function.Predicate;
 
@@ -152,6 +155,18 @@ public class Statics {
 
     /**
      */
+    static public DirectoryView directoryview(FileChooser fileChooser, String dir) {
+        return new DirectoryView(fileChooser, dir);
+    }
+
+    /**
+     */
+    static public DirectoryView directoryview(FileChooser fileChooser, File dir) {
+        return new DirectoryView(fileChooser, dir);
+    }
+
+    /**
+     */
     static public FileChooser filechooser() {
         return new FileChooser();
     }
@@ -202,6 +217,12 @@ public class Statics {
      */
     static public <VALUE> Input input(String type, VALUE defaultValue) {
         return new Input(type, defaultValue);
+    }
+
+    /**
+     */
+    static public <VALUE> Input input(String type, VALUE defaultValue, String tag) {
+        return new Input(type, defaultValue, tag);
     }
 
     /**
