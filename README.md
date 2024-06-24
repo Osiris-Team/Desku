@@ -94,7 +94,7 @@ Android and iOS implementations are provided in the starter repo.
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
 It can be a single component or a complete suite of multiple components, either
 way, its pretty easy to create a Desku-Extension:
-1. Start with the [Desku-Gradle-Starter-Extension](https://github.com/Osiris-Team/Desku-Gradle-Starter-Extension) template.
+1. **Start with the [Desku-Gradle-Starter-Extension](https://github.com/Osiris-Team/Desku-Gradle-Starter-Extension) template.**
 2. Publish your repo on GitHub with the #desku-extension tag/topic (also mention the Desku version your extension supports / was built with).
 3. Create a release and use JitPack or Maven to host the files.
 
