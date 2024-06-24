@@ -14,6 +14,10 @@ public abstract class JavaScriptEvent<T extends Component<?,?>> {
      * Component where this event originates from.
      */
     public final transient T comp;
+    /**
+     * True if change was caused programmatically and NOT by the user directly.
+     */
+    public boolean isProgrammatic = false;
 
     /**
      * @param rawJSMessage must be a clean and parseable JSON-Object. No additional cleaning will be done on the server-side.

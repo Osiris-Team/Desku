@@ -296,8 +296,12 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * meaning client-side is also affected.
      */
     public THIS setValue(VALUE v) {
+        String newVal = ValueChangeEvent.getStringFromValue(v, this);
+        ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>("{\"newValue\": \""+newVal+"\"}", _this, this.internalValue);
+        event.isProgrammatic = true;
         this.internalValue = v;
-        atr("value", ValueChangeEvent.getStringFromValue(v, this));
+        atr("value", newVal); // Change in memory value, without triggering another change event
+        readOnlyOnValueChange.execute(event); // Executes all listeners
         return _this;
     }
 
@@ -318,6 +322,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                     element.attr("value", event.jsMessage.get("newValue").getAsString());
                     readOnlyOnValueChange.execute(event); // Executes all listeners
                 });
+        // TODO also register programmatic value change listener
         return _this;
     }
 
