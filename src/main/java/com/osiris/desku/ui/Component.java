@@ -169,7 +169,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
         // Perform actual UI update
         UI ui = UI.get();
-        if (!ui.isLoading.get()){
+        if (!ui.isLoading()){
             if(!this.isAttached) {
                 // Means that this (parent) was not attached yet,
                 // thus we postpone the addition of child to the end of UI.access()
@@ -196,7 +196,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
-            if (!ui.isLoading.get()){
+            if (!ui.isLoading()){
                 executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
                         + " = ``;\n"); // Change UI representation
             }
@@ -210,7 +210,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
-            if (!ui.isLoading.get()){
+            if (!ui.isLoading()){
                 executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
                         + " = `" + attribute.getValue() + "`;\n"); // Change UI representation
             }
@@ -221,14 +221,14 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (e.isInsert) { // Add or change attribute
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
-            if (!ui.isLoading.get()){
+            if (!ui.isLoading()){
                 executeJS("comp.setAttribute(`" + e.attribute.getKey()
                         + "`, `" + e.attribute.getValue() + "`);\n"); // Change UI representation
             }
 
         } else {// Remove attribute
             element.removeAttr(e.attribute.getKey()); // Change in-memory representation
-            if (!ui.isLoading.get()){
+            if (!ui.isLoading()){
                 executeJS("comp.removeAttribute(`" + e.attribute.getKey() + "`);\n"); // Change UI representation
             }
         }
@@ -281,7 +281,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * @param v executed when the value is got from the client-side.
      */
     public THIS getValue(Consumer<VALUE> v) {
-        if(isFirstAdd) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
+        UI ui = UI.get();
+        if(ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
         else
             gatr("value", value -> {
@@ -1179,6 +1180,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         String classes = element.attr("class");
         classes = classes.replace(s, "");
         atr("class", classes);
+        return _this;
+    }
+
+    public THIS removeAllClasses() {
+        atr("class", "");
         return _this;
     }
 

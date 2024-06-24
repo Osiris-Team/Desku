@@ -31,11 +31,13 @@ public class OptionField extends Component<OptionField, String> {
         super(defaultValue);
         addClass("input-group");
         this.label = label;
-        this.button = new Button(defaultValue).secondary()
+        this.button = new Button(defaultValue)
                 .width("100%")
                 .childStart1().childGap("0.5vw").onClick(e -> {
                     items.visible(!items.isVisible());
                 });
+        this.button.label.sty("color", "");
+        this.button.removeAllClasses().addClass("form-select");
         this.items.visible(false);
         add(this.label, this.button, this.items);
         childVertical();

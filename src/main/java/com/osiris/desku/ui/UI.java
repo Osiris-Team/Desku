@@ -28,7 +28,7 @@ import java.util.function.Consumer;
  */
 public abstract class UI {
     private static final Map<Thread, UI> threadsAndUIs = new HashMap<>();
-    public final AtomicBoolean isLoading = new AtomicBoolean(true);
+    private final AtomicBoolean isLoading = new AtomicBoolean(true);
     /**
      * Relevant when wanting HTML load state, since we cant run JavaScript before the page is fully loaded.<br>
      * Boolean parameter isLoading, is true if still loading or false if finished loading.
@@ -731,6 +731,12 @@ public abstract class UI {
                 action.remove();
                 code.run();
             }, AL::warn);
+        }
+    }
+
+    public boolean isLoading(){
+        synchronized (isLoading){
+            return isLoading.get();
         }
     }
 
