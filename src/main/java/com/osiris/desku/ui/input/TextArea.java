@@ -54,7 +54,7 @@ public class TextArea extends Component<TextArea, String> {
     public TextArea onValueChange(Consumer<ValueChangeEvent<TextArea, String>> code) {
         // Forward input text change event to this component
         input.onValueChange(e -> {
-            ValueChangeEvent<TextArea, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore);
+            ValueChangeEvent<TextArea, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore, e.isProgrammatic);
             code.accept(e2);
         });
         return this;

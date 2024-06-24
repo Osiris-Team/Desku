@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.utils.Reflect;
 import com.osiris.jlib.json.JsonFile;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends JavaScriptEvent<COMP> {
 
@@ -33,7 +35,8 @@ public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends J
     /**
      * How the value is saved/shown on the client-side/UI.
      */
-    public static <VALUE> String getStringFromValue(VALUE val, Component<?, VALUE> comp){
+    public static <VALUE> String getStringFromValue(@Nullable VALUE val, @NotNull Component<?, VALUE> comp){
+        if(val == null) return "";
         if(Reflect.isPseudoPrimitiveType(val)){
             return String.valueOf(val);
         } else{
@@ -58,8 +61,8 @@ public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends J
     /**
      * Prevent JSON->JAVA parsing of {@link #rawJSMessage} and {@link #value} by using this constructor instead.
      */
-    public ValueChangeEvent(String rawJSMessage, JsonObject jsMessage, COMP comp, VALUE value, VALUE valueBefore) {
-        super(rawJSMessage, jsMessage, comp);
+    public ValueChangeEvent(String rawJSMessage, JsonObject jsMessage, COMP comp, VALUE value, VALUE valueBefore, boolean isProgrammatic) {
+        super(rawJSMessage, jsMessage, comp, isProgrammatic);
         this.value = value;
         this.valueBefore = valueBefore;
     }

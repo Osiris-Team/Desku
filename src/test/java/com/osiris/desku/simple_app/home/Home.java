@@ -224,7 +224,7 @@ public class Home extends Route {
                 .add(text("Option 1"), text("Option 2"), text("Option 3"))
                 .onValueChange(e -> {
             AL.info("Input of option field changed: "+e.value+" before: "+e.valueBefore);
-        }));
+        }).setValue(null));
         // File uploader (probably only relevant if this a web server)
         ly.add(fileuploader("File uploader label").onValueChange(e -> {
             AL.info("Input of file uploader changed: "+e.value +" before: "+e.valueBefore);

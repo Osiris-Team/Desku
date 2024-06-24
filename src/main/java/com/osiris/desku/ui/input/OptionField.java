@@ -79,7 +79,7 @@ public class OptionField extends Component<OptionField, String> {
     public OptionField onValueChange(Consumer<ValueChangeEvent<OptionField, String>> code) {
         // Forward input text change event to this component
         button.label.onValueChange(e -> {
-            ValueChangeEvent<OptionField, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore);
+            ValueChangeEvent<OptionField, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore, e.isProgrammatic);
             code.accept(e2);
         });
         return this;

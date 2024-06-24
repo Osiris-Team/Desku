@@ -28,9 +28,10 @@ public abstract class JavaScriptEvent<T extends Component<?,?>> {
         this.comp = comp;
     }
 
-    public JavaScriptEvent(String rawJSMessage, JsonObject jsMessage, T comp) {
+    public JavaScriptEvent(String rawJSMessage, JsonObject jsMessage, T comp, boolean isProgrammatic) {
         this.rawJSMessage = rawJSMessage;
         this.jsMessage = jsMessage;
         this.comp = comp;
+        this.isProgrammatic = isProgrammatic;
     }
 }

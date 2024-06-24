@@ -3,6 +3,7 @@ package com.osiris.desku.ui.display;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.UI;
 import com.osiris.events.Event;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.TextNode;
 
 public class Text extends Component<Text, String> {
@@ -56,7 +57,9 @@ public class Text extends Component<Text, String> {
         return this;
     }
 
-    public Text append(String oldValue, String valueToAppend) {
+    public Text append(@Nullable String oldValue, @Nullable String valueToAppend) {
+        if(oldValue == null) oldValue = "";
+        if(valueToAppend == null) valueToAppend = "";
         element.appendText(valueToAppend);
         _onValueAppended.execute(valueToAppend); // Updates the UI
         String newValue = oldValue + valueToAppend;

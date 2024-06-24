@@ -295,7 +295,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Sets {@link #internalValue} AND triggers the {@link #readOnlyOnValueChange} event,
      * meaning client-side is also affected.
      */
-    public THIS setValue(VALUE v) {
+    public THIS setValue(@Nullable VALUE v) {
         String newVal = ValueChangeEvent.getStringFromValue(v, this);
         ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>("{\"newValue\": \""+newVal+"\"}", _this, this.internalValue);
         event.isProgrammatic = true;

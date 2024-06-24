@@ -46,7 +46,7 @@ public class ColorPicker extends Component<ColorPicker, String> {
     @Override
     public ColorPicker onValueChange(Consumer<ValueChangeEvent<ColorPicker, String>> code) {
         input.onValueChange(e -> {
-            ValueChangeEvent<ColorPicker, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore);
+            ValueChangeEvent<ColorPicker, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore, e.isProgrammatic);
             code.accept(e2);
         });
         return this;
