@@ -208,7 +208,7 @@ public class Home extends Route {
         }));
         ly.add(passwordfield("Password field label").onValueChange(e -> {
             AL.info("Input of passwordfield changed: "+e.value+" before: "+e.valueBefore);
-        }));
+        }).setValue("\\path").setValue(null)); // setting to null changes its value to ""
         ly.add(checkbox("Checkbox label").onValueChange(e -> {
             AL.info("Input of checkbox changed: "+e.value+" before: "+e.valueBefore);
         }));
@@ -224,7 +224,7 @@ public class Home extends Route {
                 .add(text("Option 1"), text("Option 2"), text("Option 3"))
                 .onValueChange(e -> {
             AL.info("Input of option field changed: "+e.value+" before: "+e.valueBefore);
-        }).setValue(null));
+        }));
         // File uploader (probably only relevant if this a web server)
         ly.add(fileuploader("File uploader label").onValueChange(e -> {
             AL.info("Input of file uploader changed: "+e.value +" before: "+e.valueBefore);

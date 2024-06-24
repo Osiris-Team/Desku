@@ -1,5 +1,6 @@
 package com.osiris.desku.ui;
 
+import com.google.gson.JsonPrimitive;
 import com.osiris.desku.App;
 import com.osiris.desku.ui.css.CSS;
 import com.osiris.desku.ui.display.Text;
@@ -296,8 +297,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * meaning client-side is also affected.
      */
     public THIS setValue(@Nullable VALUE v) {
-        String newVal = ValueChangeEvent.getStringFromValue(v, this);
-        ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>("{\"newValue\": \""+newVal+"\"}", _this, this.internalValue);
+        String newVal = new JsonPrimitive(ValueChangeEvent.getStringFromValue(v, this)).toString(); // Escapes the string if needed, so that it can be used in json
+        String json = "{\"newValue\": "+(newVal.isEmpty() ? "\"\"": newVal)+"}";
+        ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(json, _this, this.internalValue);
         event.isProgrammatic = true;
         this.internalValue = v;
         atr("value", newVal); // Change in memory value, without triggering another change event
