@@ -3,6 +3,7 @@ package com.osiris.desku.ui.input;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ValueChangeEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -36,7 +37,7 @@ public class TextField extends Component<TextField, String> {
         childVertical();
     }
 
-    public String getValue() {
+    public @NotNull String getValue() {
         return this.input.element.attr("value");
     }
 

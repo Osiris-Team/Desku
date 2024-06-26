@@ -3,7 +3,9 @@ package com.osiris.desku.ui.event;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.utils.NoValue;
 import com.osiris.desku.ui.utils.Reflect;
 import com.osiris.jlib.json.JsonFile;
 import org.jetbrains.annotations.NotNull;
@@ -11,36 +13,53 @@ import org.jetbrains.annotations.Nullable;
 
 public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends JavaScriptEvent<COMP> {
 
-    public static <T> T getValueFromString(String value, Component<?,T> comp){
-        if(value.isEmpty()){ // If empty can only be a string nothing else.
-            return (T) "";
+    public static <T> T stringToVal(String value, Component<?,T> comp){
+        if(value == null || value.isEmpty()){
+            return comp.internalDefaultValue;
         }
-        char c = value.charAt(0);
-        if(c == '{' || c == '[') // NoValue.class for example is {} as JSON
-            return getValueFromString(JsonFile.parser.toJson(value, comp.internalValueClass),
-                    comp);
-        else{
+        else if(Reflect.isPseudoPrimitiveType(comp.internalValueClass))
             return (T) Reflect.pseudoPrimitivesAndParsers.get(comp.internalValueClass)
                     .apply(value);
-        }
+        else
+            return JsonFile.parser.fromJson(value, comp.internalValueClass);
     }
 
-    public static <T> T getValueFromJsonEl(JsonElement value, Component<?, T> comp){
+    public static <T> T jsonElToVal(JsonElement value, Component<?, T> comp){
         if(value.isJsonPrimitive()){
-            return getValueFromString(value.getAsString(), comp);
+            return stringToVal(value.getAsString(), comp);
         } else
             return JsonFile.parser.fromJson(value, comp.internalValueClass);
     }
 
     /**
-     * How the value is saved/shown on the client-side/UI.
+     * How the value is saved/shown on the client-side/UI. <br>
+     * Is safe in JSON, and maybe safe to use in HTML attributes (since we hope Jsoup handles escaped strings properly).  <br><br>
+     *
+     * There are multiple possibilities: <br><br>
+     *
+     * 1. The value type is a primitive or pseudo-primitive (uppercase class of a primitive), like a number, in that case it can be simply converted to a string
+     * and set in HTML value attribute. <br><br>
+     *
+     * 2. The value type is a string. In this case the string might contain special chars, thus we escape it using the gson library. <br><br>
+     *
+     * 3. The value type is neither of the above, meaning a custom type, in which case its converted into a json string,
+     * and escaping the fields/values of that json object is handled by the gson library. <br><br>
+     *
+     * 4. The value is null or of type {@link com.osiris.desku.ui.utils.NoValue}, thus return an empty string. <br><br>
      */
-    public static <VALUE> String getStringFromValue(@Nullable VALUE val, @NotNull Component<?, VALUE> comp){
-        if(val == null) return "";
-        if(Reflect.isPseudoPrimitiveType(val)){
+    public static <VALUE> @NotNull String valToString(@Nullable VALUE val, @NotNull Component<?, VALUE> comp){
+        if(val == null || val instanceof NoValue) return "";
+        else if(val instanceof String){ // Escapes the string if needed, so that it can be used in json or html attributes
+            return escapeString((String) val);
+        }
+        else if(Reflect.isPseudoPrimitiveType(val)){
             return String.valueOf(val);
         } else{
-            return JsonFile.parser.toJson(val, comp.internalValueClass);
+            String s = JsonFile.parser.toJson(val, comp.internalValueClass);
+            if(s.equals("null") || s.isEmpty())
+                throw new RuntimeException("Cannot convert value of type inline class ("+comp.internalValueClass+") into a json string, unsupported by gson at the moment!" +
+                        " Move your class outside of your method or runnable into its parent class, or directly create a new file for it.");
+            return s;
         }
     }
 
@@ -55,7 +74,7 @@ public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends J
     public ValueChangeEvent(String rawJSMessage, COMP comp, VALUE valueBefore) {
         super(rawJSMessage, comp);
         this.valueBefore = valueBefore;
-        this.value = getValueFromJsonEl(jsMessage.get("newValue"), comp);
+        this.value = jsonElToVal(jsMessage.get("newValue"), comp);
     }
 
     /**
@@ -67,5 +86,19 @@ public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends J
         this.valueBefore = valueBefore;
     }
 
+    public String getValueAsString(){
+        return jsMessage.get("newValue").getAsString();
+    }
+
+    public String getValueAsEscapedString(){
+        String s = getValueAsString();
+        return escapeString(s);
+    }
+
+    public static String escapeString(String s){
+        s = new JsonPrimitive(s).toString();
+        s = s.substring(1, s.length()-1); // remove encapsulating ""
+        return s;
+    }
 
 }

@@ -106,7 +106,7 @@ public class FileUploader extends Component<FileUploader, File> {
                     e.value.content = byteArray;
                     File newValue = e.value; // msg contains the new data and is parsed above in the event constructor
                     internalValue = newValue; // Change in memory value, without triggering another change event
-                    element.attr("value", e.jsMessage.get("newValue").getAsString());
+                    element.attr("value", e.getValueAsString());
                     readOnlyOnValueChange.execute(e); // Executes all listeners
                 });
         return _this;

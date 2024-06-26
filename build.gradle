@@ -37,7 +37,7 @@ test {
 }
 
 group = 'com.osiris.desku'
-version = '1.0.13'
+version = '1.0.14'
 description = 'Desku'
 sourceCompatibility = 1.11
 targetCompatibility = 1.11

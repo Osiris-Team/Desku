@@ -362,6 +362,23 @@ want to support even more platforms make a pull-request with your implementation
 
 </details>
 
+
+
+<details>
+<summary>How are null values handled?</summary>
+
+comp.getValue() should NEVER return null, even if comp.setValue(null)
+was called before. In that case the default value is returned.
+
+comp.setValue(null) is allowed to ensure compatibility with similar frameworks
+like JavaFX, and allow some sort of "clearing"/"resetting" of the value, without
+needing to rely on the error-prone null!
+
+This also means that all components should have a sensible
+default value (except very basic containers, these use the NoValue.class).
+
+</details>
+
   
   
 <p align="center">

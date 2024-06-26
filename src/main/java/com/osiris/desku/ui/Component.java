@@ -1,6 +1,5 @@
 package com.osiris.desku.ui;
 
-import com.google.gson.JsonPrimitive;
 import com.osiris.desku.App;
 import com.osiris.desku.ui.css.CSS;
 import com.osiris.desku.ui.display.Text;
@@ -10,6 +9,7 @@ import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.layout.*;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
+import com.osiris.jlib.json.JsonFile;
 import com.osiris.jlib.logger.AL;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -121,6 +121,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public THIS _this = (THIS) this;
     public VALUE internalValue;
+    public VALUE internalDefaultValue;
     public Class<VALUE> internalValueClass;
     /**
      * Jsoup {@link Element} that can be used to convert this
@@ -258,10 +259,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public Component(@NotNull VALUE value, @NotNull Class<VALUE> valueClass, @NotNull String tag) {
         this.internalValue = value;
+        this.internalDefaultValue = value;
         this.internalValueClass = valueClass;
         this.element = new MyElement(this, tag);
         element.attr("java-id", String.valueOf(id));
-        atr("value", ValueChangeEvent.getStringFromValue(value, this));
+        atr("value", ValueChangeEvent.valToString(value, this));
         // Do not use setValue since that might be overwritten by extending class and thus cause issues
     }
 
@@ -269,7 +271,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Util method to get the value directly. <br>
      * Thus override {@link #getValue(Consumer)} instead if needed.
      */
-    public VALUE getValue() {
+    public @NotNull VALUE getValue() {
         AtomicReference<VALUE> atomicValue = new AtomicReference<>();
         getValue(val -> {
             atomicValue.set(val);
@@ -280,14 +282,20 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     /**
      * @param v executed when the value is got from the client-side.
+     * @return should never return null, even if setValue(null) was called, in that case it returns the {@link #internalDefaultValue}
+     * that was set in the constructor.
      */
-    public THIS getValue(Consumer<VALUE> v) {
+    public THIS getValue(Consumer<@NotNull VALUE> v) {
         UI ui = UI.get();
         if(ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
         else
-            gatr("value", value -> {
-                v.accept(ValueChangeEvent.getValueFromString(value, this));
+            gatr("value", valueAsString -> {
+                VALUE value = ValueChangeEvent.stringToVal(valueAsString, this);
+                if(value != this.internalValue){
+
+                }
+                v.accept(value);
             });
         return _this;
     }
@@ -295,15 +303,25 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Sets {@link #internalValue} AND triggers the {@link #readOnlyOnValueChange} event,
      * meaning client-side is also affected.
+     * @see ValueChangeEvent#valToString(Object, Component)
+     * @see ValueChangeEvent#stringToVal(String, Component)
      */
     public THIS setValue(@Nullable VALUE v) {
-        String newVal = new JsonPrimitive(ValueChangeEvent.getStringFromValue(v, this)).toString(); // Escapes the string if needed, so that it can be used in json
-        String json = "{\"newValue\": "+(newVal.isEmpty() ? "\"\"": newVal)+"}";
+        String newVal = ValueChangeEvent.valToString(v, this);
+
+        String newValJsonSafe;
+        if(v instanceof String) newValJsonSafe = "\""+newVal+"\"";
+        else if(newVal.isEmpty()) newValJsonSafe = "\"\"";
+        else newValJsonSafe = newVal; // json object or other primitive
+
+        String json = "{\"newValue\": "+newValJsonSafe+"}";
         ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(json, _this, this.internalValue);
         event.isProgrammatic = true;
         this.internalValue = v;
+
         atr("value", newVal); // Change in memory value, without triggering another change event
         readOnlyOnValueChange.execute(event); // Executes all listeners
+
         return _this;
     }
 
@@ -312,6 +330,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * or by the user (by listening to the input event).
      *
      * @see UI#registerJSListener(String, Component, String, Consumer)
+     * @see ValueChangeEvent#valToString(Object, Component)
+     * @see ValueChangeEvent#stringToVal(String, Component)
      */
     public THIS onValueChange(Consumer<ValueChangeEvent<THIS, VALUE>> code) {
         readOnlyOnValueChange.addAction((event) -> code.accept(event));
@@ -321,11 +341,28 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                     ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(msg, _this, internalValue);
                     VALUE newValue = event.value; // msg contains the new data and is parsed above in the event constructor
                     internalValue = newValue; // Change in memory value, without triggering another change event
-                    element.attr("value", event.jsMessage.get("newValue").getAsString());
+                    atr("value", event.getValueAsEscapedString());
                     readOnlyOnValueChange.execute(event); // Executes all listeners
                 });
         // TODO also register programmatic value change listener
         return _this;
+    }
+
+    public boolean isDefaultValue(){
+        return isValuesEqual(getValue(), this.internalDefaultValue);
+    }
+
+    /**
+     * Checks if val1 and val2 are equal, if not additionally converts them to json and checks them:
+     * Each of those subclasses (JsonObject, JsonArray, etc.) overrides the Object.equals method, providing an effective deep JSON comparison.
+     * Meaning we compare if the fields and their values are equal, regardless of order.
+     * @see ValueChangeEvent#valToString(Object, Component)
+     * @see ValueChangeEvent#stringToVal(String, Component)
+     */
+    public boolean isValuesEqual(VALUE val1, VALUE val2){
+        if(val1 == val2) return true;
+        return JsonFile.parser.toJsonTree(val1, this.internalValueClass)
+                .equals(JsonFile.parser.toJsonTree(val2, this.internalValueClass));
     }
 
     /**

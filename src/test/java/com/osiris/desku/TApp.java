@@ -18,6 +18,7 @@ public class TApp {
         route = new MRoute("/", onLoad);
         try {
             ui = App.uis.create(route);
+            while(ui.isLoading()) Thread.yield();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
