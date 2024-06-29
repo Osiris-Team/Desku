@@ -76,7 +76,11 @@ public class TextValueUpdateTest {
                         }
                     });
         });
-        while(!isDone.get()) Thread.yield();
+        for (int i = 0; i < 30; i++) {
+            if(isDone.get()) break;
+            Thread.sleep(1000);
+        }
+        if(!isDone.get()) throw new Exception("Didn't finish within 30 seconds!");
         if(refEx.get() != null) throw refEx.get();
     }
 }
