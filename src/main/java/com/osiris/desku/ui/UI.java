@@ -313,11 +313,25 @@ public abstract class UI {
         if (content.element.parent() == null) {
             // First load
             Document html = route.getBaseDocument();
-            // Append styles
+
+            // Append additional styles
             Element elGlobalCSSLink = new Element("link");
             elGlobalCSSLink.attr("rel", "stylesheet");
             elGlobalCSSLink.attr("href", App.styles.getName());
             html.getElementsByTag("head").get(0).appendChild(elGlobalCSSLink);
+
+            // Append theme
+            Element elThemeCSS = new Element("style");
+            elThemeCSS.html("\n" +
+                    App.theme.toCSS() +
+                    "    body, #outlet {\n" +
+                    "      height: 100vh;\n" +
+                    "      width: 100%;\n" +
+                    "      margin: 0;\n" +
+                    "    }\n" +
+                    "\n");
+            html.getElementsByTag("head").get(0).appendChild(elThemeCSS);
+
 
             // Append actual content
             Element outlet = html.getElementById("outlet");

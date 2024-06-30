@@ -239,13 +239,15 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
             if (!ui.isLoading()){
                 executeJS("comp.setAttribute(`" + e.attribute.getKey()
-                        + "`, `" + e.attribute.getValue() + "`);\n"); // Change UI representation
+                        + "`, `" + e.attribute.getValue() + "`);\n" +
+                        "comp[\""+e.attribute.getKey()+"\"] = `"+e.attribute.getValue()+"`"); // Change UI representation
             }
 
         } else {// Remove attribute
             element.removeAttr(e.attribute.getKey()); // Change in-memory representation
             if (!ui.isLoading()){
-                executeJS("comp.removeAttribute(`" + e.attribute.getKey() + "`);\n"); // Change UI representation
+                executeJS("comp.removeAttribute(`" + e.attribute.getKey() + "`);\n" +
+                        "comp[\""+e.attribute.getKey()+"\"] = null"); // Change UI representation
             }
         }
         onAttributeChange.execute(e);
@@ -628,7 +630,12 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Returns the value for the provided attribute key and an empty String if no key found or when value is null/undefined.
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
-        executeJS("message = comp.getAttribute(`" + key + "`)", onValueReturned, AL::warn);
+        executeJS("try { " +
+                "   message = comp[\"" + key + "\"]; " +
+                "} catch (e) { " +
+                "   console.error(e); " +
+                "   message = comp.getAttribute(`" + key + "`); " +
+                "}", onValueReturned, AL::warn);
     }
 
     /**

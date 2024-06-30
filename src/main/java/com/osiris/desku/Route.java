@@ -27,14 +27,6 @@ public abstract class Route {
                 "<head>\n" +
                 "  <meta charset=\"UTF-8\" />\n" +
                 "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n" +
-                "  <style>\n" +
-                App.theme.toCSS() +
-                "    body, #outlet {\n" +
-                "      height: 100vh;\n" +
-                "      width: 100%;\n" +
-                "      margin: 0;\n" +
-                "    }\n" +
-                "  </style>\n" +
                 "  <!-- index.ts is included here automatically (either by the dev server or during the build) -->\n" +
                 "</head>\n" +
                 "<body>\n" +

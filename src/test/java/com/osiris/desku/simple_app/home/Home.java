@@ -204,6 +204,7 @@ public class Home extends Route {
         // Fields
         ly.add(textfield("Text field label", "Def").onValueChange(e -> {
             AL.info("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
+            AL.info("Or via getValue() = "+e.comp.getValue());
         }));
         ly.add(textarea("Text area label", "Def").onValueChange(e -> {
             AL.info("Input of textarea changed: "+e.value+" before: "+e.valueBefore);

@@ -1,5 +1,6 @@
 package com.osiris.desku;
 
+import com.osiris.desku.frontend_frameworks.bootstrap.Bootstrap;
 import com.osiris.desku.ui.UI;
 import com.osiris.desku.ui.UIManager;
 import com.osiris.desku.ui.css.Theme;
