@@ -44,6 +44,7 @@ public class Popup extends Overlay {
         sty("min-height", "100vh");
         sty("background-color", "var(--bs-secondary-color)");
         childCenter1().childCenter2();
+        setZIndex(ZIndex.MODAL);
         dialog.padding(true);
         dialog.sty("background-color", "var(--bs-light)");
         dialog.sty("min-width", "300px");

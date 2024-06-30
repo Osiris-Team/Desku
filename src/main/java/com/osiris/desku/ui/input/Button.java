@@ -17,7 +17,7 @@ public class Button extends Component<Button, String> {
         super(txt, String.class, "button");
         this.label = new Text(txt).sty("color", "var(--color-contrast)");
         add(label);
-        childCenter1();
+        childCenter();
         addClass("btn");
         primary();
     }

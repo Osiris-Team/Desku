@@ -43,7 +43,7 @@ public class OptionField extends Component<OptionField, String> {
     public Items items = new Items(this);
     {
         items.visible(false);
-        items.btn1.visible(false);
+        //items.btn1.visible(false);
         items.btn2.visible(false);
     }
 

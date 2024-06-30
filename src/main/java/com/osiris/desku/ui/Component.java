@@ -6,10 +6,7 @@ import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.desku.ui.event.ScrollEvent;
 import com.osiris.desku.ui.event.ValueChangeEvent;
-import com.osiris.desku.ui.layout.Horizontal;
-import com.osiris.desku.ui.layout.Overlay;
-import com.osiris.desku.ui.layout.SmartLayout;
-import com.osiris.desku.ui.layout.Vertical;
+import com.osiris.desku.ui.layout.*;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.json.JsonFile;
@@ -1103,6 +1100,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         return layout;
     }
 
+    public THIS childStart(){
+        childStart1().childStart2();
+        return _this;
+    }
+
     /**
      * justify-content (along primary axis) <br>
      * flex-start (default): items are packed toward the start of the flex-direction.
@@ -1112,12 +1114,22 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         return _this;
     }
 
+    public THIS childEnd(){
+        childEnd1().childEnd2();
+        return _this;
+    }
+
     /**
      * justify-content (along primary axis) <br>
      * flex-end: items are packed toward the end of the flex-direction.
      */
     public THIS childEnd1() {
         sty("justify-content", "flex-end");
+        return _this;
+    }
+
+    public THIS childCenter(){
+        childCenter1().childCenter2();
         return _this;
     }
 
@@ -1329,6 +1341,21 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         return this.getClass().getSimpleName()+"_"+id;
     }
 
+    public @Nullable Tooltip tooltip = null;
+
+    public THIS setTooltip(String content){
+        this.tooltip = new Tooltip(this, content);
+        tooltip.attachToParent();
+        return _this;
+    }
+
+    public THIS setTooltip(Tooltip tooltip){
+        this.tooltip = tooltip;
+        tooltip.parent = this;
+        tooltip.attachToParent();
+        return _this;
+    }
+
     /**
      * Enables or disables the component.
      *
@@ -1455,6 +1482,43 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     public THIS scrollToRightSmooth(int duration) {
         executeJS("let start = comp.scrollLeft; let startTime = null; let scrollWidth = comp.scrollWidth - comp.clientWidth; function scrollTo(timestamp) { if (!startTime) startTime = timestamp; let elapsed = timestamp - startTime; let progress = elapsed / duration; comp.scrollLeft = scrollWidth * Math.pow(2, 10 * (progress - 1)); if (elapsed < duration) { window.requestAnimationFrame(scrollTo); } } window.requestAnimationFrame(scrollTo);");
         return _this;
+    }
+
+    /**
+     * Sets the z-index for the component using the specified enum value.
+     *
+     * @param zIndexEnum the enum value representing the desired z-index
+     * @return the current instance of Component
+     */
+    public THIS setZIndex(ZIndex zIndexEnum) {
+        sty("z-index", ""+zIndexEnum.value);
+        return _this;
+    }
+
+    /**
+     * Based on https://getbootstrap.com/docs/5.3/layout/z-index/
+     */
+    public enum ZIndex {
+        DROPDOWN(1000),
+        STICKY(1020),
+        FIXED(1030),
+        OFFCANVAS_BACKDROP(1040),
+        OFFCANVAS(1045),
+        MODAL_BACKDROP(1050),
+        MODAL(1055),
+        POPOVER(1070),
+        TOOLTIP(1080),
+        TOAST(1090);
+
+        private final int value;
+
+        ZIndex(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
     }
 
 
