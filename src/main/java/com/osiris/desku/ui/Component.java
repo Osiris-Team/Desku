@@ -6,7 +6,10 @@ import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.desku.ui.event.ScrollEvent;
 import com.osiris.desku.ui.event.ValueChangeEvent;
-import com.osiris.desku.ui.layout.*;
+import com.osiris.desku.ui.layout.Horizontal;
+import com.osiris.desku.ui.layout.Overlay;
+import com.osiris.desku.ui.layout.SmartLayout;
+import com.osiris.desku.ui.layout.Vertical;
 import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.json.JsonFile;
@@ -1326,14 +1329,12 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         return this.getClass().getSimpleName()+"_"+id;
     }
 
-    public THIS scrollIntoView(){
-        return scrollIntoView(true, "start", "nearest");
-    }
-
-    public THIS scrollIntoView(boolean smooth){
-        return scrollIntoView(smooth, "start", "nearest");
-    }
-
+    /**
+     * Enables or disables the component.
+     *
+     * @param b true to enable, false to disable
+     * @return the current instance of Component
+     */
     public THIS enable(boolean b) {
         if (b) ratr("disabled");
         else atr("disabled");
@@ -1341,9 +1342,21 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     /**
-     * @param smooth if true: scrolling should animate smoothly, otherwise instant: scrolling should happen instantly in a single jump.
-     * @param block defines vertical alignment. One of start, center, end, or nearest. Defaults to start.
-     * @param inline defines horizontal alignment. One of start, center, end, or nearest. Defaults to nearest.
+     * Scrolls the component into view with default options (smooth animation, start block, nearest inline).
+     *
+     * @return the current instance of Component
+     */
+    public THIS scrollIntoView(){
+        return scrollIntoView(true, "start", "nearest");
+    }
+
+    /**
+     * Scrolls the component into view with customizable options.
+     *
+     * @param smooth if true: scrolling should animate smoothly, otherwise instant
+     * @param block defines vertical alignment (start, center, end, nearest)
+     * @param inline defines horizontal alignment (start, center, end, nearest)
+     * @return the current instance of Component
      */
     public THIS scrollIntoView(boolean smooth, String block, String inline){
         executeJS("comp.scrollIntoView({ behavior: \"" +
@@ -1356,20 +1369,94 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         return _this;
     }
 
-    public @Nullable Tooltip tooltip = null;
-
-    public THIS setTooltip(String content){
-        this.tooltip = new Tooltip(this, content);
-        tooltip.attachToParent();
+    /**
+     * Scrolls the component to a specified position.
+     *
+     * @param x the horizontal position
+     * @param y the vertical position
+     * @return the current instance of Component
+     */
+    public THIS scrollTo(int x, int y) {
+        executeJS("comp.scrollTo(" + x + ", " + y + ");");
         return _this;
     }
 
-    public THIS setTooltip(Tooltip tooltip){
-        this.tooltip = tooltip;
-        tooltip.parent = this;
-        tooltip.attachToParent();
+    /**
+     * Scrolls the component by a specified amount.
+     *
+     * @param x the horizontal distance to scroll
+     * @param y the vertical distance to scroll
+     * @return the current instance of Component
+     */
+    public THIS scrollBy(int x, int y) {
+        executeJS("comp.scrollBy(" + x + ", " + y + ");");
         return _this;
     }
+
+    /**
+     * Scrolls the component to the top.
+     *
+     * @return the current instance of Component
+     */
+    public THIS scrollToTop() {
+        executeJS("comp.scrollTop = 0;");
+        return _this;
+    }
+
+    /**
+     * Scrolls the component to the bottom.
+     *
+     * @return the current instance of Component
+     */
+    public THIS scrollToBottom() {
+        executeJS("comp.scrollTop = comp.scrollHeight;");
+        return _this;
+    }
+
+    /**
+     * Scrolls the component to the top with smooth animation.
+     *
+     * @param duration the duration of the animation in milliseconds
+     * @return the current instance of Component
+     */
+    public THIS scrollToTopSmooth(int duration) {
+        executeJS("let start = comp.scrollTop; let startTime = null; function scrollTo(timestamp) { if (!startTime) startTime = timestamp; let elapsed = timestamp - startTime; let progress = elapsed / duration; comp.scrollTop = start * (1 - Math.pow(2, -10 * progress)); if (elapsed < duration) { window.requestAnimationFrame(scrollTo); } } window.requestAnimationFrame(scrollTo);");
+        return _this;
+    }
+
+    /**
+     * Scrolls the component to the bottom with smooth animation.
+     *
+     * @param duration the duration of the animation in milliseconds
+     * @return the current instance of Component
+     */
+    public THIS scrollToBottomSmooth(int duration) {
+        executeJS("let start = comp.scrollTop; let startTime = null; let scrollHeight = comp.scrollHeight - comp.clientHeight; function scrollTo(timestamp) { if (!startTime) startTime = timestamp; let elapsed = timestamp - startTime; let progress = elapsed / duration; comp.scrollTop = scrollHeight * Math.pow(2, 10 * (progress - 1)); if (elapsed < duration) { window.requestAnimationFrame(scrollTo); } } window.requestAnimationFrame(scrollTo);");
+        return _this;
+    }
+
+    /**
+     * Scrolls the component to the left with smooth animation.
+     *
+     * @param duration the duration of the animation in milliseconds
+     * @return the current instance of Component
+     */
+    public THIS scrollToLeftSmooth(int duration) {
+        executeJS("let start = comp.scrollLeft; let startTime = null; function scrollTo(timestamp) { if (!startTime) startTime = timestamp; let elapsed = timestamp - startTime; let progress = elapsed / duration; comp.scrollLeft = start * (1 - Math.pow(2, -10 * progress)); if (elapsed < duration) { window.requestAnimationFrame(scrollTo); } } window.requestAnimationFrame(scrollTo);");
+        return _this;
+    }
+
+    /**
+     * Scrolls the component to the right with smooth animation.
+     *
+     * @param duration the duration of the animation in milliseconds
+     * @return the current instance of Component
+     */
+    public THIS scrollToRightSmooth(int duration) {
+        executeJS("let start = comp.scrollLeft; let startTime = null; let scrollWidth = comp.scrollWidth - comp.clientWidth; function scrollTo(timestamp) { if (!startTime) startTime = timestamp; let elapsed = timestamp - startTime; let progress = elapsed / duration; comp.scrollLeft = scrollWidth * Math.pow(2, 10 * (progress - 1)); if (elapsed < duration) { window.requestAnimationFrame(scrollTo); } } window.requestAnimationFrame(scrollTo);");
+        return _this;
+    }
+
 
     //
     // Listeners
