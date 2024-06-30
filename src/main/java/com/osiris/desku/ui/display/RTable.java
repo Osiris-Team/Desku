@@ -23,7 +23,7 @@ public class RTable extends Component<RTable, NoValue> {
      * @param clazz uses this classes' fields for the headers.
      */
     public RTable(Class<?> clazz) {
-        super(NoValue.GET, "rtable");
+        super(NoValue.GET, NoValue.class, "rtable");
         add(this.table);
         this.clazz = clazz;
         headers(clazz);
@@ -34,7 +34,7 @@ public class RTable extends Component<RTable, NoValue> {
      * @param fieldPredicate is used to determine which fields to use.
      */
     public RTable(Class<?> clazz, Predicate<Field> fieldPredicate) {
-        super(NoValue.GET, "rtable");
+        super(NoValue.GET, NoValue.class, "rtable");
         add(this.table);
         this.clazz = clazz;
         this.fieldPredicate = fieldPredicate;

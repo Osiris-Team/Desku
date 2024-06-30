@@ -27,7 +27,7 @@ public class CheckBox extends Component<CheckBox, Boolean> {
     }
 
     public CheckBox(Text label, boolean defaultValue) {
-        super(defaultValue);
+        super(defaultValue, Boolean.class);
         addClass("input-group");
         this.label = label;
         add(this.input, this.label);

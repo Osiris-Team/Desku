@@ -24,7 +24,7 @@ public class Image extends Component<Image, NoValue> {
      * @param name for example "image.png" or "/image.jpg" or "/folder/image.jpg".
      */
     public Image(RenderedImage image, String name) {
-        super(NoValue.GET, "img");
+        super(NoValue.GET, NoValue.class, "img");
         // Paths
         String src = name;
         if (!src.startsWith("/")) src = "/" + src;
@@ -71,7 +71,7 @@ public class Image extends Component<Image, NoValue> {
      * @param src   examples: "/image.png" or "image.png" or "/sub-dir/image.png" or "sub-dir/image.png"
      */
     public Image(String packagePath, String src) {
-        super(NoValue.GET, "img");
+        super(NoValue.GET, NoValue.class, "img");
 
         // Paths
         if (!src.startsWith("/")) src = "/" + src;

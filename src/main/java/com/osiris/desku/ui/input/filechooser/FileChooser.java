@@ -32,7 +32,7 @@ public class FileChooser extends Component<FileChooser, String> {
     }
 
     public FileChooser(Text label, String defaultValue) {
-        super(defaultValue);
+        super(defaultValue, String.class);
         this.tfSelectedFiles = new TextField(label, defaultValue);
         this.directoryView = new DirectoryView(this, App.userDir.getAbsoluteFile());
         directoryView.visible(false);

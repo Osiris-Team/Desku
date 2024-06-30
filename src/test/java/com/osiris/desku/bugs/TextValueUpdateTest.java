@@ -22,7 +22,7 @@ public class TextValueUpdateTest {
     static class MyComp extends Component<MyComp, Person>{
 
         public MyComp() {
-            super(new Person());
+            super(new Person(), Person.class);
         }
     }
 

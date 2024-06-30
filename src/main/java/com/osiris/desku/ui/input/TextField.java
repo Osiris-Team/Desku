@@ -27,7 +27,7 @@ public class TextField extends Component<TextField, String> {
     }
 
     public TextField(Text label, String defaultValue) { // TODO defaultValue is not visible in UI
-        super(defaultValue);
+        super(defaultValue, String.class);
         addClass("textfield");
         addClass("input-group");
         this.label = label;

@@ -28,7 +28,7 @@ public class OptionField extends Component<OptionField, String> {
     }
 
     public OptionField(Text label, String defaultValue) {
-        super(defaultValue);
+        super(defaultValue, String.class);
         addClass("input-group");
         this.label = label;
         this.button = new Button(defaultValue)

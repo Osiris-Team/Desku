@@ -6,7 +6,7 @@ import com.osiris.desku.ui.utils.NoValue;
 public class Vertical extends Component<Vertical, NoValue> {
 
     public Vertical() {
-        super(NoValue.GET);
+        super(NoValue.GET, NoValue.class);
         childVertical();
     }
 }

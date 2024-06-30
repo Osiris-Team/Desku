@@ -16,7 +16,7 @@ public class PageLayout extends Component<PageLayout, NoValue> {
     public int iStart, maxFetchCount;
 
     public PageLayout() {
-        super(NoValue.GET);
+        super(NoValue.GET, NoValue.class);
         this.add(content, navigator);
         childVertical();
     }
@@ -48,7 +48,7 @@ public class PageLayout extends Component<PageLayout, NoValue> {
         public Button next;
 
         public Navigator(Component<?,?> content) {
-            super(NoValue.GET);
+            super(NoValue.GET, NoValue.class);
             this.content = content;
 
             Button previous = new Button("Previous").secondary().width("100%").sizeS().childStart1()

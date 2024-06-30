@@ -16,6 +16,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Element;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -241,23 +243,31 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * @see #Component(Object, Class, String)
      */
-    public Component(@NotNull VALUE value) {
-        this(value, (Class<VALUE>) value.getClass(), "c");
+    public Component(@NotNull VALUE value, @NotNull Class<VALUE> valueClass) {
+        this(value, valueClass, "c");
     }
 
     /**
-     * @see #Component(Object, Class, String)
-     */
-    public Component(@NotNull VALUE value, String tag) {
-        this(value, (Class<VALUE>) value.getClass(), tag);
-    }
-
-    /**
-     * @param value default starting value for this component.
+     * @param value default starting value for this component. For compatibility reasons null is allowed, however note that if that's the case
+     *              a default value will be created using reflection, if that doesn't work a RuntimeException is thrown.
      * @param valueClass the class of the default value.
      * @param tag html tag.
      */
     public Component(@NotNull VALUE value, @NotNull Class<VALUE> valueClass, @NotNull String tag) {
+        if(value == null) {
+            if(valueClass == String.class) value = (VALUE) "";
+            else {
+                try {
+                    if (!Modifier.isAbstract(valueClass.getModifiers()) && valueClass.getDeclaredConstructor() != null) {
+                        value = valueClass.getDeclaredConstructor().newInstance();
+                    } else {
+                        throw new IllegalArgumentException("Class must have a public no-argument constructor and not be abstract.");
+                    }
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    throw new RuntimeException("Failed to create default value: " + e.getMessage(), e);
+                }
+            }
+        }
         this.internalValue = value;
         this.internalDefaultValue = value;
         this.internalValueClass = valueClass;

@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 public class ListLayout extends Component<ListLayout, NoValue> {
 
     public ListLayout() {
-        super(NoValue.GET, "ul");
+        super(NoValue.GET, NoValue.class, "ul");
         Consumer<AddedChildEvent> superAdd = _add;
         _add = e -> {
             e.childComp.element.tagName("li"); // Set tag name before adding child

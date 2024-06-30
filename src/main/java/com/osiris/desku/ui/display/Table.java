@@ -42,7 +42,7 @@ public class Table extends Component<Table, NoValue> {
     }
 
     public Table() {
-        super(NoValue.GET);
+        super(NoValue.GET, NoValue.class);
         add(headers, rows);
         addClass("desku-table");
         rows.onChildAdd.addAction(e -> {
@@ -138,7 +138,7 @@ public class Table extends Component<Table, NoValue> {
         public Event<Row> _onHeaderClick = new Event<>();
 
         public Headers(Table table) {
-            super(NoValue.GET, "headers");
+            super(NoValue.GET, NoValue.class, "headers");
             this.t = table;
             width("100%");
             Consumer<AddedChildEvent> superAdd = this._add;
@@ -166,7 +166,7 @@ public class Table extends Component<Table, NoValue> {
         public Event<Row> _onRowClick = new Event<>();
 
         public Rows(Table table) {
-            super(NoValue.GET, "rows");
+            super(NoValue.GET, NoValue.class, "rows");
             childVertical();
             this.t = table;
             width("100%"); // Children grow height of this layout
@@ -189,7 +189,7 @@ public class Table extends Component<Table, NoValue> {
 
     public static class Row extends Component<Row, NoValue> {
         public Row() {
-            super(NoValue.GET);
+            super(NoValue.GET, NoValue.class);
             addClass("desku-table-row");
 
             // Wrap all added children first into cell
@@ -222,7 +222,7 @@ public class Table extends Component<Table, NoValue> {
     public static class Cell extends Component<Cell, NoValue> {
 
         public Cell(){
-            super(NoValue.GET);
+            super(NoValue.GET, NoValue.class);
             addClass("desku-table-cell");
         }
 

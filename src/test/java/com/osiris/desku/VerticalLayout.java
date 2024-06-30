@@ -25,7 +25,7 @@ public class VerticalLayout extends Component<VerticalLayout, NoValue> {
     }
 
     public VerticalLayout() {
-        super(NoValue.GET, "vl");
+        super(NoValue.GET, NoValue.class, "vl");
         // Make sure to call init before anything else!
 
         // You can get the window this component is loaded in, like so:

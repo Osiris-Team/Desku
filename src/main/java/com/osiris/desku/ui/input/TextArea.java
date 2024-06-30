@@ -27,7 +27,7 @@ public class TextArea extends Component<TextArea, String> {
     }
 
     public TextArea(Text label, String defaultValue) { // TODO defaultValue is not visible in UI
-        super(defaultValue);
+        super(defaultValue, String.class);
         addClass("input-group");
         this.label = label;
         this.defaultValue = defaultValue;

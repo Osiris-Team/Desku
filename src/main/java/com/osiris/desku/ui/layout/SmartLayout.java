@@ -35,7 +35,7 @@ public class SmartLayout extends Component<SmartLayout, NoValue> {
      * @param minChildWidth the min width of a child component.
      */
     public SmartLayout(boolean childGrow, String minChildWidth) {
-        super(NoValue.GET);
+        super(NoValue.GET, NoValue.class);
         addClass("smart-layout");
         wrap(true);
         rsty("flex-direction");

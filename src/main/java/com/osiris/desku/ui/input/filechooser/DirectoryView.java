@@ -20,13 +20,13 @@ public class DirectoryView extends Component<DirectoryView, NoValue> {
     private File dir;
 
     public DirectoryView(FileChooser fileChooser, String dir) {
-        super(NoValue.GET);
+        super(NoValue.GET, NoValue.class);
         this.fileChooser = fileChooser;
         setDir(new File(dir));
     }
 
     public DirectoryView(FileChooser fileChooser, File dir) {
-        super(NoValue.GET);
+        super(NoValue.GET, NoValue.class);
         this.fileChooser = fileChooser;
         childVertical();
         setDir(dir);

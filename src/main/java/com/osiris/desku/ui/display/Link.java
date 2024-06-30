@@ -8,7 +8,7 @@ import com.osiris.jlib.logger.AL;
 public class Link extends Component<Link, String> {
 
     public Link() {
-        super("", "a");
+        super("", String.class, "a");
     }
 
     public Link setValue(String url) {

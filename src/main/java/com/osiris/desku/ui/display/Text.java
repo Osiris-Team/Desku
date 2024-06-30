@@ -17,7 +17,7 @@ public class Text extends Component<Text, String> {
     public final Event<Void> _onEmptyValue = new Event<>();
 
     public Text(String s) {
-        super(s, "txt");
+        super(s, String.class, "txt");
         setValue(s);
         // Attach Java event listeners
         UI win = UI.get();

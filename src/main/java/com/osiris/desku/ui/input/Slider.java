@@ -25,7 +25,7 @@ public class Slider extends Component<Slider, Double> {
     }
 
     public Slider(Text label, double defaultValue, double minValue, double maxValue, double stepValue) {
-        super(defaultValue);
+        super(defaultValue, Double.class);
         addClass("slider");
         this.label = label;
         this.input = new Input<>("range", defaultValue);

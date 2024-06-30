@@ -100,7 +100,8 @@ public class Home extends Route {
                 .add(text("XLarge").sizeXL())
                 .add(text("XLarge").sizeXL())
                 .add(text("XXLarge").sizeXXL())
-                .add(text("XXXLarge").sizeXXXL());
+                .add(text("XXXLarge").sizeXXXL())
+                .add(text(null));
 
         ly.horizontalCL()
                 .add(text("Horizontal child layout. Items: "))
@@ -110,7 +111,8 @@ public class Home extends Route {
                 .add(text("Large").sizeL())
                 .add(text("XLarge").sizeXL())
                 .add(text("XXLarge").sizeXXL())
-                .add(text("XXXLarge").sizeXXXL());
+                .add(text("XXXLarge").sizeXXXL())
+                .add(text(null));
         // Smart, mobile friendly layout
         ly.add(text("Smart, mobile friendly layout").sizeXXL());
         ly.add(smartlayout().add(

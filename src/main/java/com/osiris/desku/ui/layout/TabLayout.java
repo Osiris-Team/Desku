@@ -12,7 +12,7 @@ public class TabLayout extends Component<TabLayout, NoValue> {
     public Horizontal pages = new Horizontal();
 
     public TabLayout() {
-        super(NoValue.GET);
+        super(NoValue.GET, NoValue.class);
         childVertical();
         add(tabs, pages);
         tabs.addClass("nav nav-tabs");
