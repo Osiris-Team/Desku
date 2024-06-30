@@ -32,7 +32,7 @@ public class FileUploader extends Component<FileUploader, File> {
     public FileUploader(Text label, String defaultFileName) {
         super(new File("", new byte[]{}), File.class);
         this.label = label;
-        this.input = new Input<>("file", defaultFileName);
+        this.input = new Input<>("file", defaultFileName, String.class);
         add(this.label, this.input);
         childVertical();
     }

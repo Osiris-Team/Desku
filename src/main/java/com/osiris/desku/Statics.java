@@ -215,14 +215,14 @@ public class Statics {
 
     /**
      */
-    static public <VALUE> Input input(String type, VALUE defaultValue) {
-        return new Input(type, defaultValue);
+    static public <VALUE> Input input(String type, VALUE defaultValue, Class<VALUE> defaultValueClass) {
+        return new Input(type, defaultValue, defaultValueClass);
     }
 
     /**
      */
-    static public <VALUE> Input input(String type, VALUE defaultValue, String tag) {
-        return new Input(type, defaultValue, tag);
+    static public <VALUE> Input input(String type, VALUE defaultValue, Class<VALUE> defaultValueClass, String tag) {
+        return new Input(type, defaultValue, defaultValueClass, tag);
     }
 
     /**

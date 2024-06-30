@@ -11,7 +11,7 @@ public class CheckBox extends Component<CheckBox, Boolean> {
 
     // Layout
     public Text label;
-    public Input<Boolean> input = new Input<>("checkbox", false)
+    public Input<Boolean> input = new Input<Boolean>("checkbox", false, Boolean.class)
             .addClass("form-check-input").addClass("mt-0").sty("max-width", "20px");
 
     public CheckBox() {

@@ -10,7 +10,7 @@ public class ColorPicker extends Component<ColorPicker, String> {
 
     // Layout
     public Text label;
-    public Input<String> input = new Input<>("color", "#000000");
+    public Input<String> input = new Input<>("color", "#000000", String.class);
 
     public ColorPicker() {
         this("", "#000000");

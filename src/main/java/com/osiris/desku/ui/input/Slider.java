@@ -28,7 +28,7 @@ public class Slider extends Component<Slider, Double> {
         super(defaultValue, Double.class);
         addClass("slider");
         this.label = label;
-        this.input = new Input<>("range", defaultValue);
+        this.input = new Input<>("range", defaultValue, Double.class);
         add(this.label, this.input);
         childVertical();
         this.input.atr("value", String.valueOf(defaultValue));

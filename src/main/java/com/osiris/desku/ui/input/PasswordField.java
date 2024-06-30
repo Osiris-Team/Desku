@@ -29,7 +29,7 @@ public class PasswordField extends Component<PasswordField, String> {
         addClass("passwordfield");
         addClass("input-group");
         this.label = label;
-        this.input = new Input<>("password", defaultValue);
+        this.input = new Input<>("password", defaultValue, String.class);
         add(this.label, this.input);
         childVertical();
     }

@@ -31,7 +31,7 @@ public class TextArea extends Component<TextArea, String> {
         addClass("input-group");
         this.label = label;
         this.defaultValue = defaultValue;
-        this.input = new Input<>("textarea", defaultValue, "textarea");
+        this.input = new Input<>("textarea", defaultValue, String.class, "textarea");
         add(this.label, this.input);
         childVertical();
     }

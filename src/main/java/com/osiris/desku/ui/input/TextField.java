@@ -32,7 +32,7 @@ public class TextField extends Component<TextField, String> {
         addClass("input-group");
         this.label = label;
         this.defaultValue = defaultValue;
-        this.input = new Input<>("text", defaultValue);
+        this.input = new Input<>("text", defaultValue, String.class);
         add(this.label, this.input);
         childVertical();
     }
