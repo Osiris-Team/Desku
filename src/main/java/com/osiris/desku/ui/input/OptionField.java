@@ -3,7 +3,7 @@ package com.osiris.desku.ui.input;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ValueChangeEvent;
-import com.osiris.desku.ui.layout.SmartLayout;
+import com.osiris.desku.ui.layout.Popup;
 import com.osiris.desku.utils.GodIterator;
 
 import java.util.function.Consumer;
@@ -13,7 +13,12 @@ public class OptionField extends Component<OptionField, String> {
     // Layout
     public Text label;
     public Button button;
-    public SmartLayout items = new SmartLayout();
+    public Popup items = new Popup();
+    {
+        items.visible(false);
+        items.btn1.visible(false);
+        items.btn2.visible(false);
+    }
 
     public OptionField() {
         this("", "Select");

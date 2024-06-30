@@ -3,7 +3,6 @@ package com.osiris.desku.ui.input;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ValueChangeEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
@@ -34,10 +33,6 @@ public class TextArea extends Component<TextArea, String> {
         this.input = new Input<>("textarea", defaultValue, String.class, "textarea");
         add(this.label, this.input);
         childVertical();
-    }
-
-    public @NotNull String getValue() {
-        return this.input.element.attr("value");
     }
 
     public TextArea setValue(String v) {

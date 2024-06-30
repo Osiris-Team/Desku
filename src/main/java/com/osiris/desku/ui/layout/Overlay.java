@@ -11,7 +11,6 @@ public class Overlay extends Component<Overlay, NoValue> {
      */
     public Overlay(Component<?,?> parent) {
         super(NoValue.GET, NoValue.class, "overlay");
-        verticalCL();
         if (parent == null)
             this.sty("position", "fixed"); // Sit on top of page
         else {

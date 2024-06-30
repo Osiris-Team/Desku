@@ -152,6 +152,18 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             onChildRemove.execute(child);
         }
     };
+    public Consumer<Component> _removeSelf = self -> {
+        UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
+        if (self.element.parent() != null){
+            self.element.remove();
+        }
+        self.update();
+        ui.executeJavaScriptSafely(ui.jsGetComp("comp", self.id) +
+                        "comp.parentNode.removeChild(comp);\n",
+                "internal", 0);
+        self.isAttached = false;
+        //onChildRemove.execute(self);
+    };
     public Consumer<AddedChildEvent> _add = (e) -> {
 
         // Perform in-memory update
@@ -530,6 +542,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         if (!children.contains(oldComp))
             throw new IndexOutOfBoundsException("Provided old component to be replaced does not exist in children!");
         _add.accept(new AddedChildEvent(newComp, oldComp, false, true));
+        return _this;
+    }
+
+    public THIS removeSelf() {
+        _removeSelf.accept(this);
         return _this;
     }
 
