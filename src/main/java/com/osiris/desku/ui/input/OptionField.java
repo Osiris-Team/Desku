@@ -6,14 +6,41 @@ import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.layout.Popup;
 import com.osiris.desku.utils.GodIterator;
 
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public class OptionField extends Component<OptionField, String> {
+    public static class Items extends Popup{
+        public Items(OptionField optionField) {
+            // Lastly change add function:
+            Consumer<AddedChildEvent> superItemsAdd = _add;
+            _add = e -> {
+                e.childComp.sty("cursor", "pointer");
+                e.childComp.onClick(click -> {
+                    visible(false);
+                    optionField.setValue(click.comp.element.text());
+                });
+                superItemsAdd.accept(e); // Directly add children to items / list layout
+            };
+        }
+
+        public Items add(String... options) {
+            if (options == null) return this;
+            GodIterator.forEach(options, s -> {
+                _add.accept(new AddedChildEvent(new Text(s), null, false, false));
+            });
+            return this;
+        }
+
+        public CopyOnWriteArrayList<Component> get(){
+            return body.children;
+        }
+    }
 
     // Layout
     public Text label;
     public Button button;
-    public Popup items = new Popup();
+    public Items items = new Items(this);
     {
         items.visible(false);
         items.btn1.visible(false);
@@ -46,25 +73,16 @@ public class OptionField extends Component<OptionField, String> {
         this.items.visible(false);
         add(this.label, this.button, this.items);
         childVertical();
-
-        // Lastly change add function:
-        Consumer<AddedChildEvent> superItemsAdd = this.items._add;
-        this._add = e -> {
-            e.childComp.sty("cursor", "pointer");
-            e.childComp.onClick(click -> {
-                items.visible(false);
-                setValue(click.comp.element.text());
-            });
-            superItemsAdd.accept(e); // Directly add children to items / list layout
-        };
     }
 
-    public OptionField add(String... options) {
-        if (options == null) return _this;
-        GodIterator.forEach(options, s -> {
-            _add.accept(new AddedChildEvent(new Text(s), null, false, false));
-        });
-        return _this;
+    public OptionField addItems(String... arr) {
+        items.add(arr);
+        return this;
+    }
+
+    public OptionField addItems(Component<?, ?>... arr) {
+        items.add(arr);
+        return this;
     }
 
     @Override

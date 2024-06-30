@@ -8,5 +8,6 @@ public class Vertical extends Component<Vertical, NoValue> {
     public Vertical() {
         super(NoValue.GET, NoValue.class);
         childVertical();
+        MainLayoutStyles.apply(this);
     }
 }

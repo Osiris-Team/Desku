@@ -223,7 +223,7 @@ public class Home extends Route {
         // Option field
         // You can also add strings directly instead of components
         ly.add(optionfield("Option field label")
-                .add(text("Option 1"), text("Option 2"), text("Option 3"))
+                .addItems(text("Option 1"), text("Option 2"), text("Option 3"))
                 .onValueChange(e -> {
             AL.info("Input of option field changed: "+e.value+" before: "+e.valueBefore);
         }));

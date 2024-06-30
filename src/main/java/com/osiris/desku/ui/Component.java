@@ -1075,7 +1075,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Creates, adds and returns a new child layout with vertical component alignment.
      */
     public Vertical verticalCL() {
-        Vertical layout = new Vertical();
+        Vertical layout = new Vertical().padding(false);
         add(layout);
         return layout;
     }
@@ -1085,7 +1085,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Creates, adds and returns a new child layout with horizontal component alignment.
      */
     public Horizontal horizontalCL() {
-        Horizontal layout = new Horizontal();
+        Horizontal layout = new Horizontal().padding(false);
         add(layout);
         return layout;
     }
@@ -1095,7 +1095,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Creates, adds and returns a new smart child layout.
      */
     public SmartLayout smartCL() {
-        SmartLayout layout = new SmartLayout();
+        SmartLayout layout = new SmartLayout().padding(false);
         add(layout);
         return layout;
     }

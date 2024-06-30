@@ -7,9 +7,6 @@ import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.layout.Vertical;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,9 +25,7 @@ public class TextValueUpdateTest {
 
     @Test
     void testGettingSettingValuesAndTheirFormats() throws Throwable {
-        AtomicBoolean isDone = new AtomicBoolean(false);
-        AtomicReference<Throwable> refEx = new AtomicReference<>();
-        TApp.load(() -> {
+        TApp.testAndAwaitResult((asyncResult) -> {
             String txtDefValue  = "Hello!";
             Text txt = new Text(txtDefValue);
             MyComp myComp = new MyComp();
@@ -70,17 +65,12 @@ public class TextValueUpdateTest {
 
 
                         } catch (Throwable e) {
-                            refEx.set(e);
+                            asyncResult.refEx.set(e);
                         } finally {
-                            isDone.set(true);
+                            asyncResult.isDone.set(true);
                         }
                     });
         });
-        for (int i = 0; i < 30; i++) {
-            if(isDone.get()) break;
-            Thread.sleep(1000);
-        }
-        if(!isDone.get()) throw new Exception("Didn't finish within 30 seconds!");
-        if(refEx.get() != null) throw refEx.get();
+
     }
 }

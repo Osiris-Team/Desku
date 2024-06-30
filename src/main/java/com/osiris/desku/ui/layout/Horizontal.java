@@ -7,5 +7,6 @@ public class Horizontal extends Component<Horizontal, NoValue> {
     public Horizontal() {
         super(NoValue.GET, NoValue.class);
         childHorizontal();
+        MainLayoutStyles.apply(this);
     }
 }
