@@ -1,5 +1,5 @@
 # Desku [![](https://jitpack.io/v/Osiris-Team/Desku.svg)](https://jitpack.io/#Osiris-Team/Desku)
-Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java/JS, HTML and CSS.
+Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java. Using Web-Tech (JS/HTML/CSS) under the hood.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
 ### Who is it for?
