@@ -316,9 +316,6 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         else
             gatr("value", valueAsString -> {
                 VALUE value = ValueChangeEvent.stringToVal(valueAsString, this);
-                if(value != this.internalValue){
-
-                }
                 v.accept(value);
             });
         return _this;
@@ -627,7 +624,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     /**
      * Short for get attribute value. <br>
-     * Returns the value for the provided attribute key and an empty String if no key found or when value is null/undefined.
+     * Returns the value for the provided attribute key. <br>
+     * First tries to return its property value, then if that fails, tries to
+     * return the value for its attribute, and returns an empty String if no key found or when value is null/undefined.
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
         executeJS("try { " +

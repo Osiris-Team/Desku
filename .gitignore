@@ -46,3 +46,5 @@ hs_err_pid*
 /.gradle/*
 /webview.dll
 /WebView2Loader.dll
+/mvnw.cmd
+/.mvn/

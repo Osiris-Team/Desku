@@ -3,14 +3,14 @@ package com.osiris.desku.bugs;
 import com.osiris.desku.TApp;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.UI;
-import com.osiris.desku.ui.display.Text;
+import com.osiris.desku.ui.input.TextField;
 import com.osiris.desku.ui.layout.Vertical;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TextValueUpdateTest {
+public class TextFieldValueUpdateTest {
 
     static class Person{
         public String name = "John";
@@ -27,33 +27,33 @@ public class TextValueUpdateTest {
     void test() throws Throwable {
         TApp.testAndAwaitResult((asyncResult) -> {
             String txtDefValue  = "Hello!";
-            Text txt = new Text(txtDefValue);
+            TextField tf = new TextField("Label", txtDefValue);
             MyComp myComp = new MyComp();
             return new Vertical()
-                    .add(txt)
+                    .add(tf)
                     .add(myComp)
                     .later(__ -> {
                         try{
                             while(UI.get().isLoading()) Thread.yield(); // Wait to ensure not the internal value is directly returned
                             // but instead the value is returned from the frontend HTML value attribute of the component.
 
-                            txt.setValue("1");
-                            assertEquals("1", txt.getValue());
+                            tf.setValue("1");
+                            assertEquals("1", tf.getValue());
 
-                            txt.setValue(null);
-                            assertEquals(txtDefValue, txt.getValue());
+                            tf.setValue(null);
+                            assertEquals(txtDefValue, tf.getValue());
 
-                            txt.setValue("\"\"");
-                            assertEquals("\"\"", txt.getValue());
+                            tf.setValue("\"\"");
+                            assertEquals("\"\"", tf.getValue());
 
-                            txt.setValue("C:\\example\\path");
-                            assertEquals("C:\\example\\path", txt.getValue());
+                            tf.setValue("C:\\example\\path");
+                            assertEquals("C:\\example\\path", tf.getValue());
 
-                            txt.setValue("{}"); // NoValue.GET as string is also {}, however the components type is String and not NoValue
-                            assertEquals("{}", txt.getValue());
+                            tf.setValue("{}"); // NoValue.GET as string is also {}, however the components type is String and not NoValue
+                            assertEquals("{}", tf.getValue());
 
-                            txt.setValue("{\"key\": \"value\"}");
-                            assertEquals("{\"key\": \"value\"}", txt.getValue());
+                            tf.setValue("{\"key\": \"value\"}");
+                            assertEquals("{\"key\": \"value\"}", tf.getValue());
 
                             assertTrue(myComp.isDefaultValue());
 
