@@ -372,10 +372,15 @@ public class Home extends Route {
             long msTook = System.currentTimeMillis() - ms.get();
             e.comp.label.setValue("Click to add elements below (took "+msTook+"ms, total elements: "+lyElements.children.size()+")");
         });
+        Button btnClearElements = button("Clear").onClick(e -> {
+            btnAddElements.label.setValue("Click to add elements below");
+            lyElements.removeAll();
+        });
 
         ly.add(
                 numElements,
-                btnAddElements,
+                horizontal().padding(false)
+                        .add(btnAddElements, btnClearElements),
                 lyElements
         );
 

@@ -145,10 +145,15 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             if (child.element.parent() != null)
                 child.element.remove();
             child.update();
-            ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
+
+            // Update UI
+            if (isAttached && !ui.isLoading()){
+                ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
                                 ui.jsGetComp("childComp", child.id) +
                                 "comp.removeChild(childComp);\n",
                         "internal", 0);
+            }
+
             child.isAttached = false;
             onChildRemove.execute(child);
         }
@@ -159,9 +164,14 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             self.element.remove();
         }
         self.update();
-        ui.executeJavaScriptSafely(ui.jsGetComp("comp", self.id) +
-                        "comp.parentNode.removeChild(comp);\n",
-                "internal", 0);
+
+        // Update UI
+        if (isAttached && !ui.isLoading()){
+            ui.executeJavaScriptSafely(ui.jsGetComp("comp", self.id) +
+                            "comp.parentNode.removeChild(comp);\n",
+                    "internal", 0);
+        }
+
         self.isAttached = false;
         //onChildRemove.execute(self);
     };
@@ -213,7 +223,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
-            if (!ui.isLoading()){
+            if (isAttached && !ui.isLoading()){
                 executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
                         + " = ``;\n"); // Change UI representation
             }
@@ -227,7 +237,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
-            if (!ui.isLoading()){
+            if (isAttached && !ui.isLoading()){
                 executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
                         + " = `" + attribute.getValue() + "`;\n"); // Change UI representation
             }
@@ -238,7 +248,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (e.isInsert) { // Add or change attribute
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
-            if (!ui.isLoading()){
+            if (isAttached && !ui.isLoading()){
                 executeJS("comp.setAttribute(`" + e.attribute.getKey()
                         + "`, `" + e.attribute.getValue() + "`);\n" +
                         "comp[\""+e.attribute.getKey()+"\"] = `"+e.attribute.getValue()+"`"); // Change UI representation
@@ -246,7 +256,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
         } else {// Remove attribute
             element.removeAttr(e.attribute.getKey()); // Change in-memory representation
-            if (!ui.isLoading()){
+            if (isAttached && !ui.isLoading()){
                 executeJS("comp.removeAttribute(`" + e.attribute.getKey() + "`);\n" +
                         "comp[\""+e.attribute.getKey()+"\"] = null"); // Change UI representation
             }
