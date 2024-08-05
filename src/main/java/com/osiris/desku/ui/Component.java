@@ -294,11 +294,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     /**
      * Util method to get the value directly. <br>
-     * Thus override {@link #getValueInternal(Consumer)} instead if needed.
+     * Thus override {@link #getValue(Consumer)} instead if needed.
      */
     public @NotNull VALUE getValue() {
         AtomicReference<VALUE> atomicValue = new AtomicReference<>();
-        getValueInternal(val -> {
+        getValue(val -> {
             atomicValue.set(val);
         });
         while(atomicValue.get() == null) Thread.yield(); // Wait until value returned
@@ -306,17 +306,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     /**
-     * If extending, override {@link #getValueInternal(Consumer)}.
      * @param v executed when the value is got from the client-side.
      * @return should never return null, even if setValue(null) was called, in that case it returns the {@link #internalDefaultValue}
      * that was set in the constructor.
      */
     public THIS getValue(Consumer<@NotNull VALUE> v) {
-        getValueInternal(v);
-        return _this;
-    }
-
-    protected void getValueInternal(Consumer<@NotNull VALUE> v) {
         UI ui = UI.get();
         if(ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
@@ -325,6 +319,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 VALUE value = ValueChangeEvent.stringToVal(valueAsString, this);
                 v.accept(value);
             });
+        return _this;
     }
 
     /**
@@ -635,12 +630,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * return the value for its attribute, and returns an empty String if no key found or when value is null/undefined.
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
-        executeJS("try { " +
-                "   message = comp[\"" + key + "\"]; " +
-                "} catch (e) { " +
-                "   console.error(e); " +
-                "   message = comp.getAttribute(`" + key + "`); " +
-                "}", onValueReturned, AL::warn);
+        executeJS("try { message = comp[\"" + key + "\"]; } catch (e) { console.error(e); }\n" +
+                "if(message == null) try{ message = comp.getAttribute(`\" + key + \"`); } catch (e) { console.error(e); }\n", onValueReturned, AL::warn);
     }
 
     /**

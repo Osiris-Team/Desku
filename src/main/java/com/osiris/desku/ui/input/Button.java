@@ -26,8 +26,9 @@ public class Button extends Component<Button, String> {
      * @return button label as string.
      */
     @Override
-    public void getValueInternal(Consumer<String> v) {
+    public Button getValue(Consumer<String> v) {
         label.getValue(v);
+        return _this;
     }
 
     /**

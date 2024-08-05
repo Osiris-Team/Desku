@@ -28,6 +28,9 @@ public class TextValueUpdateTest {
         TApp.testAndAwaitResult((asyncResult) -> {
             String txtDefValue  = "Hello!";
             Text txt = new Text(txtDefValue);
+            txt.setValue("0");
+            assertEquals("0", txt.getValue());
+
             MyComp myComp = new MyComp();
             return new Vertical()
                     .add(txt)

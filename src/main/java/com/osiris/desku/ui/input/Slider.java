@@ -38,8 +38,9 @@ public class Slider extends Component<Slider, Double> {
     }
 
     @Override
-    public void getValueInternal(Consumer<Double> v) {
+    public Slider getValue(Consumer<Double> v) {
         input.getValue(v);
+        return _this;
     }
 
 

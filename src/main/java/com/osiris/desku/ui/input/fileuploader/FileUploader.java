@@ -53,8 +53,9 @@ public class FileUploader extends Component<FileUploader, File> {
      * Returns the uploaded file, or a file where {@link File#content} length is 0, if nothing uploaded yet.
      */
     @Override
-    public void getValueInternal(Consumer<File> v) {
-        super.getValueInternal(v);
+    public FileUploader getValue(Consumer<File> v) {
+        super.getValue(v);
+        return _this;
     }
 
 
