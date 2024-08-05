@@ -60,4 +60,11 @@ public class TabLayout extends Component<TabLayout, NoValue> {
             selectTab(tab);
         return this;
     }
+
+    @Override
+    public TabLayout removeAll() {
+        tabs.removeAll();
+        pages.removeAll();
+        return _this;
+    }
 }
