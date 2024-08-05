@@ -11,7 +11,7 @@ AUTO-GENERATED FILE, CHANGES SHOULD BE DONE IN ./JPM.java or ./src/main/java/com
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.osiris.desku</groupId>
     <artifactId>Desku</artifactId>
-    <version>1.0.16</version>
+    <version>1.0.19</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -118,7 +118,7 @@ AUTO-GENERATED FILE, CHANGES SHOULD BE DONE IN ./JPM.java or ./src/main/java/com
                             <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>
-                    <finalName>Desku-1.0.16</finalName>
+                    <finalName>Desku-1.0.19</finalName>
                 </configuration>
             </plugin>
             <plugin>
@@ -177,6 +177,12 @@ AUTO-GENERATED FILE, CHANGES SHOULD BE DONE IN ./JPM.java or ./src/main/java/com
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
             </resource>
         </resources>
     </build>

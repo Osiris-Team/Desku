@@ -25,7 +25,7 @@ public class JPM {
             // Override default configurations
             this.groupId = "com.osiris.desku";
             this.artifactId = "Desku";
-            this.version = "1.0.19";
+            this.version = "1.0.20";
             this.jarName = "Desku-"+version+".jar";
             this.javaVersionSource = "11";
             this.javaVersionTarget = "11";
@@ -65,6 +65,18 @@ public class JPM {
                 if(!args.contains("skipMaven"))
                     JPM.executeMaven("clean", "package", "-DskipTests"); // or JPM.executeMaven(args); if you prefer the CLI, like "java JPM.java clean package"
             }
+        }
+
+        @Override
+        public XML toXML() {
+            XML pom = super.toXML();
+
+            // Ensure all files (like .html .css etc, are also added to the jar)
+            XML resource = new XML("resource");
+            resource.put("directory", "src/main/java");
+            resource.put("includes include", "**/*");
+            pom.add("build resources", resource);
+            return pom;
         }
     }
 
