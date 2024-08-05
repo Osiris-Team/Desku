@@ -631,7 +631,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
         executeJS("try { message = comp[\"" + key + "\"]; } catch (e) { console.error(e); }\n" +
-                "if(message == null) try{ message = comp.getAttribute(`\" + key + \"`); } catch (e) { console.error(e); }\n", onValueReturned, AL::warn);
+                "if(message == null) try{ message = comp.getAttribute(`" + key + "`); } catch (e) { console.error(e); }\n", onValueReturned, AL::warn);
     }
 
     /**
