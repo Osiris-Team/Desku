@@ -42,9 +42,8 @@ public class TextField extends Component<TextField, String> {
     }
 
     @Override
-    public TextField getValue(Consumer<String> v) {
+    public void getValueInternal(Consumer<String> v) {
         input.getValue(v);
-        return this;
     }
 
     @Override

@@ -13,6 +13,7 @@ import com.osiris.jlib.json.JsonFile;
 import com.osiris.jlib.logger.AL;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnknownNullability;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Element;
 
@@ -267,7 +268,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * @param valueClass the class of the default value.
      * @param tag html tag.
      */
-    public Component(@NotNull VALUE value, @NotNull Class<VALUE> valueClass, @NotNull String tag) {
+    public Component(@UnknownNullability VALUE value, @NotNull Class<VALUE> valueClass, @NotNull String tag) {
         if(value == null) {
             if(valueClass == String.class) value = (VALUE) "";
             else {
@@ -293,11 +294,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     /**
      * Util method to get the value directly. <br>
-     * Thus override {@link #getValue(Consumer)} instead if needed.
+     * Thus override {@link #getValueInternal(Consumer)} instead if needed.
      */
     public @NotNull VALUE getValue() {
         AtomicReference<VALUE> atomicValue = new AtomicReference<>();
-        getValue(val -> {
+        getValueInternal(val -> {
             atomicValue.set(val);
         });
         while(atomicValue.get() == null) Thread.yield(); // Wait until value returned
@@ -305,11 +306,17 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     /**
+     * If extending, override {@link #getValueInternal(Consumer)}.
      * @param v executed when the value is got from the client-side.
      * @return should never return null, even if setValue(null) was called, in that case it returns the {@link #internalDefaultValue}
      * that was set in the constructor.
      */
     public THIS getValue(Consumer<@NotNull VALUE> v) {
+        getValueInternal(v);
+        return _this;
+    }
+
+    protected void getValueInternal(Consumer<@NotNull VALUE> v) {
         UI ui = UI.get();
         if(ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
@@ -318,7 +325,6 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 VALUE value = ValueChangeEvent.stringToVal(valueAsString, this);
                 v.accept(value);
             });
-        return _this;
     }
 
     /**

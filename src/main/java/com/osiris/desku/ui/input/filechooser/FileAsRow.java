@@ -46,8 +46,9 @@ public class FileAsRow extends Table.Row {
             add(txtLastModified = new Text(new Date(file.lastModified()).toString()));
 
         }
+        txtFileName.width("100%");
         if (file == null || file.isDirectory()) {
-            onDoubleClick(e -> {
+            txtFileName.onClick(e -> {
                 directoryView.setDir(file);
             });
         }

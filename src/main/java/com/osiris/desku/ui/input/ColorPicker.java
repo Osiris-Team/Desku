@@ -33,9 +33,8 @@ public class ColorPicker extends Component<ColorPicker, String> {
     }
 
     @Override
-    public ColorPicker getValue(Consumer<String> v) {
+    public void getValueInternal(Consumer<String> v) {
         input.getValue(v);
-        return this;
     }
 
     public ColorPicker setValue(String v) {

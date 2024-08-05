@@ -41,9 +41,8 @@ public class TextArea extends Component<TextArea, String> {
     }
 
     @Override
-    public TextArea getValue(Consumer<String> v) {
+    public void getValueInternal(Consumer<String> v) {
         input.getValue(v);
-        return this;
     }
 
     @Override

@@ -17,6 +17,9 @@ public class OptionFieldTest {
             OptionField optionField = new OptionField();
             optionField.addItems(defItems);
 
+            optionField.setValue("option0");
+            assertEquals("option0", optionField.getValue());
+
             return new Vertical()
                     .add(optionField)
                     .later(__ -> {

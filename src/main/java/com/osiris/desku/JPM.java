@@ -25,7 +25,7 @@ public class JPM {
             // Override default configurations
             this.groupId = "com.osiris.desku";
             this.artifactId = "Desku";
-            this.version = "1.0.20";
+            this.version = "1.0.21";
             this.jarName = "Desku-"+version+".jar";
             this.javaVersionSource = "11";
             this.javaVersionTarget = "11";

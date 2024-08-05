@@ -36,12 +36,11 @@ public class CheckBox extends Component<CheckBox, Boolean> {
     }
 
     @Override
-    public CheckBox getValue(Consumer<Boolean> v) {
+    public void getValueInternal(Consumer<Boolean> v) {
         gatr("checked", value -> {
             if (value.isEmpty()) v.accept(false);
             else v.accept(true);
         });
-        return _this;
     }
 
     @Override

@@ -86,9 +86,8 @@ public class OptionField extends Component<OptionField, String> {
     }
 
     @Override
-    public OptionField getValue(Consumer<String> v) {
+    public void getValueInternal(Consumer<String> v) {
         button.label.getValue(v);
-        return this;
     }
 
 
