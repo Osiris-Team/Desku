@@ -55,6 +55,10 @@ public class TextFieldValueUpdateTest {
                             tf.setValue("{\"key\": \"value\"}");
                             assertEquals("{\"key\": \"value\"}", tf.getValue());
 
+                            tf.setValue("`");
+                            assertEquals("`", tf.getValue());
+
+
                             assertTrue(myComp.isDefaultValue());
 
                             Person p1 = new Person();

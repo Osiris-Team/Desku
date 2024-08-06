@@ -17,7 +17,8 @@ public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends J
         if(value == null || value.isEmpty()){
             return comp.internalDefaultValue;
         }
-        else if(Reflect.isPseudoPrimitiveType(comp.internalValueClass))
+        value = unescapeString(value);
+        if(Reflect.isPseudoPrimitiveType(comp.internalValueClass))
             return (T) Reflect.pseudoPrimitivesAndParsers.get(comp.internalValueClass)
                     .apply(value);
         else
@@ -98,7 +99,15 @@ public class ValueChangeEvent<COMP extends Component<?, VALUE>, VALUE> extends J
     public static String escapeString(String s){
         s = new JsonPrimitive(s).toString();
         s = s.substring(1, s.length()-1); // remove encapsulating ""
+        s = s.replace("`", "\\`");
         return s;
+    }
+
+    /**
+     * Unescapes only JS relevant stuff, not Json, since Gson handles unescaping the rest (like ' and ") automatically.
+     */
+    public static String unescapeString(String s){
+        return s.replace("\\`", "`");
     }
 
 }

@@ -39,4 +39,19 @@ public class TApp {
         }
         return asyncResult;
     }
+
+    public static void testIndefinetely(Function<AsyncResult, Component<?,?>> onLoad){
+        AsyncResult asyncResult = new AsyncResult();
+        App.init(new DesktopUIManager());
+        route = new MRoute("/", () -> onLoad.apply(asyncResult));
+        try {
+            ui = App.uis.create(route);
+            while(ui.isLoading()) Thread.yield();
+
+            while(true)
+                Thread.sleep(1000);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

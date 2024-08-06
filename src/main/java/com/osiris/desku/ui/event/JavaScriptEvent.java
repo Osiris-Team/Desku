@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.osiris.desku.ui.Component;
 import com.osiris.jlib.json.JsonFile;
 
+import static com.osiris.desku.ui.event.ValueChangeEvent.unescapeString;
+
 public abstract class JavaScriptEvent<T extends Component<?,?>> {
     /**
      * Raw event information that is passed over from JavaScript to Java.
@@ -23,8 +25,8 @@ public abstract class JavaScriptEvent<T extends Component<?,?>> {
      * @param rawJSMessage must be a clean and parseable JSON-Object. No additional cleaning will be done on the server-side.
      */
     public JavaScriptEvent(String rawJSMessage, T comp) {
-        this.rawJSMessage = rawJSMessage;
-        this.jsMessage = JsonFile.parser.fromJson(rawJSMessage, JsonObject.class);
+        this.rawJSMessage = unescapeString(rawJSMessage);
+        this.jsMessage = JsonFile.parser.fromJson(this.rawJSMessage, JsonObject.class);
         this.comp = comp;
     }
 
