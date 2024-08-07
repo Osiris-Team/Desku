@@ -40,8 +40,8 @@ public class JPM {
             // Add dependencies
             implementation("com.github.Osiris-Team:Easy-Java-Events:1.9.0");
             implementation("com.github.Osiris-Team:jlib:18.4");
-            implementation("com.github.Osiris-Team.webview_java:core:1.3.2");
-            implementation("com.github.Osiris-Team.webview_java:bridge:1.3.2");
+            implementation("com.github.Osiris-Team.webview_java:core:1.3.3");
+            implementation("com.github.Osiris-Team.webview_java:bridge:1.3.3");
             implementation("org.nanohttpd:nanohttpd:2.3.1");
             implementation("org.nanohttpd:nanohttpd-websocket:2.3.1");
             implementation("org.java-websocket:Java-WebSocket:1.5.3");

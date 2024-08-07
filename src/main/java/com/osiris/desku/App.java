@@ -36,32 +36,14 @@ public class App {
      * Example on Windows: <br>
      * C:\Users\UserName\AppName
      */
-    public static File userDir = new File(System.getProperty("user.home") + "/" + name);
+    public static File userDir;
     /**
      * Should be the directory in which this application was started. <br>
      * Can be used to store information that is not specific to an user. <br>
      * If creating files is not possible in this directory (for example requires admin permissions)
      * this is set to {@link #userDir} at start of {@link #init(UIManager, LoggerParams)}.
      */
-    public static File workingDir = new File(System.getProperty("user.dir"));
-    static {
-        boolean hasWritePerms = false;
-        try{
-            File f = new File(workingDir+"/write-perms-test-dir-"+System.currentTimeMillis()+".txt");
-            if(f.getParentFile() != null && !f.getParentFile().mkdirs()) throw new Exception();
-            if(!f.createNewFile()) throw new Exception();
-            f.delete();
-            hasWritePerms = true;
-        } catch (Exception e) {
-            hasWritePerms = false;
-        }
-        if(!hasWritePerms){
-            System.out.println("Updated working dir from "+workingDir+" to "+userDir);
-            workingDir = userDir; // Update working dir
-            System.setProperty("user.dir", userDir.getAbsolutePath());
-        }
-    }
-
+    public static File workingDir;
 
     /**
      * Examples: google.com or wikipedia.com or localhost
@@ -87,10 +69,41 @@ public class App {
      * Example on Windows: <br>
      * C:\Users\UserName\AppData\Local\Temp\AppName
      */
-    public static File tempDir = new File(System.getProperty("java.io.tmpdir") + "/" + name);
-    public static File htmlDir = new File(workingDir + "/html");
-    public static File styles = new File(htmlDir + "/global-styles.css");
-    public static File javascript = new File(htmlDir + "/global-javascript.js");
+    public static File tempDir;
+    public static File htmlDir;
+    public static File styles;
+    public static File javascript;
+
+    static {
+        updateDirs();
+    }
+
+    public static void updateDirs(){
+        boolean hasWritePermsInWorkingDir;
+
+        userDir = new File(System.getProperty("user.home") + "/" + name);
+        workingDir = new File(System.getProperty("user.dir"));
+        try{
+            File f = new File(workingDir+"/write-perms-test-dir-"+System.currentTimeMillis()+".txt");
+            if(!f.createNewFile()) throw new Exception();
+            f.delete();
+            hasWritePermsInWorkingDir = true;
+        } catch (Exception e) {
+            hasWritePermsInWorkingDir = false;
+        }
+        if(!hasWritePermsInWorkingDir){
+            System.out.println("Updated working dir from "+workingDir+" to "+userDir);
+            workingDir = userDir; // Update working dir
+            System.setProperty("user.dir", userDir.getAbsolutePath());
+        }
+
+        tempDir = new File(System.getProperty("java.io.tmpdir") + "/" + name);
+        htmlDir = new File(workingDir + "/html");
+        styles = new File(htmlDir + "/global-styles.css");
+        javascript = new File(htmlDir + "/global-javascript.js");
+
+    }
+
     public static CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
     /**
      * The default theme that affects all views.
@@ -103,15 +116,14 @@ public class App {
     public static class LoggerParams{
         public String name = "Logger";
         public boolean debug = true;
-        public File logsDir = new File(workingDir+"/logs");
-        public File latestLogFile = new File(logsDir + "/latest.log");
-        public File mirrorOutFile = new File(logsDir + "/mirror-out.log");
-        public File mirrorErrFile = new File(logsDir + "/mirror-err.log");
+        public File logsDir;
+        public File latestLogFile;
+        public File mirrorOutFile;
+        public File mirrorErrFile;
         public boolean ansi = true;
         public boolean forceAnsi = false;
 
         public LoggerParams() {
-            logsDir.mkdirs();
         }
     }
 
@@ -126,8 +138,16 @@ public class App {
         }
         App.uis = uiManager;
         try {
+            updateDirs();
             Logger.getGlobal().setLevel(Level.SEVERE);
             if (!AL.isStarted) {
+                if(loggerParams.logsDir == null) loggerParams.logsDir = new File(workingDir+"/logs");
+                if(loggerParams.latestLogFile == null) loggerParams.latestLogFile = new File(loggerParams.logsDir + "/latest.log");
+                if(loggerParams.mirrorOutFile == null) loggerParams.mirrorOutFile = new File(loggerParams.logsDir + "/mirror-out.log");
+                if(loggerParams.mirrorErrFile == null) loggerParams.mirrorErrFile = new File(loggerParams.logsDir + "/mirror-err.log");
+                loggerParams.logsDir.mkdirs();
+
+                // TODO test webview 1.3.3 and the above changes to logger and files which now should have the correct app name
                 AL.start(loggerParams.name, loggerParams.debug, loggerParams.latestLogFile, loggerParams.ansi, loggerParams.forceAnsi);
                 AL.mirrorSystemStreams(loggerParams.mirrorOutFile, loggerParams.mirrorErrFile);
             }

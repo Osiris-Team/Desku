@@ -53,13 +53,13 @@ AUTO-GENERATED FILE, CHANGES SHOULD BE DONE IN ./JPM.java or ./src/main/java/com
         <dependency>
             <groupId>com.github.Osiris-Team.webview_java</groupId>
             <artifactId>core</artifactId>
-            <version>1.3.2</version>
+            <version>1.3.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.github.Osiris-Team.webview_java</groupId>
             <artifactId>bridge</artifactId>
-            <version>1.3.2</version>
+            <version>1.3.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
