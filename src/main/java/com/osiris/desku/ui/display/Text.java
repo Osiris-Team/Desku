@@ -20,21 +20,21 @@ public class Text extends Component<Text, String> {
         super(s, String.class, "txt");
         setValue(s);
         // Attach Java event listeners
-        UI win = UI.get();
+        UI ui = UI.get();
         Runnable registration = () -> {
             _onValueAppended.addAction((childString) -> {
-                win.executeJavaScriptSafely(win.jsGetComp("comp", id) +
+                ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
                                 "var childString = document.createTextNode(`" + childString + "`);\n" +
                                 "comp.appendChild(childString);\n",
                         "internal", 0);
             });
             _onEmptyValue.addAction((_void) -> {
-                win.executeJavaScriptSafely(win.jsGetComp("comp", id) +
+                ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
                                 "comp.textContent = '';\n", // remove all text nodes
                         "internal", 0);
             });
         };
-        win.runIfReadyOrLater(registration);
+        ui.runIfReadyOrLater(registration);
     }
 
     public Text setValue(String v) {

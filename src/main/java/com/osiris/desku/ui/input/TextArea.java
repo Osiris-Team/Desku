@@ -25,7 +25,7 @@ public class TextArea extends Component<TextArea, String> {
         this(new Text(label).sizeS(), defaultValue);
     }
 
-    public TextArea(Text label, String defaultValue) { // TODO defaultValue is not visible in UI
+    public TextArea(Text label, String defaultValue) {
         super(defaultValue, String.class);
         addClass("input-group");
         this.label = label;
@@ -33,10 +33,12 @@ public class TextArea extends Component<TextArea, String> {
         this.input = new Input<>("textarea", defaultValue, String.class, "textarea");
         add(this.label, this.input);
         childVertical();
+        setValue(defaultValue);
     }
 
     public TextArea setValue(String v) {
         input.setValue(v);
+        input.executeJS("comp.textContent = `"+ValueChangeEvent.escapeString(v)+"`;\n");
         return this;
     }
 
