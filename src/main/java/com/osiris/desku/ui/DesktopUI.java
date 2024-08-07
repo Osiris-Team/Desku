@@ -1,13 +1,14 @@
 package com.osiris.desku.ui;
 
+import co.casterlabs.commons.platform.OSFamily;
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.swing.Swing;
 import com.osiris.desku.ui.utils.Rectangle;
 import com.osiris.jlib.logger.AL;
-import dev.webview.Webview;
-import dev.webview.platform.OperatingSystem;
-import dev.webview.platform.Platform;
+import dev.webview.webview_java.AWTWebview;
+import dev.webview.webview_java.Webview;
+import co.casterlabs.commons.platform.Platform;
 
 import javax.swing.*;
 import java.awt.Component;
@@ -60,7 +61,9 @@ public class DesktopUI extends UI {
 
         // Using createAWT allows you to defer the creation of the webview until the
         // canvas is fully renderable.
-        browserContainer = (Canvas) Webview.createAWT(true, (browser) -> {
+        AWTWebview component = new AWTWebview(true);
+        browserContainer = component;
+        component.setOnInitialized((browser) -> {
             this.browser = browser;
 
             browser.loadURL(startURL);
@@ -80,7 +83,7 @@ public class DesktopUI extends UI {
                     int contentHeight = contentSize.height - insets.top - insets.bottom;
                     // There is a random margin on Windows that isn't visible, so we must
                     // compensate. // TODO figure out why this is caused.
-                    if (Platform.os == OperatingSystem.WINDOWS) {
+                    if (Platform.osFamily == OSFamily.WINDOWS) {
                         contentWidth -= 16;
                         contentHeight -= 39;
                     }
