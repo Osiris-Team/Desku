@@ -44,6 +44,23 @@ public class App {
      * this is set to {@link #userDir} at start of {@link #init(UIManager, LoggerParams)}.
      */
     public static File workingDir = new File(System.getProperty("user.dir"));
+    static {
+        boolean hasWritePerms = false;
+        try{
+            File f = new File(workingDir+"/write-perms-test-dir-"+System.currentTimeMillis()+".txt");
+            if(f.getParentFile() != null && !f.getParentFile().mkdirs()) throw new Exception();
+            if(!f.createNewFile()) throw new Exception();
+            f.delete();
+            hasWritePerms = true;
+        } catch (Exception e) {
+            hasWritePerms = false;
+        }
+        if(!hasWritePerms){
+            System.out.println("Updated working dir from "+workingDir+" to "+userDir);
+            workingDir = userDir; // Update working dir
+            System.setProperty("user.dir", userDir.getAbsolutePath());
+        }
+    }
 
 
     /**
@@ -109,22 +126,6 @@ public class App {
         }
         App.uis = uiManager;
         try {
-            boolean hasWritePerms = false;
-            try{
-                File f = new File(workingDir+"/write-perms-test-dir-"+System.currentTimeMillis()+".txt");
-                if(f.getParentFile() != null && !f.getParentFile().mkdirs()) throw new Exception();
-                if(!f.createNewFile()) throw new Exception();
-                f.delete();
-                hasWritePerms = true;
-            } catch (Exception e) {
-                hasWritePerms = false;
-            }
-            if(!hasWritePerms){
-                System.out.println("Updated working dir from "+workingDir+" to "+userDir);
-                workingDir = userDir; // Update working dir
-                System.setProperty("user.dir", userDir.getAbsolutePath());
-            }
-
             Logger.getGlobal().setLevel(Level.SEVERE);
             if (!AL.isStarted) {
                 AL.start(loggerParams.name, loggerParams.debug, loggerParams.latestLogFile, loggerParams.ansi, loggerParams.forceAnsi);
