@@ -147,7 +147,6 @@ public class App {
                 if(loggerParams.mirrorErrFile == null) loggerParams.mirrorErrFile = new File(loggerParams.logsDir + "/mirror-err.log");
                 loggerParams.logsDir.mkdirs();
 
-                // TODO test webview 1.3.3 and the above changes to logger and files which now should have the correct app name
                 AL.start(loggerParams.name, loggerParams.debug, loggerParams.latestLogFile, loggerParams.ansi, loggerParams.forceAnsi);
                 AL.mirrorSystemStreams(loggerParams.mirrorOutFile, loggerParams.mirrorErrFile);
             }
