@@ -111,9 +111,10 @@ public class App {
         try {
             boolean hasWritePerms = false;
             try{
-                File dir = new File(workingDir+"/write-perms-test-dir-"+System.currentTimeMillis());
-                if(!dir.mkdirs()) throw new Exception();
-                dir.delete();
+                File f = new File(workingDir+"/write-perms-test-dir-"+System.currentTimeMillis()+".txt");
+                if(f.getParentFile() != null && !f.getParentFile().mkdirs()) throw new Exception();
+                if(!f.createNewFile()) throw new Exception();
+                f.delete();
                 hasWritePerms = true;
             } catch (Exception e) {
                 hasWritePerms = false;
