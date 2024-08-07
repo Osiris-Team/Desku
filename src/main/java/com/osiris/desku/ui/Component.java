@@ -1509,6 +1509,17 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     /**
+     * @param percent for example 0.75 would be 75% of the original size.
+     *                Meaning 0 to 1 is equal to 0% to 100%, you can also go above 100%.
+     */
+    public THIS scale(double percent){
+        sty("zoom",  ""+percent);
+        sty("-moz-transform", "scale("+percent+")");
+        sty("-moz-transform-origin", "0 0");
+        return _this;
+    }
+
+    /**
      * Based on https://getbootstrap.com/docs/5.3/layout/z-index/
      */
     public enum ZIndex {

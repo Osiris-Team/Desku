@@ -29,13 +29,39 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class App {
+    public static String name = "My Todo";
 
+    /**
+     * Can be used to store user-specific data. <br>
+     * Example on Windows: <br>
+     * C:\Users\UserName\AppName
+     */
+    public static File userDir = new File(System.getProperty("user.home") + "/" + name);
     /**
      * Should be the directory in which this application was started. <br>
      * Can be used to store information that is not specific to an user. <br>
+     * If creating files is not possible in this directory (for example requires admin permissions)
+     * this is set to {@link #userDir}.
      */
     public static File workingDir = new File(System.getProperty("user.dir"));
-    public static String name = "My Todo";
+    static{
+        boolean hasWritePerms = false;
+        try{
+            File dir = new File(workingDir+"/write-perms-test-dir-"+System.currentTimeMillis());
+            if(!dir.mkdirs()) throw new Exception();
+            dir.delete();
+            hasWritePerms = true;
+        } catch (Exception e) {
+            hasWritePerms = false;
+        }
+        if(!hasWritePerms){
+            System.out.println("Updated working dir from "+workingDir+" to "+userDir);
+            workingDir = userDir; // Update working dir
+            System.setProperty("user.dir", userDir.getAbsolutePath());
+        }
+    }
+
+
     /**
      * Examples: google.com or wikipedia.com or localhost
      */
@@ -64,12 +90,6 @@ public class App {
     public static File htmlDir = new File(workingDir + "/html");
     public static File styles = new File(htmlDir + "/global-styles.css");
     public static File javascript = new File(htmlDir + "/global-javascript.js");
-    /**
-     * Can be used to store user-specific data. <br>
-     * Example on Windows: <br>
-     * C:\Users\UserName\AppName
-     */
-    public static File userDir = new File(System.getProperty("user.home") + "/" + name);
     public static CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
     /**
      * The default theme that affects all views.
