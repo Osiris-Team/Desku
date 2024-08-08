@@ -248,6 +248,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (e.isInsert) { // Add or change attribute
             element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
+            //System.out.println(this.toPrintString()+" insert "+ e.attribute.getKey()+" - "+e.attribute.getValue());
             if (isAttached && !ui.isLoading()){
                 executeJS("comp.setAttribute(`" + e.attribute.getKey()
                         + "`, `" + e.attribute.getValue() + "`);\n" +
@@ -613,7 +614,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Adds the attribute/key without its value.
      */
     public THIS atr(String key) {
-        _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), true));
+        _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, "true"), true));
         return _this;
     }
 
@@ -640,7 +641,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * return the value for its attribute, and returns an empty String if no key found or when value is null/undefined.
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
-        executeJS("try { message = comp[\"" + key + "\"]; } catch (e) { console.error(e); }\n" +
+        UI ui = UI.get();
+        if(!isAttached || ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the atr, thus return internal directly
+            onValueReturned.accept(element.attr(key));
+        else
+            executeJS("try { message = comp[\"" + key + "\"]; } catch (e) { console.error(e); }\n" +
                 "if(message == null) try{ message = comp.getAttribute(`" + key + "`); } catch (e) { console.error(e); }\n", onValueReturned, AL::warn);
     }
 

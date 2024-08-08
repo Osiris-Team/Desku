@@ -37,8 +37,8 @@ public class CheckBox extends Component<CheckBox, Boolean> {
 
     @Override
     public CheckBox getValue(Consumer<Boolean> v) {
-        gatr("checked", value -> {
-            if (value.isEmpty()) v.accept(false);
+        input.gatr("checked", value -> {
+            if (value.isEmpty() || !Boolean.parseBoolean(value)) v.accept(false);
             else v.accept(true);
         });
         return _this;
@@ -46,7 +46,10 @@ public class CheckBox extends Component<CheckBox, Boolean> {
 
     @Override
     public CheckBox setValue(Boolean v) {
+        super.setValue(v);
         input.setValue(v);
+        // "checked" attribute cannot be set to true/false, both would show it checked,
+        // thus we need to add/remove this attribute instead
         if (v) input.atr("checked");
         else input.ratr("checked");
         return this;
@@ -67,6 +70,7 @@ public class CheckBox extends Component<CheckBox, Boolean> {
                     ValueChangeEvent<CheckBox, Boolean> e = new ValueChangeEvent<>(msg, this, internalValue);
                     // Change in memory value, without triggering another change event
                     this.internalValue = e.value;
+                    this.element.attr("value", String.valueOf(e.value));
                     input.element.attr("value", String.valueOf(e.value));
                     if (e.value) input.element.attr("checked", "");
                     else input.element.removeAttr("checked");
