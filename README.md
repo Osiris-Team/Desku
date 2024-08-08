@@ -11,15 +11,16 @@ In addition, it is also highly beginner-friendly, making it accessible to everyo
 vertical().add(text("Hello World!"))
 ```
 <details>
-<summary>3 lines example</summary>
+<summary>Minimal example</summary>
 
 ```java
 import com.osiris.desku.App;
 import static com.osiris.desku.Statics;
 public class Main {
     public static void main(String[] args) throws Exception {
-        App.init(new DesktopUIManager());
+        App.uis = new DesktopUIManager(); // Not needed when using the Desku-Gradle-Starter-App
         App.name = "My-App";
+        App.init();
         App.uis.create(() -> {
             return vertical().add(text("Hello World!")); 
         });
@@ -37,9 +38,10 @@ import static com.osiris.desku.Statics; // Low-code Java UI via static methods
 public class Main {
     public static void main(String[] args) throws Exception {
         
-        // Setup app details.
-        App.init(new DesktopUIManager()); // Not needed when using the Desku-Gradle-Starter-App
+        // Setup app details and init.
+        App.uis = new DesktopUIManager(); // Not needed when using the Desku-Gradle-Starter-App
         App.name = "My-App";
+        App.init(); 
 
         // Create routes.
         // This is only for demonstration. 

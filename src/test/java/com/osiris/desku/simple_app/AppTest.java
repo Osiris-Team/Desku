@@ -10,10 +10,10 @@ import com.osiris.desku.ui.DesktopUIManager;
 class AppTest {
 
     public static void main(String[] args) throws Exception {
-        // Setup details
-        App.init(new DesktopUIManager());
-        App.name = "My-App";
-        // before loading the page
+        // Setup details before init
+        App.uis = new DesktopUIManager();
+        App.name = "My-Example-Desku-App";
+        App.init();
 
         // Create routes
         Route home = new Home();

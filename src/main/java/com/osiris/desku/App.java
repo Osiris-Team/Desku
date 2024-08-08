@@ -110,6 +110,7 @@ public class App {
      */
     public static Theme theme = new Theme();
 
+
     public static UIManager uis = null;
     public static ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -127,16 +128,25 @@ public class App {
         }
     }
 
+    /**
+     * Initialize assuming platform-specific {@link UIManager} was already set earlier. <br>
+     * Meaning {@link App#uis} must be not null when calling this.
+     */
+    public static void init() {
+        init(null, new LoggerParams());
+    }
+
     public static void init(UIManager uiManager) {
         init(uiManager, new LoggerParams());
     }
 
     public static void init(UIManager uiManager, LoggerParams loggerParams) {
-        if (uiManager == null) {
+        if (uiManager == null && App.uis == null) {
             throw new NullPointerException("Provided UI factory is null!" +
                     " Make sure to provide an implementation for the platform this app is running in.");
         }
-        App.uis = uiManager;
+        if(uiManager != null)
+            App.uis = uiManager;
         try {
             updateDirs();
             Logger.getGlobal().setLevel(Level.SEVERE);
