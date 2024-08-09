@@ -46,10 +46,10 @@ public class FileAsRow extends Table.Row {
         add(checkBox);
         add(this.icon = icon);
         if (file == null) {
-            add(txtFileName = new Text("..DRIVES"));
+            add(txtFileName = new Text("..Drives"));
             add(txtLastModified = new Text(""));
         } else {
-            add(txtFileName = new Text(file.getName()));
+            add(txtFileName = new Text(file.getName().trim().isEmpty() ? cleanFilePath : file.getName())); // getName() is null for drives
             add(txtLastModified = new Text(new Date(file.lastModified()).toString()));
 
         }

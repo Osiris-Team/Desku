@@ -54,7 +54,7 @@ public class DirectoryView extends Component<DirectoryView, NoValue> {
         table = new Table();
         table.maxColumnWidthPercent = -1;
         add(table);
-        table.headers("Select", "Icon", dir == null ? ".." : // If this the case then parent shows drives/roots
+        table.headers("Select", "Icon", dir == null ? "Drives" : // If this the case then parent shows drives/roots
                 dir.getAbsolutePath().replace("\\", "/"), "Modified");
         String selectWidth = "5%", iconWidth = "5%", nameWidth = "70%", modifiedWidth = "20%";
         table.getHeaderAt(0).width(selectWidth);
@@ -67,8 +67,7 @@ public class DirectoryView extends Component<DirectoryView, NoValue> {
             if (dir != null) {
                 // Add parent dir first, or drives view if parent dir is null
                 File parentDir = dir.getParentFile(); // will be displayed with name ".."
-                if(parentDir == null) Collections.addAll(_files, File.listRoots());
-                else _files.add(parentDir);
+                _files.add(parentDir); // Might be null
                 // First half is directories, then actual files
                 File[] files1 = dir.listFiles();
                 if(files1 != null && files1.length > 0){
@@ -97,15 +96,17 @@ public class DirectoryView extends Component<DirectoryView, NoValue> {
 
                 FileAsRow fileAsRow = new FileAsRow(fileChooser, this, file);
 
-                boolean isSelectedByDefault = false;
-                for (int i = 0; i < defaultSelectedFiles.size(); i++) {
-                    File f = defaultSelectedFiles.get(i);
-                    if (f.getAbsolutePath().equals(file.getAbsolutePath())) {
-                        isSelectedByDefault = true;
-                        break;
+                if(file != null){
+                    boolean isSelectedByDefault = false;
+                    for (int i = 0; i < defaultSelectedFiles.size(); i++) {
+                        File f = defaultSelectedFiles.get(i);
+                        if (f.getAbsolutePath().equals(file.getAbsolutePath())) {
+                            isSelectedByDefault = true;
+                            break;
+                        }
                     }
+                    if (isSelectedByDefault) fileAsRow.checkBox.setValue(true);
                 }
-                if (isSelectedByDefault) fileAsRow.checkBox.setValue(true);
 
                 files.add(fileAsRow);
                 table.row(fileAsRow);
