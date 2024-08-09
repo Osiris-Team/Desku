@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 public class FileChooser extends Component<FileChooser, String> {
 
     // Layout
+    public Text label;
     public TextField tfSelectedFiles;
     public DirectoryView directoryView;
     public Horizontal btnsSelectedFiles;
@@ -65,12 +66,16 @@ public class FileChooser extends Component<FileChooser, String> {
 
     public FileChooser(Text label, String defaultValue) {
         super(defaultValue, String.class);
+        this.label = label;
         this.tfSelectedFiles = new TextField(label, defaultValue);
         this.directoryView = new DirectoryView(this, App.userDir.getAbsoluteFile());
         this.btnsSelectedFiles = new Horizontal().padding(false);
         btnsSelectedFiles.add(new Button("Select File(s)").onClick(e -> {
             directoryView.visible(!directoryView.isVisible());
         }));
+        for (File file : stringToPathsList(defaultValue)) {
+            btnsSelectedFiles.add(getButton(new FileAsRow(this, directoryView, file)));
+        }
         tfSelectedFiles.visible(false);
         directoryView.visible(false);
         childVertical();
@@ -81,9 +86,7 @@ public class FileChooser extends Component<FileChooser, String> {
             String filePaths = tfSelectedFiles.getValue();
             filePaths += e.cleanFilePath + " ; ";
             this.tfSelectedFiles.setValue(filePaths);
-            btnsSelectedFiles.add(new Button(e.cleanFilePath).onClick(e2 -> {
-                setDir(e.file.isDirectory() ? e.file : e.file.getParentFile());
-            }));
+            btnsSelectedFiles.add(getButton(e));
         });
         onFileDeselected(e -> {
             String filePaths = tfSelectedFiles.getValue();
@@ -97,7 +100,13 @@ public class FileChooser extends Component<FileChooser, String> {
         });
 
         this.childGap(true);
-        add(this.btnsSelectedFiles, this.tfSelectedFiles, this.directoryView);
+        add(this.label, this.btnsSelectedFiles, this.tfSelectedFiles, this.directoryView);
+    }
+
+    private Button getButton(FileAsRow e) {
+        return new Button(e.cleanFilePath).onClick(e2 -> {
+            setDir(e.file.isDirectory() ? e.file : e.file.getParentFile());
+        });
     }
 
     @Override
