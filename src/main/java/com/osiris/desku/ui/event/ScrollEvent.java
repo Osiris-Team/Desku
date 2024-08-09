@@ -17,10 +17,10 @@ public class ScrollEvent<T extends Component<?,?>> extends JavaScriptEvent<T> {
      */
     public ScrollEvent(String rawJSMessage, T comp) {
         super(rawJSMessage, comp);
-        this.isReachedEnd = jsMessage.get("isReachedEnd").getAsBoolean();
-        this.scrollHeight = jsMessage.get("scrollHeight").getAsDouble();
-        this.scrollTop = jsMessage.get("scrollTop").getAsDouble();
-        this.clientHeight = jsMessage.get("clientHeight").getAsDouble();
+        this.isReachedEnd = message.get("isReachedEnd").getAsBoolean();
+        this.scrollHeight = message.get("scrollHeight").getAsDouble();
+        this.scrollTop = message.get("scrollTop").getAsDouble();
+        this.clientHeight = message.get("clientHeight").getAsDouble();
     }
 
 }

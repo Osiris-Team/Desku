@@ -1,5 +1,6 @@
 package com.osiris.desku.ui.input;
 
+import com.osiris.desku.Value;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ValueChangeEvent;
@@ -38,7 +39,7 @@ public class TextArea extends Component<TextArea, String> {
 
     public TextArea setValue(String v) {
         input.setValue(v);
-        input.executeJS("comp.textContent = `"+ValueChangeEvent.escapeString(v)+"`;\n");
+        input.executeJS("comp.textContent = `"+ Value.escapeForJavaScript(v)+"`;\n");
         return this;
     }
 
@@ -52,7 +53,7 @@ public class TextArea extends Component<TextArea, String> {
     public TextArea onValueChange(Consumer<ValueChangeEvent<TextArea, String>> code) {
         // Forward input text change event to this component
         input.onValueChange(e -> {
-            ValueChangeEvent<TextArea, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore, e.isProgrammatic);
+            ValueChangeEvent<TextArea, String> e2 = new ValueChangeEvent<>(e.messageRaw, e.message, this, e.value, e.valueBefore, e.isProgrammatic);
             code.accept(e2);
         });
         return this;

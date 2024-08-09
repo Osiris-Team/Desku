@@ -8,8 +8,8 @@ public class ClickEvent<T extends Component<?,?>> extends JavaScriptEvent<T> {
 
     public ClickEvent(String rawJSMessage, T comp) {
         super(rawJSMessage, comp);
-        this.isTrusted = jsMessage.get("isTrusted").getAsBoolean();
-        this.screenX = jsMessage.get("screenX").getAsInt();
-        this.screenY = jsMessage.get("screenY").getAsInt();
+        this.isTrusted = message.get("isTrusted").getAsBoolean();
+        this.screenX = message.get("screenX").getAsInt();
+        this.screenY = message.get("screenY").getAsInt();
     }
 }

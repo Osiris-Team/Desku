@@ -1,6 +1,8 @@
 package com.osiris.desku.ui;
 
+import com.google.gson.JsonObject;
 import com.osiris.desku.App;
+import com.osiris.desku.Value;
 import com.osiris.desku.ui.css.CSS;
 import com.osiris.desku.ui.display.Text;
 import com.osiris.desku.ui.event.ClickEvent;
@@ -11,6 +13,7 @@ import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.json.JsonFile;
 import com.osiris.jlib.logger.AL;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
@@ -212,54 +215,63 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     };
     public Consumer<Attribute> _styleChange = attribute -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
-        if (attribute.getValue().isEmpty()) {
+        String key = attribute.getKey();
+        String value = attribute.getValue();
+        if (value.isEmpty()) {
 
             // Remove style
-            style.remove(attribute.getKey());
+            style.remove(key);
             String style = element.hasAttr("style") ? element.attributes().get("style") : "";
-            int iKeyFirstChar = style.indexOf(attribute.getKey());
+            int iKeyFirstChar = style.indexOf(key);
             if (iKeyFirstChar == -1) return; // Already doesn't exist, so no removal is needed
             style = style.substring(0, iKeyFirstChar) + style.substring(style.indexOf(";", iKeyFirstChar) + 1);
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
             if (isAttached && !ui.isLoading()){
-                executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
+                executeJS("comp.style." + CSS.getJSCompatibleCSSKey(key)
                         + " = ``;\n"); // Change UI representation
             }
         } else {
 
             // Add or change style
-            style.put(attribute.getKey(), attribute.getValue());
+            style.put(key, value);
 
             String style = element.hasAttr("style") ? element.attributes().get("style") : "";
-            style += attribute.getKey() + ": " + attribute.getValue() + ";";
+            style += key + ": " + value + ";";
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
             if (isAttached && !ui.isLoading()){
-                executeJS("comp.style." + CSS.getJSCompatibleCSSKey(attribute.getKey())
-                        + " = `" + attribute.getValue() + "`;\n"); // Change UI representation
+                value = Value.escapeForJavaScript(value);
+                executeJS("comp.style." + CSS.getJSCompatibleCSSKey(key)
+                        + " = `" + value + "`;\n"); // Change UI representation
             }
         }
         onStyleChange.execute(attribute);
     };
     public Consumer<AttributeChangeEvent> _attributeChange = e -> {
+        String key = Value.escapeForJsoup(e.attribute.getKey());
+        String value = Value.escapeForJsoup(e.attribute.getValue());
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (e.isInsert) { // Add or change attribute
-            element.attr(e.attribute.getKey(), e.attribute.getValue()); // Change in-memory representation
-            //System.out.println(this.toPrintString()+" insert "+ e.attribute.getKey()+" - "+e.attribute.getValue());
+            element.attr(key, value); // Change in-memory representation
+            //System.out.println(this.toPrintString()+" insert "+ key+" - "+value);
             if (isAttached && !ui.isLoading()){
-                executeJS("comp.setAttribute(`" + e.attribute.getKey()
-                        + "`, `" + e.attribute.getValue() + "`);\n" +
-                        "comp[\""+e.attribute.getKey()+"\"] = `"+e.attribute.getValue()+"`"); // Change UI representation
+                key = Value.escapeForJavaScript(Value.escapeForJSON(key));
+                value = Value.escapeForJavaScript(Value.escapeForJSON(value));
+                executeJS("comp.setAttribute(`" + key
+                        + "`, `" + value + "`);\n" +
+                        "comp[`"+key+"`] = `"+value+"`\n"); // Change UI representation
+                //System.out.println(key+" = "+ value);
             }
 
         } else {// Remove attribute
-            element.removeAttr(e.attribute.getKey()); // Change in-memory representation
+            element.removeAttr(key); // Change in-memory representation
             if (isAttached && !ui.isLoading()){
-                executeJS("comp.removeAttribute(`" + e.attribute.getKey() + "`);\n" +
-                        "comp[\""+e.attribute.getKey()+"\"] = null"); // Change UI representation
+                key = Value.escapeForJavaScript(key);
+                executeJS("comp.removeAttribute(`" + key + "`);\n" +
+                        "comp[`"+key+"`] = null"); // Change UI representation
             }
         }
         onAttributeChange.execute(e);
@@ -299,7 +311,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         this.internalValueClass = valueClass;
         this.element = new MyElement(this, tag);
         element.attr("java-id", String.valueOf(id));
-        atr("value", ValueChangeEvent.valToString(value, this));
+        atr("value", Value.valToString(value, this));
         // Do not use setValue since that might be overwritten by extending class and thus cause issues
     }
 
@@ -323,11 +335,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public THIS getValue(Consumer<@NotNull VALUE> v) {
         UI ui = UI.get();
-        if(ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
+        if(!isAttached || ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
         else
             gatr("value", valueAsString -> {
-                VALUE value = ValueChangeEvent.stringToVal(valueAsString, this);
+                VALUE value = Value.stringToVal(valueAsString, this);
                 v.accept(value);
             });
         return _this;
@@ -336,20 +348,19 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Sets {@link #internalValue} AND triggers the {@link #readOnlyOnValueChange} event,
      * meaning client-side is also affected.
-     * @see ValueChangeEvent#valToString(Object, Component)
-     * @see ValueChangeEvent#stringToVal(String, Component)
+     * @see Value#valToString(Object, Component)
+     * @see Value#stringToVal(String, Component)
      */
     public THIS setValue(@Nullable VALUE v) {
-        String newVal = ValueChangeEvent.valToString(v, this);
+        String newVal = Value.valToString(v, this);
 
         String newValJsonSafe;
-        if(v instanceof String) newValJsonSafe = "\""+newVal+"\"";
-        else if(newVal.isEmpty()) newValJsonSafe = "\"\"";
-        else newValJsonSafe = newVal; // json object or other primitive
+        if(newVal.isEmpty()) newValJsonSafe = "\"\"";
+        else newValJsonSafe = "\""+Value.escapeForJSON(newVal)+"\""; // json object or other primitive
 
-        String json = "{\"newValue\": "+newValJsonSafe+"}";
-        ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(json, _this, this.internalValue);
-        event.isProgrammatic = true;
+        String message = "{\"newValue\": "+newValJsonSafe+"}";
+        JsonObject jsonEl = JsonFile.parser.fromJson(message, JsonObject.class);
+        ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(message, jsonEl, _this, v, this.internalValue, true);
         this.internalValue = v;
 
         atr("value", newVal); // Change in memory value, without triggering another change event
@@ -363,8 +374,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * or by the user (by listening to the input event).
      *
      * @see UI#registerJSListener(String, Component, String, Consumer)
-     * @see ValueChangeEvent#valToString(Object, Component)
-     * @see ValueChangeEvent#stringToVal(String, Component)
+     * @see Value#valToString(Object, Component)
+     * @see Value#stringToVal(String, Component)
      */
     public THIS onValueChange(Consumer<ValueChangeEvent<THIS, VALUE>> code) {
         readOnlyOnValueChange.addAction((event) -> code.accept(event));
@@ -374,10 +385,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                     ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(msg, _this, internalValue);
                     VALUE newValue = event.value; // msg contains the new data and is parsed above in the event constructor
                     internalValue = newValue; // Change in memory value, without triggering another change event
-                    atr("value", event.getValueAsEscapedString());
+                    atr("value", event.getValueAsString());
                     readOnlyOnValueChange.execute(event); // Executes all listeners
                 });
-        // TODO also register programmatic value change listener
         return _this;
     }
 
@@ -389,8 +399,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Checks if val1 and val2 are equal, if not additionally converts them to json and checks them:
      * Each of those subclasses (JsonObject, JsonArray, etc.) overrides the Object.equals method, providing an effective deep JSON comparison.
      * Meaning we compare if the fields and their values are equal, regardless of order.
-     * @see ValueChangeEvent#valToString(Object, Component)
-     * @see ValueChangeEvent#stringToVal(String, Component)
+     * @see Value#valToString(Object, Component)
+     * @see Value#stringToVal(String, Component)
      */
     public boolean isValuesEqual(VALUE val1, VALUE val2){
         if(val1 == val2) return true;
@@ -612,6 +622,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Short for put attribute. <br>
      * Adds the attribute/key without its value.
+     * @param key unescaped key.
      */
     public THIS atr(String key) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, "true"), true));
@@ -620,6 +631,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     /**
      * Short for put attribute and value. <br>
+     * @param key unescaped key.
+     * @param val unescaped value.
      */
     public THIS atr(String key, String val) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, val), true));
@@ -628,6 +641,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     /**
      * Short for remove attribute. <br>
+     * @param key unescaped key.
      */
     public THIS ratr(String key) {
         _attributeChange.accept(new AttributeChangeEvent(new Attribute(key, ""), false));
@@ -638,15 +652,28 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Short for get attribute value. <br>
      * Returns the value for the provided attribute key. <br>
      * First tries to return its property value, then if that fails, tries to
-     * return the value for its attribute, and returns an empty String if no key found or when value is null/undefined.
+     * return the value for its attribute, and returns an empty String if no key found or when value is null/undefined. <br>
+     * @param key unescaped key.
+     * @param onValueReturned returns unescaped string attribute value for the provided key.
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
         UI ui = UI.get();
         if(!isAttached || ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the atr, thus return internal directly
-            onValueReturned.accept(element.attr(key));
-        else
-            executeJS("try { message = comp[\"" + key + "\"]; } catch (e) { console.error(e); }\n" +
-                "if(message == null) try{ message = comp.getAttribute(`" + key + "`); } catch (e) { console.error(e); }\n", onValueReturned, AL::warn);
+            onValueReturned.accept(getUnescapedJsoupElementAttribute(key));
+        else{
+            key = Value.escapeForJavaScript(Value.escapeForJsoup(key));
+            executeJS("try { message = comp[`" + key + "`]; } catch (e) { console.error(e); }\n" +
+                    "if(message == null) try{ message = comp.getAttribute(`" + key + "`); } catch (e) { console.error(e); }\n", onValueReturned, AL::warn);
+        }
+
+    }
+
+    public String getUnescapedJsoupElementAttribute(String key){
+        return Value.unescapeForJsoup(element.attr(Value.unescapeForJsoup(key)));
+    }
+
+    public void setEscapedJsoupElementAttribute(String key, String value){
+        element.attr(Value.escapeForJsoup(key), Value.escapeForJsoup(value));
     }
 
     /**
@@ -1271,7 +1298,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Adds a CSS class to this component.
      */
     public THIS addClass(String s) {
-        String classes = element.attr("class");
+        String classes = getUnescapedJsoupElementAttribute("class");
         classes += " " + s;
         atr("class", classes);
         return _this;
@@ -1281,7 +1308,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Removes a CSS class from this component.
      */
     public THIS removeClass(String s) {
-        String classes = element.attr("class");
+        String classes = getUnescapedJsoupElementAttribute("class");
         classes = classes.replace(s, "");
         atr("class", classes);
         return _this;

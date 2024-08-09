@@ -1,5 +1,6 @@
 package com.osiris.desku.ui.input.filechooser;
 
+import com.osiris.desku.Icon;
 import com.osiris.desku.ui.display.Image;
 import com.osiris.desku.ui.display.Table;
 import com.osiris.desku.ui.display.Text;
@@ -17,6 +18,11 @@ public class FileAsRow extends Table.Row {
     public Text txtFileName;
     public Text txtLastModified;
 
+    public FileAsRow(FileChooser fileChooser, DirectoryView directoryView, File file) {
+        this(fileChooser, directoryView, file,
+                (file == null || file.isDirectory() ? Icon.solid_folder() : Icon.regular_file()));
+    }
+
     public FileAsRow(FileChooser fileChooser, DirectoryView directoryView, File file, Image icon) {
         checkBox.readOnlyOnValueChange.addAction((action, e) -> {
             if (e.value && !fileChooser.isMultiSelect && !directoryView.selectedFiles.isEmpty()) {
@@ -26,6 +32,7 @@ public class FileAsRow extends Table.Row {
         }, Exception::printStackTrace);
         checkBox.onValueChange(e -> {
             if (e.value) {
+                if(directoryView.selectedFiles.contains(this)) return;
                 directoryView.selectedFiles.add(this);
                 fileChooser._onFileSelected.execute(this);
             } else {
@@ -52,5 +59,19 @@ public class FileAsRow extends Table.Row {
                 directoryView.setDir(file);
             });
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FileAsRow fileAsRow = (FileAsRow) o;
+        return cleanFilePath.equals(fileAsRow.cleanFilePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return cleanFilePath.hashCode();
     }
 }

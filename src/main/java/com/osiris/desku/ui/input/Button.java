@@ -46,7 +46,7 @@ public class Button extends Component<Button, String> {
     public Button onValueChange(Consumer<ValueChangeEvent<Button, String>> code) {
         // Forward label text change event to this button
         label.onValueChange(e -> {
-            ValueChangeEvent<Button, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore, e.isProgrammatic);
+            ValueChangeEvent<Button, String> e2 = new ValueChangeEvent<>(e.messageRaw, e.message, this, e.value, e.valueBefore, e.isProgrammatic);
             code.accept(e2);
         });
         return this;

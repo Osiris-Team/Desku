@@ -3,10 +3,15 @@ package com.osiris.desku.ui.input.filechooser;
 import com.osiris.desku.App;
 import com.osiris.desku.ui.Component;
 import com.osiris.desku.ui.display.Text;
+import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.input.TextField;
 import com.osiris.events.Event;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class FileChooser extends Component<FileChooser, String> {
@@ -31,6 +36,30 @@ public class FileChooser extends Component<FileChooser, String> {
         this(new Text(label).sizeS(), defaultValue);
     }
 
+    public FileChooser(String label, List<File> defaultValue) {
+        this(new Text(label).sizeS(), pathsListToString(defaultValue));
+    }
+
+    public FileChooser(Text label, List<File> defaultValue) {
+        this(label, pathsListToString(defaultValue));
+    }
+
+    public static String pathsListToString(List<File> list) {
+        StringBuilder s = new StringBuilder();
+        for (File file : list) {
+            s.append(file.getAbsolutePath()).append(" ; ");
+        }
+        return s.toString();
+    }
+
+    public static List<File> stringToPathsList(String s) {
+        List<File> l = new ArrayList<>();
+        for (String path : s.split(";")) {
+            l.add(new File(path.trim()));
+        }
+        return l;
+    }
+
     public FileChooser(Text label, String defaultValue) {
         super(defaultValue, String.class);
         this.tfSelectedFiles = new TextField(label, defaultValue);
@@ -42,16 +71,60 @@ public class FileChooser extends Component<FileChooser, String> {
         });
         onFileSelected(e -> {
             String filePaths = tfSelectedFiles.getValue();
-            filePaths += e.cleanFilePath + "; ";
+            filePaths += e.cleanFilePath + " ; ";
             this.tfSelectedFiles.setValue(filePaths);
         });
         onFileDeselected(e -> {
             String filePaths = tfSelectedFiles.getValue();
-            filePaths = filePaths.replace(e.cleanFilePath + ";", "");
+            filePaths = filePaths.replace(e.cleanFilePath + " ; ", "");
             this.tfSelectedFiles.setValue(filePaths);
         });
 
         add(this.tfSelectedFiles, this.directoryView);
+    }
+
+    @Override
+    public FileChooser setValue(@Nullable String v) {
+        tfSelectedFiles.setValue(v);
+        return this;
+    }
+
+    @Override
+    public FileChooser getValue(Consumer<@NotNull String> v) {
+        tfSelectedFiles.getValue(v);
+        return this;
+    }
+
+    @Override
+    public FileChooser onValueChange(Consumer<ValueChangeEvent<FileChooser, String>> code) {
+        tfSelectedFiles.onValueChange(e -> {
+            ValueChangeEvent<FileChooser, String> e2 = new ValueChangeEvent<>(e.messageRaw, e.message, this, e.value, e.valueBefore, e.isProgrammatic);
+            code.accept(e2);
+            String[] previousPaths = e.valueBefore.split(";");
+            String[] paths = e.value.split(";");
+            for (String path : paths) {
+                path = path.trim();
+                for (String previousPath : previousPaths) {
+                    previousPath = previousPath.trim();
+                    if(!path.equals(previousPath)){
+                        // This is the path that was changed, thus deselect previous path
+                        // This forces the user to use the UI instead of this text field to select the new path
+                        if(!previousPath.isEmpty())
+                        {
+                            _onFileDeselected.execute(new FileAsRow(this, directoryView, new File(previousPath)));
+                            _onFileSelected.execute(new FileAsRow(this, directoryView, new File(path)));
+                        }
+                    }
+                }
+            }
+        });
+        return this;
+    }
+
+    public FileChooser onFileSelectChange(Consumer<FileAsRow> code) {
+        _onFileSelected.addAction(file -> code.accept(file));
+        _onFileDeselected.addAction(file -> code.accept(file));
+        return this;
     }
 
     public FileChooser onFileSelected(Consumer<FileAsRow> code) {

@@ -127,7 +127,7 @@ public class Home extends Route {
                 vertical().childGap(true).scrollable(true, "100%", "100px", // Size for scroll layout
                         "100%", "5px") // Min sizes for children
                         .onScroll(e -> {
-                            AL.info("SCROLL: "+e.rawJSMessage);
+                            AL.info("SCROLL: "+e.messageRaw);
                         })
         );
         for (int i = 0; i < 20; i++) {

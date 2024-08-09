@@ -97,7 +97,7 @@ public class FileUploader extends Component<FileUploader, File> {
                     msg = msg.replace("\\", "/");
                     ValueChangeEvent<FileUploader, File> e = new ValueChangeEvent<>(msg, this, internalValue);
                     // Convert file content that is string binary to byte[] // TODO is this really necessary?
-                    String content = e.jsMessage.get("newContent").getAsString();
+                    String content = e.message.get("newContent").getAsString();
                     String[] bytes = content.split(" ");
                     int length = bytes.length;
                     byte[] byteArray = new byte[length];

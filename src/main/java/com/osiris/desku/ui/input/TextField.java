@@ -51,7 +51,7 @@ public class TextField extends Component<TextField, String> {
     public TextField onValueChange(Consumer<ValueChangeEvent<TextField, String>> code) {
         // Forward input text change event to this component
         input.onValueChange(e -> {
-            ValueChangeEvent<TextField, String> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore, e.isProgrammatic);
+            ValueChangeEvent<TextField, String> e2 = new ValueChangeEvent<>(e.messageRaw, e.message, this, e.value, e.valueBefore, e.isProgrammatic);
             code.accept(e2);
         });
         return this;

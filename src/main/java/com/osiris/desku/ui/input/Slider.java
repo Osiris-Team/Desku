@@ -54,7 +54,7 @@ public class Slider extends Component<Slider, Double> {
     public Slider onValueChange(Consumer<ValueChangeEvent<Slider, Double>> code) {
         // Forward input text change event to this component
         input.onValueChange(e -> {
-            ValueChangeEvent<Slider, Double> e2 = new ValueChangeEvent<>(e.rawJSMessage, e.jsMessage, this, e.value, e.valueBefore, e.isProgrammatic);
+            ValueChangeEvent<Slider, Double> e2 = new ValueChangeEvent<>(e.messageRaw, e.message, this, e.value, e.valueBefore, e.isProgrammatic);
             code.accept(e2);
         });
         return this;

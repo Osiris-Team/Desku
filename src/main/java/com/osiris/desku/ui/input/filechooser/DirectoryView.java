@@ -39,6 +39,15 @@ public class DirectoryView extends Component<DirectoryView, NoValue> {
     public void setDir(File dir) {
         this.dir = dir;
 
+        fileChooser.tfSelectedFiles.onValueChange(e -> {
+           // User or programmer changed the text field value containing all selected files
+           // thus we update the selected files and this UI
+            selectedFiles.clear();
+            for (File file : FileChooser.stringToPathsList(e.value)) {
+                selectedFiles.add(new FileAsRow(fileChooser, this, file));
+            }
+        });
+
         files.clear();
         removeAll();
 
@@ -77,37 +86,23 @@ public class DirectoryView extends Component<DirectoryView, NoValue> {
 
             // Get default selected files
             List<File> defaultSelectedFiles = new ArrayList<>();
-            for (String s : fileChooser.tfSelectedFiles.defaultValue.split(";")) {
+            String defValue = fileChooser.tfSelectedFiles.getValue(); // falls back to default value if none
+            for (String s : defValue.split(";")) {
                 if (!s.trim().isEmpty())
-                    defaultSelectedFiles.add(new File(s));
+                    defaultSelectedFiles.add(new File(s.trim()));
             }
 
             // Create UI components for files
             for (File file : _files) {
 
-                FileAsRow fileAsRow = new FileAsRow(fileChooser, this, file,
-                        (file == null || file.isDirectory() ? Icon.solid_folder() : Icon.regular_file()));
-
-                int iSelectedFile = -1;
-                for (int i = 0; i < selectedFiles.size(); i++) {
-                    FileAsRow f = selectedFiles.get(i);
-                    if (f.file.getAbsolutePath().equals(file.getAbsolutePath())) {
-                        iSelectedFile = i;
-                        //AL.info("Found already selected file! "+f.file);
-                        break;
-                    }
-                }
-                if (iSelectedFile != -1) {
-                    selectedFiles.set(iSelectedFile, fileAsRow);
-                    fileAsRow.checkBox.setValue(true);
-                }
+                FileAsRow fileAsRow = new FileAsRow(fileChooser, this, file);
 
                 boolean isSelectedByDefault = false;
                 for (int i = 0; i < defaultSelectedFiles.size(); i++) {
                     File f = defaultSelectedFiles.get(i);
                     if (f.getAbsolutePath().equals(file.getAbsolutePath())) {
                         isSelectedByDefault = true;
-                        //AL.info("Found DEFAULT selected file! "+f);
+                        AL.info("Found DEFAULT selected file! "+f);
                         break;
                     }
                 }
