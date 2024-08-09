@@ -39,8 +39,6 @@ public class FileChooserTest {
                     .add(c)
                     .later(v -> {
                         try{
-                            if(true) while(true)
-                                Thread.sleep(1111);
                             while(UI.get().isLoading()) Thread.yield(); // Wait to ensure not the internal value is directly returned
                             // but instead the value is returned from the frontend HTML value attribute of the component.
 
