@@ -102,7 +102,6 @@ public class DirectoryView extends Component<DirectoryView, NoValue> {
                     File f = defaultSelectedFiles.get(i);
                     if (f.getAbsolutePath().equals(file.getAbsolutePath())) {
                         isSelectedByDefault = true;
-                        AL.info("Found DEFAULT selected file! "+f);
                         break;
                     }
                 }
