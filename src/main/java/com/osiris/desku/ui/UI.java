@@ -149,6 +149,13 @@ public abstract class UI {
     public abstract void plusY(int y) throws InterruptedException, InvocationTargetException;
 
     /**
+     * @see #executeJavaScriptSafely(String, String, int)
+     */
+    public void executeJavaScriptSafely(String jsCode) {
+        executeJavaScriptSafely(jsCode, "internal", 0);
+    }
+
+    /**
      * Executes {@link #executeJavaScript(String, String, int)} only once the UI is loaded and after
      * some internals JS dependencies are loaded.
      *

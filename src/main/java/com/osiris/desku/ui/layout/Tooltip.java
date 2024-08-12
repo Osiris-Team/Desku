@@ -1,6 +1,7 @@
 package com.osiris.desku.ui.layout;
 
 import com.osiris.desku.ui.Component;
+import com.osiris.desku.ui.UI;
 
 public class Tooltip{
     public Component<?, ?> parent;
@@ -15,7 +16,8 @@ public class Tooltip{
         parent.atr("data-bs-toggle", "tooltip");
         parent.atr("data-bs-title", content);
 
-        parent.executeJS("new bootstrap.Tooltip(comp)");
+        UI ui = UI.get();
+        ui.executeJavaScriptSafely(ui.jsGetComp("comp", parent.id) + "new bootstrap.Tooltip(comp)");
         return this;
     }
 }
