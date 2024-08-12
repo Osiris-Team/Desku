@@ -2,6 +2,7 @@ package com.osiris.desku.ui;
 
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
+import com.osiris.desku.Value;
 import com.osiris.desku.ui.utils.Rectangle;
 import com.osiris.desku.ui.utils.UnsafePortChrome;
 import com.osiris.events.Event;
@@ -34,7 +35,13 @@ public abstract class UI {
      * Boolean parameter isLoading, is true if still loading or false if finished loading.
      */
     public final Event<Boolean> onLoadStateChanged = new Event<>();
-    private final List<PendingAppend> pendingAppends = new ArrayList<>();
+    /**
+     * This allows the programmer to add components to a parent even if the parent is
+     * not attached yet (out of order additions). However those additions will only be visible in Java
+     * and later in the browser. <br>
+     * Access using "synchronized (pendingAppends)" to ensure order.
+     */
+    public final List<PendingAppend> pendingAppends = new ArrayList<>();
     /**
      * Last loaded html.
      */
@@ -142,7 +149,7 @@ public abstract class UI {
     public abstract void plusY(int y) throws InterruptedException, InvocationTargetException;
 
     /**
-     * Executes {@link #executeJavaScript(String, String, int)} (String, String, int)} only once the UI is loaded and after
+     * Executes {@link #executeJavaScript(String, String, int)} only once the UI is loaded and after
      * some internals JS dependencies are loaded.
      *
      * @see #getSnapshot() internal JS dependencies are added here.
@@ -239,7 +246,8 @@ public abstract class UI {
     }
 
     /**
-     * Access this window synchronously now.
+     * Access this window synchronously now and executes any {@link #pendingAppends}
+     * after running the provided code.
      */
     public UI access(Runnable code) {
         UI.set(this, Thread.currentThread());
@@ -261,8 +269,8 @@ public abstract class UI {
 
     public void safeInit(String startURL, boolean isTransparent, boolean isDecorated, int widthPercent, int heightPercent) {
         try {
-            AL.info("Starting new UI/window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
-            AL.info("Waiting for it to finish loading... Please stand by...");
+            AL.debug(this.getClass(), "Starting new UI/window with url: " + startURL + " transparent: " + isTransparent + " width: " + widthPercent + "% height: " + heightPercent + "%");
+            AL.debug(this.getClass(), "Waiting for it to finish loading... Please stand by...");
             long ms = System.currentTimeMillis();
 
             /**
@@ -283,7 +291,7 @@ public abstract class UI {
 
             while (isLoading.get()) Thread.yield();
 
-            AL.info("Init took " + (System.currentTimeMillis() - ms) + "ms for " + this);
+            AL.debug(this.getClass(), "Init took " + (System.currentTimeMillis() - ms) + "ms for " + this);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -293,15 +301,15 @@ public abstract class UI {
         App.uis.all.remove(this);
         try {
             webSocketServer.stop();
-            AL.info("Closed WebSocketServer " + webSocketServer.domain + ":" + webSocketServer.port + " for UI: " + this);
+            AL.debug(this.getClass(), "Closed WebSocketServer " + webSocketServer.domain + ":" + webSocketServer.port + " for UI: " + this);
         } catch (Exception e) {
         }
         try {
             httpServer.server.stop();
-            AL.info("Closed HTTPServer " + httpServer.serverDomain + ":" + httpServer.serverPort + " for UI: " + this);
+            AL.debug(this.getClass(), "Closed HTTPServer " + httpServer.serverDomain + ":" + httpServer.serverPort + " for UI: " + this);
         } catch (Exception e) {
         }
-        AL.info("Closed " + this);
+        AL.debug(this.getClass(), "Closed " + this);
     }
 
     /**
@@ -414,7 +422,7 @@ public abstract class UI {
         if (snapshot == null) snapshot = getSnapshot();
 
         // Write html to temp file
-        AL.info("Generate: " + file);
+        AL.debug(this.getClass(), "Generate: " + file);
         file.getParentFile().mkdirs();
         if (!file.exists()) file.createNewFile();
         Files.write(file.toPath(), snapshot.outerHtml().getBytes(StandardCharsets.UTF_8));
@@ -423,7 +431,7 @@ public abstract class UI {
 
     public File getSnapshotTempFile() {
         return new File(App.htmlDir
-                + (route.path.equals("/") || route.path.equals("") ? "/.html" : (route.path + ".html")));
+                + (route.path.equals("/") || route.path.isEmpty() ? "/.html" : (route.path + ".html")));
     }
 
     /**
@@ -607,7 +615,7 @@ public abstract class UI {
     public synchronized void startHTTPServer(String serverDomain, int serverPort) throws Exception {
         httpServer = new HTTPServer(this, serverDomain, serverPort);
         serverPort = httpServer.serverPort;
-        AL.info("Started HTTPServer " + serverDomain + ":" + serverPort + " for UI: " + this);
+        AL.debug(this.getClass(), "Started HTTPServer " + serverDomain + ":" + serverPort + " for UI: " + this);
     }
 
     /**
@@ -639,12 +647,12 @@ public abstract class UI {
                 super.onOpen(conn, handshake);
                 // Executed when client connects, since its executed at the end of the HTML body
                 // this tells us that the page is loaded for the first time too
-                AL.info(this + " init success!");
+                AL.debug(this.getClass(), this + " init success!");
                 onLoadStateChanged.execute(false);
             }
         };
         serverPort = webSocketServer.port;
-        AL.info("Started WebSocketServer " + serverDomain + ":" + serverPort + " for UI: " + this);
+        AL.debug(this.getClass(), "Started WebSocketServer " + serverDomain + ":" + serverPort + " for UI: " + this);
     }
 
     public String jsClientSendWebSocketMessage(String message) {
@@ -665,7 +673,7 @@ public abstract class UI {
     }
 
     /**
-     * Ensures all parents are attached before performing actually
+     * Ensures all parents are attached before actually
      * performing the pending append operation.
      */
     private void attachToParentSafely(PendingAppend pendingAppend) {
@@ -698,6 +706,12 @@ public abstract class UI {
         }
     }
 
+    public List<PendingAppend> getPendingAppendsCopy(){
+        synchronized (pendingAppends){
+            return new ArrayList<>(pendingAppends);
+        }
+    }
+
     public void attachWhenAccessEnds(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
         synchronized (pendingAppends) {
             pendingAppends.add(new PendingAppend(parent, child, e));
@@ -705,8 +719,8 @@ public abstract class UI {
     }
 
     public <T extends Component<?, ?>> void attachToParent(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
-        //AL.info("attachToParent() "+parent.getClass().getSimpleName()+"("+parent.id+"/"+parent.isAttached()+") ++++ "+
-        //        child.getClass().getSimpleName()+"("+child.id+") ");
+        if(App.isInDepthDebugging) AL.debug(this.getClass(), "attachToParent() parent = "+parent.toPrintString()+" attached="+parent.isAttached()+" added child = "+
+                child.toPrintString()+" child html = \n"+ child.element.outerHtml());
 
         if (e.otherChildComp == null) { // add
             executeJavaScript(jsAttachToParent(parent, child),
@@ -716,10 +730,13 @@ public abstract class UI {
                 child2.setAttached(true);
             });
         } else if (e.isInsert || e.isReplace) { // for replace, remove() must be executed after this function returns
+            // if replace: childComp is the new component to be added and otherChildComp is the one that gets removed/replaced
+            // "beforebegin" = Before the element. Only valid if the element is in the DOM tree and has a parent element.
             executeJavaScript(
                     jsGetComp("otherChildComp", e.otherChildComp.id) +
-                            "var child = `" + e.childComp.element.outerHtml() + "`;\n" +
-                            "otherChildComp.insertAdjacentHTML(\"beforebegin\", child);\n",
+                            "var child = `" + Value.escapeForJavaScript(Value.escapeForJSON(e.childComp.element.outerHtml())) + "`;\n" +
+                            "otherChildComp.insertAdjacentHTML(\"beforebegin\", child);\n" +
+                            (App.isInDepthDebugging ? "console.log('otherChildComp:', otherChildComp); console.log('➡️✅ inserted child:', child); \n" : ""),
                     "internal", 0);
             e.childComp.setAttached(true);
             e.childComp.forEachChildRecursive(child2 -> {
@@ -730,10 +747,9 @@ public abstract class UI {
 
     public String jsAttachToParent(Component<?, ?> parent, Component<?, ?> child) {
         return "try{" + jsGetComp("parentComp", parent.id) +
-                "var child = `\n" + child.element.outerHtml() + "\n`;\n" +
+                "var child = `\n" + Value.escapeForJavaScript(Value.escapeForJSON(child.element.outerHtml())) + "\n`;\n" +
                 "parentComp.insertAdjacentHTML(\"beforeend\", child);\n" +
-                //"console.log('ADDED CHILD: ');\n"+
-                //"console.log(child);\n" +
+                (App.isInDepthDebugging ? "console.log('parentComp:', parentComp); console.log('➡️✅ added child:', child);\n" : "") +
                 "\n}catch(e){console.error(e)}";
     }
 
@@ -748,13 +764,38 @@ public abstract class UI {
         }
     }
 
+    public void runIfReadyAndCompAttachedOrLater(Component<?, ?> comp, Runnable code) {
+        synchronized (isLoading){
+            if (!isLoading.get() && comp.isAttached()) code.run();
+            else onLoadStateChanged.addAction((action, isLoading) -> {
+                if (isLoading && !comp.isAttached()) return;
+                action.remove();
+                code.run();
+            }, AL::warn);
+        }
+    }
+
     public boolean isLoading(){
         synchronized (isLoading){
             return isLoading.get();
         }
     }
 
-    private class PendingAppend {
+    public static class PendingAppend {
+        public static boolean removeFromPendingAppends(UI ui, Component<?, ?> comp){
+            if(ui != null){ // && ui.isLoading()){ // Also remove from pending appends, these can also happen after loading
+                synchronized (ui.pendingAppends){
+                    List<UI.PendingAppend> toRemove = new ArrayList<>(0);
+                    for (UI.PendingAppend pendingAppend : ui.pendingAppends) {
+                        if(comp.equals(pendingAppend.child))
+                            toRemove.add(pendingAppend);
+                    }
+                    return ui.pendingAppends.removeAll(toRemove);
+                }
+            }
+            return false;
+        }
+
         public Component<?, ?> parent;
         public Component<?, ?> child;
         public Component.AddedChildEvent e;

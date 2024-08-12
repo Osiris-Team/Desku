@@ -22,6 +22,8 @@ import org.jsoup.nodes.Element;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -61,6 +63,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * </pre>
      */
     public final int id = idCounter.getAndIncrement();
+    /**
+     * List of children. Normally it's read-only. <br>
+     * Thus do not modfify directly and use methods like {@link #add(Component[])} or {@link #remove(Component[])}
+     * instead, to ensure the changes are also visible in the browser.
+     */
     public final CopyOnWriteArrayList<Component> children = new CopyOnWriteArrayList<>();
     /**
      * Executed when a child was added on the Java side. <br>
@@ -149,17 +156,17 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 child.element.remove();
             child.update();
 
-            // Update UI
-            if (isAttached && !ui.isLoading()){
-                ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
-                                ui.jsGetComp("childComp", child.id) +
-                                "comp.removeChild(childComp);\n",
-                        "internal", 0);
-            }
-
-            child.isAttached = false;
-            onChildRemove.execute(child);
         }
+        UI.PendingAppend.removeFromPendingAppends(ui, child);
+
+        // Update UI always
+        // Child might have already been removed in Java but not in JS
+        executeJS(ui.jsGetComp("childComp", child.id) +
+                "comp.removeChild(childComp);\n" +
+                (App.isInDepthDebugging ? "console.log('parent comp:', comp); console.log('➡️❌ removed childComp:', childComp); \n" : ""));
+
+        child.isAttached = false;
+        onChildRemove.execute(child);
     };
     public Consumer<Component> _removeSelf = self -> {
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
@@ -167,13 +174,12 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             self.element.remove();
         }
         self.update();
+        UI.PendingAppend.removeFromPendingAppends(ui, self);
 
         // Update UI
-        if (isAttached && !ui.isLoading()){
-            ui.executeJavaScriptSafely(ui.jsGetComp("comp", self.id) +
-                            "comp.parentNode.removeChild(comp);\n",
-                    "internal", 0);
-        }
+        executeJS(ui.jsGetComp("comp", self.id) +
+                "comp.parentNode.removeChild(comp);\n"+
+                (App.isInDepthDebugging ? "console.log('parent comp:', comp.parentNode); console.log('➡️❌ removed self:', comp); \n" : ""));
 
         self.isAttached = false;
         //onChildRemove.execute(self);
@@ -191,6 +197,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             e.childComp.update();
             element.insertChildren(iOtherComp, e.childComp.element);
         } else if (e.isReplace) {
+            // childComp is the new component to be added
+            // and otherChildComp is the one that gets removed/replaced
             int iOtherComp = children.indexOf(e.otherChildComp);
             children.set(iOtherComp, e.childComp);
             e.childComp.update();
@@ -263,7 +271,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 executeJS("comp.setAttribute(`" + key
                         + "`, `" + value + "`);\n" +
                         "comp[`"+key+"`] = `"+value+"`\n"); // Change UI representation
-                //System.out.println(key+" = "+ value);
+                if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" _attributeChange javascript -> "+key+" = "+ value);
+            } else {
+                if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" _attributeChange Java -> "+key+" = "+ value);
             }
 
         } else {// Remove attribute
@@ -334,11 +344,15 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * that was set in the constructor.
      */
     public THIS getValue(Consumer<@NotNull VALUE> v) {
+
         UI ui = UI.get();
-        if(!isAttached || ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the value, thus return internal directly
+        if(!isAttached || ui == null || ui.isLoading()) { // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
+            if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getValue() returns internalValue = "+ internalValue);
+        }
         else
             gatr("value", valueAsString -> {
+                if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getValue() returns from javascript value attribute = "+valueAsString);
                 VALUE value = Value.stringToVal(valueAsString, this);
                 v.accept(value);
             });
@@ -359,6 +373,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         else newValJsonSafe = "\""+Value.escapeForJSON(newVal)+"\""; // json object or other primitive
 
         String message = "{\"newValue\": "+newValJsonSafe+"}";
+        if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" setValue() message -> "+message);
+
         JsonObject jsonEl = JsonFile.parser.fromJson(message, JsonObject.class);
         ValueChangeEvent<THIS, VALUE> event = new ValueChangeEvent<>(message, jsonEl, _this, v, this.internalValue, true);
         this.internalValue = v;
@@ -411,8 +427,16 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Executes the provided JavaScript code now, or later
      * if this component is not attached yet. <br>
+     * <br>
+     * Does nothing and directly returns if the UI is null or still loading, since
+     * we assume that your provided JS code is strongly related to this component and that
+     * it does a manipulation that was done in Java code before (like for example changing its HTML, a style or attribute)
+     * to prevent duplicate operations. <br>
+     * If that is not the case use {@link UI#executeJavaScriptSafely(String, String, int)} instead. <br>
+     * <br>
      * Your code will be encapsulated in a try/catch block and errors logged to
      * the clients JavaScript console. <br>
+     * <br>
      * A reference of this component will be added before your code, thus you can access
      * this component via the "comp" variable in your provided JavaScript code.
      */
@@ -424,6 +448,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * @see #executeJS(String)
      */
     public THIS executeJS(UI ui, String code){
+        if(ui == null || ui.isLoading()) return _this;
         if(isAttached){
             ui.executeJavaScriptSafely(
                     "try{"+
@@ -475,14 +500,17 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     /**
-     * Executes the provided code asynchronously in a new thread. <br>
+     * Executes the provided code asynchronously in a thread from {@link App#executor} and returns directly.<br>
      * This function needs to be run inside UI context
      * since it executes {@link UI#get()}, otherwise {@link NullPointerException} is thrown. <br>
      * <br>
      * Note that your code-block will have access to the current UI,
      * which means that you can add/remove/change UI components without issues.
      * This also means that you will have to handle Thread-safety yourself
-     * when doing things to the same component from multiple threads at the same time.
+     * when doing things to the same component from multiple threads at the same time. <br>
+     * <br>
+     * Also note that your code is not allowed to run forever/block, since
+     * sometimes added components get added (in the browser) only after your code was run, see {@link UI#pendingAppends} and {@link UI#access(Runnable)}.
      *
      * @param code the code to be executed asynchronously, contains this component as parameter.
      */
@@ -836,6 +864,26 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         }
         return _this;
     }
+
+    /**
+     * Requires that the children have absolute width/height. <br>
+     * If this component has width/height set, those are used, otherwise 100% as width/height is used.
+     */
+    public THIS scrollable(boolean b) {
+        String width = style.get("width").isEmpty() ? "100%" : style.get("width");
+        String height = style.get("height").isEmpty() ? "100%" : style.get("height");
+        scrollable(b, width, height, "", "");
+        return _this;
+    }
+
+    /**
+     * Requires that the children have absolute width/height.
+     */
+    public THIS scrollable(boolean b, String width, String height) {
+        scrollable(b, width, height, "", "");
+        return _this;
+    }
+
 
     /**
      * Makes this component scrollable. <br>

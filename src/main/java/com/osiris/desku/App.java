@@ -74,6 +74,14 @@ public class App {
     public static File styles;
     public static File javascript;
 
+    /**
+     * Make sure {@link LoggerParams} has debugging enabled for this to work. <br>
+     * If this is enabled the debug output will include a much more detailed output
+     * related to the html that is added, the attributes being set etc. <br>
+     * This also adds similar logging to the browsers console output. <br>
+     */
+    public static boolean isInDepthDebugging = false;
+
     static {
         updateDirs();
     }
@@ -116,7 +124,7 @@ public class App {
 
     public static class LoggerParams{
         public String name = "Logger";
-        public boolean debug = true;
+        public boolean debug = false;
         public File logsDir;
         public File latestLogFile;
         public File mirrorOutFile;
@@ -160,12 +168,12 @@ public class App {
                 AL.start(loggerParams.name, loggerParams.debug, loggerParams.latestLogFile, loggerParams.ansi, loggerParams.forceAnsi);
                 AL.mirrorSystemStreams(loggerParams.mirrorOutFile, loggerParams.mirrorErrFile);
             }
-            AL.info("Starting application...");
-            AL.info("workingDir = " + workingDir);
-            AL.info("tempDir = " + tempDir);
-            AL.info("userDir = " + userDir);
-            AL.info("htmlDir = " + htmlDir);
-            AL.info("Java = " + System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
+            AL.debug(App.class, "Starting application...");
+            AL.debug(App.class, "workingDir = " + workingDir);
+            AL.debug(App.class, "tempDir = " + tempDir);
+            AL.debug(App.class, "userDir = " + userDir);
+            AL.debug(App.class, "htmlDir = " + htmlDir);
+            AL.debug(App.class, "Java = " + System.getProperty("java.vendor") + " " + System.getProperty("java.version"));
 
             // Clear the directory at each app startup, since
             // its aim is to provide a cache to load pages faster
@@ -187,7 +195,7 @@ public class App {
             appendToGlobalCSS(getCSS(Bootstrap.class));
             appendToGlobalJS(getJS(Bootstrap.class));
 
-            AL.info("Started application successfully!");
+            AL.debug(App.class, "Started application successfully!");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

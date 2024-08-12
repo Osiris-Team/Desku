@@ -44,7 +44,7 @@ public class Image extends Component<Image, NoValue> {
             String format = name.substring(name.lastIndexOf(".") + 1);
             if(!ImageIO.write(image, format, imgFile))
                 throw new Exception("No writer for image of type \""+format+"\".");
-            AL.info("Written java-image to: " + imgFile);
+            AL.debug(this.getClass(), "Written java-image to: " + imgFile);
         } catch (Exception e) {
             AL.warn("Failed to write java-image ("+imgFile+").", e);
         }
@@ -89,7 +89,7 @@ public class Image extends Component<Image, NoValue> {
         img.getParentFile().mkdirs();
         try {
             Files.copy(App.getResource(packagePath + src), img.toPath());
-            //AL.info("Unpacked image to: " + img);
+            //AL.debug(this.getClass(), "Unpacked image to: " + img);
         } catch (Exception e) {
             AL.warn(e);
         }

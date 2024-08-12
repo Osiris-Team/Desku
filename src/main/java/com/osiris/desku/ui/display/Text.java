@@ -23,15 +23,12 @@ public class Text extends Component<Text, String> {
         UI ui = UI.get();
         Runnable registration = () -> {
             _onValueAppended.addAction((childString) -> {
-                ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
-                                "var childString = document.createTextNode(`" + childString + "`);\n" +
-                                "comp.appendChild(childString);\n",
-                        "internal", 0);
+                executeJS("var childString = document.createTextNode(`" + childString + "`);\n" +
+                                "comp.appendChild(childString);\n");
             });
             _onEmptyValue.addAction((_void) -> {
-                ui.executeJavaScriptSafely(ui.jsGetComp("comp", id) +
-                                "comp.textContent = '';\n", // remove all text nodes
-                        "internal", 0);
+                executeJS("comp.textContent = '';\n");  // remove all text nodes
+                removeAll();
             });
         };
         ui.runIfReadyOrLater(registration);

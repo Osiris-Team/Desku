@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -59,26 +60,23 @@ public class FileChooser extends Component<FileChooser, String> {
     public static List<File> stringToPathsList(String s) {
         List<File> l = new ArrayList<>();
         for (String path : s.split(";")) {
-            l.add(new File(path.trim()));
+            path = path.trim();
+            if(!path.isEmpty()) l.add(new File(path));
         }
         return l;
     }
 
     public FileChooser(Text label, String defaultValue) {
         super(defaultValue, String.class);
-        this.label = label;
-        this.tfSelectedFiles = new TextField(label, defaultValue);
-        this.directoryView = new DirectoryView(this, App.userDir.getAbsoluteFile());
-        this.btnsSelectedFiles = new Horizontal().padding(false);
-        btnsSelectedFiles.add(new Button("Select File(s)").onClick(e -> {
-            directoryView.visible(!directoryView.isVisible());
-        }));
-        for (File file : stringToPathsList(defaultValue)) {
-            btnsSelectedFiles.add(getButton(new FileAsRow(this, directoryView, file)));
-        }
-        tfSelectedFiles.visible(false);
+        this.childVertical().childGap(true);
+        add(this.label = label);
+        add(this.tfSelectedFiles = new TextField(label, defaultValue));
+        add(this.btnsSelectedFiles = new Horizontal().padding(false).scrollable(true, "100%", "fit-content"));
+        add(this.directoryView = new DirectoryView(this, App.userDir.getAbsoluteFile()));
+        setValue(defaultValue);
+
         directoryView.visible(false);
-        childVertical();
+        tfSelectedFiles.visible(false);
         tfSelectedFiles.onClick(e -> {
             directoryView.visible(!directoryView.isVisible());
         });
@@ -98,9 +96,16 @@ public class FileChooser extends Component<FileChooser, String> {
                     btnsSelectedFiles.remove(btn);
             }
         });
+    }
 
-        this.childGap(true);
-        add(this.label, this.btnsSelectedFiles, this.tfSelectedFiles, this.directoryView);
+    private void setButtons(List<File> files){
+        btnsSelectedFiles.removeAll();
+        btnsSelectedFiles.add(new Button("Select File(s)").onClick(e -> {
+            directoryView.visible(!directoryView.isVisible());
+        }));
+        for (File file : files) {
+            btnsSelectedFiles.add(getButton(new FileAsRow(this, directoryView, file)));
+        }
     }
 
     private Button getButton(FileAsRow e) {
@@ -109,9 +114,22 @@ public class FileChooser extends Component<FileChooser, String> {
         });
     }
 
+    public FileChooser setValue(@Nullable File... v) {
+        if(v == null) setValue("");
+        else setValue(pathsListToString(Arrays.asList(v)));
+        return this;
+    }
+
+    public FileChooser setValue(@Nullable List<File> v) {
+        if(v == null) setValue("");
+        else setValue(pathsListToString(v));
+        return this;
+    }
+
     @Override
     public FileChooser setValue(@Nullable String v) {
         tfSelectedFiles.setValue(v);
+        setButtons(stringToPathsList(v));
         return this;
     }
 

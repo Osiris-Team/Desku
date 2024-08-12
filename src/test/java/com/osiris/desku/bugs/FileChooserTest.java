@@ -37,7 +37,7 @@ public class FileChooserTest {
 
             return new Vertical()
                     .add(c)
-                    .later(v -> {
+                    .later(ly -> {
                         try{
                             while(UI.get().isLoading()) Thread.yield(); // Wait to ensure not the internal value is directly returned
                             // but instead the value is returned from the frontend HTML value attribute of the component.
@@ -56,10 +56,10 @@ public class FileChooserTest {
                             if(defaultFiles.isEmpty()) defaultFiles.add(App.workingDir.listFiles()[0]);
 
                             FileChooser c2 = new FileChooser("FC2", defaultFiles);
+                            ly.add(c2);
                             assertEquals(FileChooser.pathsListToString(defaultFiles), c2.getValue());
 
-
-
+                            c2.setValue(new File(App.workingDir+"/test"));
                         } catch (Throwable e) {
                             asyncResult.refEx.set(e);
                         } finally {

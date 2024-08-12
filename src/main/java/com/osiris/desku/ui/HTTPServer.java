@@ -57,7 +57,7 @@ public class HTTPServer {
                     return sendHTMLString(msg + "</body></html>\n");
                 }
                 try {
-                    AL.info("File: " + f);
+                    AL.debug(this.getClass(), "File: " + f);
                     return sendFile(f);
                 } catch (Exception e) {
                     String err = "Failed to provide content for " + path + " due to an exception '" + e.getMessage() + "' (more details in the log). File: " + f;
