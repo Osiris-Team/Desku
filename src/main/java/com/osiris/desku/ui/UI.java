@@ -9,6 +9,8 @@ import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -504,7 +506,7 @@ public abstract class UI {
         // 3. return success to client JS and execute it
         int id = webSocketServer.counter.getAndIncrement();
         synchronized (webSocketServer.javaScriptCallbacks) {
-            PendingJavaScriptResult pendingJavaScriptResult = new PendingJavaScriptResult(id, onSuccess, onError);
+            PendingJavaScriptResult pendingJavaScriptResult = new PendingJavaScriptResult(id, onSuccess, onError, UI.get());
             webSocketServer.javaScriptCallbacks.add(pendingJavaScriptResult);
         }
         return "var message = '';\n" + // Separated by space
@@ -912,11 +914,13 @@ public abstract class UI {
         public final Consumer<String> onSuccess;
         public final Consumer<String> onError;
         public boolean isPermanent = true;
+        public @NotNull UI ui;
 
-        public PendingJavaScriptResult(int id, Consumer<String> onSuccess, Consumer<String> onError) {
+        public PendingJavaScriptResult(int id, Consumer<String> onSuccess, Consumer<String> onError, UI ui) {
             this.id = id;
             this.onSuccess = onSuccess;
             this.onError = onError;
+            this.ui = ui;
         }
     }
 }

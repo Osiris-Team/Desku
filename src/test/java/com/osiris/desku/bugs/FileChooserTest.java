@@ -20,7 +20,7 @@ public class FileChooserTest {
 
     @Test
     void test() throws Throwable {
-        TApp.testIndefinetely((asyncResult) -> {
+        TApp.testAndAwaitResult((asyncResult) -> {
             FileChooser c = new FileChooser("FC1");
             assertEquals("", c.getValue());
 

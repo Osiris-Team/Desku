@@ -282,9 +282,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 executeJS("comp.setAttribute(`" + key
                         + "`, `" + value + "`);\n" +
                         "comp[`"+key+"`] = `"+value+"`\n"); // Change UI representation
-                if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" _attributeChange javascript -> "+key+" = "+ value);
+                if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" _attributeChange in javascript '"+key+"' = "+ value);
             } else {
-                if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" _attributeChange Java -> "+key+" = "+ value);
+                if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" _attributeChange in Java '"+key+"' = "+ value);
             }
 
         } else {// Remove attribute
@@ -720,12 +720,21 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
         UI ui = UI.get();
-        if(!isAttached || ui == null || ui.isLoading()) // Since never attached once, user didn't have a chance to change the atr, thus return internal directly
-            onValueReturned.accept(getUnescapedJsoupElementAttribute(key));
+        if(!isAttached || ui == null || ui.isLoading()) { // Since never attached once, user didn't have a chance to change the atr, thus return internal directly
+            String val = getUnescapedJsoupElementAttribute(key);
+            if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getAttribute() returns from jsoup '"+key+"' = "+ val);
+            onValueReturned.accept(val);
+        }
         else{
             key = Value.escapeForJavaScript(Value.escapeForJsoup(key));
+            String finalKey = key;
             executeJS("try { message = comp[`" + key + "`]; } catch (e) { console.error(e); }\n" +
-                    "if(message == null) try{ message = comp.getAttribute(`" + key + "`); } catch (e) { console.error(e); }\n", onValueReturned, AL::warn);
+                    "if(message == null) try{ message = comp.getAttribute(`" + key + "`); } catch (e) { console.error(e); }\n",
+                    (val -> {
+                        if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getAttribute() returns from javascript '"+ finalKey +"' = "+val);
+                        onValueReturned.accept(val);
+                    }),
+                    AL::warn);
         }
 
     }

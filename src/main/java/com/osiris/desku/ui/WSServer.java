@@ -50,9 +50,9 @@ public class WSServer extends WebSocketServer {
                 if (pendingResult.id == id) {
                     if (!pendingResult.isPermanent) iPendingResultToRemove = i;
                     if (!isError) // message looks like this: "!3 Error details..." 3 is the id and can be any number
-                        pendingResult.onSuccess.accept(message.substring(iFirstSpace + 1));
+                        pendingResult.ui.access(() -> pendingResult.onSuccess.accept(message.substring(iFirstSpace + 1)));
                     else // message looks like this: "3 first second etc..." 3 is the id and can be any number
-                        pendingResult.onError.accept(message.substring(iFirstSpace + 1));
+                        pendingResult.ui.access(() ->  pendingResult.onError.accept(message.substring(iFirstSpace + 1)));
                     break;
                 }
             }
