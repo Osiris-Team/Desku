@@ -111,6 +111,7 @@ public class FileChooser extends Component<FileChooser, String> {
     private Button getButton(FileAsRow e) {
         return new Button(e.cleanFilePath).onClick(e2 -> {
             setDir(e.file.isDirectory() ? e.file : e.file.getParentFile());
+            directoryView.visible(!directoryView.isVisible());
         });
     }
 

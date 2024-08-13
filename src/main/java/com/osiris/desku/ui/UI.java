@@ -12,13 +12,13 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -151,8 +151,8 @@ public abstract class UI {
     /**
      * @see #executeJavaScriptSafely(String, String, int)
      */
-    public void executeJavaScriptSafely(String jsCode) {
-        executeJavaScriptSafely(jsCode, "internal", 0);
+    public CompletableFuture<Void> executeJavaScriptSafely(String jsCode) {
+        return executeJavaScriptSafely(jsCode, "internal", 0);
     }
 
     /**
@@ -161,8 +161,24 @@ public abstract class UI {
      *
      * @see #getSnapshot() internal JS dependencies are added here.
      */
-    public void executeJavaScriptSafely(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber) {
-        runIfReadyOrLater(() -> executeJavaScript(jsCode, jsCodeSourceName, jsCodeStartingLineNumber));
+    public CompletableFuture<Void> executeJavaScriptSafely(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber) {
+        var f = new CompletableFuture<Void>();
+        if(App.isInDepthDebugging) {
+            Exception e = new Exception();
+            var sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            String finalJsCode = "var javaStackTrace = `"+Value.escapeForJavaScript(sw.toString())+"`;\n\n\n" + jsCode;
+            runIfReadyOrLater(() -> {
+                executeJavaScript(finalJsCode, jsCodeSourceName, jsCodeStartingLineNumber);
+                f.complete(null);
+            });
+        } else{
+            runIfReadyOrLater(() -> {
+                executeJavaScript(jsCode, jsCodeSourceName, jsCodeStartingLineNumber);
+                f.complete(null);
+            });
+        }
+        return f;
     }
 
     /**
@@ -265,6 +281,9 @@ public abstract class UI {
             for (PendingAppend pendingAppend : pendingAppends) {
                 try {
                     attachToParentSafely(pendingAppend);
+                } catch (InvalidParentException e){
+                    // Do nothing / remove pendingAppend from list
+                    // since its component probably was never added to a parent
                 } catch (Exception e) {
                     AL.warn(e);
                 }
@@ -512,10 +531,10 @@ public abstract class UI {
         this.route = route;
         this.listenersAndComps.clear();
         this.content = route.loadContent();
+        this.content.setAttached(true);
         this.content.forEachChildRecursive(child -> {
             child.setAttached(true);
         });
-        this.content.setAttached(true);
         UI.remove(Thread.currentThread());
     }
 
@@ -680,36 +699,64 @@ public abstract class UI {
     }
 
     /**
-     * Ensures all parents are attached before actually
-     * performing the pending append operation.
+     * Ensures all parents are attached before performing the pending append operation.
      */
-    private void attachToParentSafely(PendingAppend pendingAppend) {
-        if (pendingAppend.child.isAttached()) return;
-
-        List<MyElement> parents = new ArrayList<>();
-        MyElement parent = pendingAppend.parent.element;
-        while (parent != null && parent instanceof MyElement) {
-            parents.add(parent); // Make sure that the last attached parent is given too
-            if (parent.comp.isAttached()) break;
-            Element p = parent.parent();
-            if (p instanceof MyElement) parent = (MyElement) p;
-            else break;
+    private CompletableFuture<Void> attachToParentSafely(PendingAppend pendingAppend) throws InvalidParentException {
+        if (pendingAppend.child.isAttached()) {
+            return CompletableFuture.completedFuture(null);
         }
-        if (parents.size() >= 2) {
-            MyElement rootParentParent = parents.get(parents.size() - 1); // attached
-            MyElement rootParent = parents.get(parents.size() - 2); // not attached yet
-            // If this gets appended, there is no need of
-            // performing the pending append operations of all its children.
-            rootParent.comp.updateAll();
-            attachToParent(rootParentParent.comp, rootParent.comp,
-                    new Component.AddedChildEvent(rootParent.comp, null, false, false));
-            // Above also sets isAttached = true of all child components recursively,
-            // thus next attachToParentSafely() will return directly without doing nothing,
-            // and thus all pending appends for those children will not be executed,
-            // since otherwise that would cause duplicate components
-        } else {
+
+        List<Component> parents = getParentChain(pendingAppend.parent);
+        if(App.isInDepthDebugging){
+            AL.info("Unattached parent chain ("+parents.size()+") child -> parent: ");
+            String s = "";
+            for (Component comp : parents) {
+                s += comp.toPrintString()+" isAttached="+comp.isAttached()+" ||| ";
+            }
+            AL.debug(this.getClass(), s);
+        }
+
+        if (parents.size() < 2) {
             pendingAppend.child.updateAll();
-            attachToParent(pendingAppend.parent, pendingAppend.child, pendingAppend.e);
+            return attachToParent(pendingAppend.parent, pendingAppend.child, pendingAppend.e);
+        }
+
+        Component rootParentParent = parents.get(parents.size() - 1); // attached
+        Component rootParent = parents.get(parents.size() - 2); // not attached yet
+
+        rootParent.updateAll();
+        return attachToParent(rootParentParent, rootParent,
+                new Component.AddedChildEvent(rootParent, null, false, false));
+    }
+
+    /**
+     * Returns a list of mainly unattached parents (the last element is the first attached parent that is found), starting from the given comp and moving up the hierarchy.
+     * The list is in order from child to parent. <br>
+     * <br>
+     * @throws InvalidParentException if the last comp is not attached. Meaning the component probably was never added to a parent on the Java side.
+     */
+    private List<Component> getParentChain(Component startElement) throws InvalidParentException {
+        List<Component> parents = new ArrayList<>();
+        MyElement current = startElement.element;
+
+        while (current != null && current instanceof MyElement) {
+            parents.add(current.comp);
+            if (current.comp.isAttached()) break;
+
+            Element parent = current.parent();
+            if (parent == null || !(parent instanceof MyElement)){
+                throw new InvalidParentException("Parent is invalid/null, possibly meaning that the component was never added to a parent on the Java side." +
+                "However it can also mean that update() was never called before. comp="+current.comp.toPrintString()+" parent="+parent+" ");
+            }
+            current = (MyElement) parent;
+        }
+
+        return parents;
+    }
+
+    public class InvalidParentException extends Exception{
+        public InvalidParentException(String message) {
+            super(message);
         }
     }
 
@@ -725,30 +772,35 @@ public abstract class UI {
         }
     }
 
-    public <T extends Component<?, ?>> void attachToParent(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
+    public <T extends Component<?, ?>> CompletableFuture<Void> attachToParent(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
         if(App.isInDepthDebugging) AL.debug(this.getClass(), "attachToParent() parent = "+parent.toPrintString()+" attached="+parent.isAttached()+" added child = "+
                 child.toPrintString()+" child html = \n"+ child.element.outerHtml());
+        if(!parent.isAttached())
+            throw new RuntimeException("Attempting attach to parent even though parent '"+parent.toPrintString()+"' is not attached yet!");
 
         if (e.otherChildComp == null) { // add
-            executeJavaScript(jsAttachToParent(parent, child),
-                    "internal", 0);
-            child.setAttached(true);
-            child.forEachChildRecursive(child2 -> {
-                child2.setAttached(true);
+            return executeJavaScriptSafely(jsAttachToParent(parent, child),
+                    "internal", 0).thenAccept(__ -> {
+                child.setAttached(true);
+                child.forEachChildRecursive(child2 -> {
+                    child2.setAttached(true);
+                });
             });
-        } else if (e.isInsert || e.isReplace) { // for replace, remove() must be executed after this function returns
+        } else { //if (e.isInsert || e.isReplace) { // for replace, remove() must be executed after this function returns
             // if replace: childComp is the new component to be added and otherChildComp is the one that gets removed/replaced
             // "beforebegin" = Before the element. Only valid if the element is in the DOM tree and has a parent element.
-            executeJavaScript(
+            return executeJavaScriptSafely(
                     jsGetComp("otherChildComp", e.otherChildComp.id) +
                             "var child = `" + Value.escapeForJavaScript(Value.escapeForJSON(e.childComp.element.outerHtml())) + "`;\n" +
                             "otherChildComp.insertAdjacentHTML(\"beforebegin\", child);\n" +
                             (App.isInDepthDebugging ? "console.log('otherChildComp:', otherChildComp); console.log('➡️✅ inserted child:', child); \n" : ""),
-                    "internal", 0);
-            e.childComp.setAttached(true);
-            e.childComp.forEachChildRecursive(child2 -> {
-                child2.setAttached(true);
-            });
+                    "internal", 0)
+                    .thenAccept(__ -> {
+                        e.childComp.setAttached(true);
+                        e.childComp.forEachChildRecursive(child2 -> {
+                            child2.setAttached(true);
+                        });
+                    });
         }
     }
 
@@ -789,13 +841,29 @@ public abstract class UI {
     }
 
     public static class PendingAppend {
+        /**
+         * Also removes all children recursively.
+         */
         public static boolean removeFromPendingAppends(UI ui, Component<?, ?> comp){
             if(ui != null){ // && ui.isLoading()){ // Also remove from pending appends, these can also happen after loading
                 synchronized (ui.pendingAppends){
                     List<UI.PendingAppend> toRemove = new ArrayList<>(0);
-                    for (UI.PendingAppend pendingAppend : ui.pendingAppends) {
-                        if(comp.equals(pendingAppend.child))
+                    for (UI.PendingAppend pendingAppend : ui.getPendingAppendsCopy()) {
+                        if(comp.equals(pendingAppend.child)){
                             toRemove.add(pendingAppend);
+                            // Also remove any children
+                            for (Component child : comp.children) {
+                                removeFromPendingAppends(ui, child);
+                            }
+                        }
+                    }
+                    if(App.isInDepthDebugging){
+                        if(!toRemove.isEmpty()){
+                            AL.info("Removing "+toRemove.size()+" components from pending append:");
+                            for (PendingAppend pa : toRemove) {
+                                AL.info("toRemove = " + pa.child.toPrintString());
+                            }
+                        }
                     }
                     return ui.pendingAppends.removeAll(toRemove);
                 }

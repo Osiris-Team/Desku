@@ -64,6 +64,15 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public final int id = idCounter.getAndIncrement();
     /**
+     * Always null, unless {@link App#isInDepthDebugging} is enabled. <br>
+     * Stacktrace to find where in your code this component was created. <br>
+     */
+    public StackTraceElement[] createdAtStracktrace = null;
+    {
+        if(App.isInDepthDebugging)
+            createdAtStracktrace = new Exception().getStackTrace();
+    }
+    /**
      * List of children. Normally it's read-only. <br>
      * Thus do not modfify directly and use methods like {@link #add(Component[])} or {@link #remove(Component[])}
      * instead, to ensure the changes are also visible in the browser.
@@ -105,9 +114,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     public final Event<ValueChangeEvent<THIS, VALUE>> readOnlyOnValueChange = new Event<>();
     /**
      * Gets executed when this component <br>
-     * was attached to the UI.
+     * was attached or detached from the UI.
      */
-    public final Event<Void> _onAttached = new Event<>();
+    public final Event<Boolean> _onAttached = new Event<>();
     public final ConcurrentHashMap<String, String> style = new ConcurrentHashMap<>();
     /**
      * Gets set to false in {@link AddedChildEvent}. <br>
@@ -121,7 +130,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     public THIS setAttached(boolean b){
         isAttached = b;
-        _onAttached.execute(null);
+        _onAttached.execute(b);
         return _this;
     }
     public boolean isAttached(){
@@ -149,6 +158,8 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public MyElement element;
     public Consumer<Component> _remove = child -> {
+        if(App.isInDepthDebugging)
+            AL.debug(this.getClass(), "Attempting to remove child '"+child.toPrintString()+"' from parent '"+this.toPrintString()+"'.");
         UI ui = UI.get(); // Necessary for updating the actual UI via JavaScript
         if (children.contains(child)) {
             children.remove(child);
@@ -441,14 +452,32 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * this component via the "comp" variable in your provided JavaScript code.
      */
     public THIS executeJS(String code){
-        return executeJS(UI.get(), code);
+        return executeJS(UI.get(), code, false);
+    }
+
+    /**
+     * Same as {@link #executeJS(String)}, however
+     * the code will definitely be run even if the UI currently is loading. <br>
+     * Note that if you never load the UI this might cause memory leaks or throw a {@link NullPointerException}
+     * if the UI is null, thus make sure to call this within {@link UI#access(Runnable)} or {@link #now(Consumer)}
+     * or {@link #later(Consumer)}. <br>
+     */
+    public THIS executeJSForced(String code){
+        return executeJS(UI.get(), code, true);
     }
 
     /**
      * @see #executeJS(String)
      */
     public THIS executeJS(UI ui, String code){
-        if(ui == null || ui.isLoading()) return _this;
+        return executeJS(ui, code, false);
+    }
+
+    /**
+     * @see #executeJS(String)
+     */
+    public THIS executeJS(UI ui, String code, boolean force){
+        if(!force && (ui == null || ui.isLoading())) return _this;
         if(isAttached){
             ui.executeJavaScriptSafely(
                     "try{"+
@@ -457,7 +486,12 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                             "}catch(e){console.error(e)}",
                     "internal", 0);
         } else{ // Execute code once attached
-            _onAttached.addOneTimeAction((event, action) -> {
+            _onAttached.addAction((action, val) -> {
+                if(!val){
+                    // Detach is not the event we want
+                    return;
+                }
+                action.remove();
                 ui.executeJavaScriptSafely(
                         "try{"+
                                 ui.jsGetComp("comp", id) +
