@@ -273,6 +273,13 @@ public abstract class UI {
      * after running the provided code.
      */
     public UI access(Runnable code) {
+        UI ui = UI.get();
+        if(ui != null){
+            // Already within another access() thus we simply run the code
+            // and leave the rest to the original access() call.
+            code.run();
+            return ui;
+        }
         UI.set(this, Thread.currentThread());
         code.run();
         UI.remove(Thread.currentThread());
