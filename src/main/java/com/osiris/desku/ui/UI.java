@@ -153,23 +153,23 @@ public abstract class UI {
     /**
      * @see #executeJavaScriptSafely(String, String, int)
      */
-    public CompletableFuture<Void> executeJavaScriptSafely(String jsCode) {
+    public synchronized CompletableFuture<Void> executeJavaScriptSafely(String jsCode) {
         return executeJavaScriptSafely(jsCode, "internal", 0);
     }
 
     /**
      * Executes {@link #executeJavaScript(String, String, int)} only once the UI is loaded and after
-     * some internals JS dependencies are loaded.
+     * some internals JS dependencies are loaded. In an orderly fashion.
      *
      * @see #getSnapshot() internal JS dependencies are added here.
      */
-    public CompletableFuture<Void> executeJavaScriptSafely(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber) {
+    public synchronized CompletableFuture<Void> executeJavaScriptSafely(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber) {
         var f = new CompletableFuture<Void>();
         if(App.isInDepthDebugging) {
             Exception e = new Exception();
-            var sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            String finalJsCode = "var javaStackTrace = `"+Value.escapeForJavaScript(sw.toString())+"`;\n\n\n" + jsCode;
+            var javaStackTrace = new StringWriter();
+            e.printStackTrace(new PrintWriter(javaStackTrace));
+            String finalJsCode = "var javaStackTrace = `"+Value.escapeForJavaScript(javaStackTrace.toString())+"`;\n\n\n" + jsCode;
             runIfReadyOrLater(() -> {
                 executeJavaScript(finalJsCode, jsCodeSourceName, jsCodeStartingLineNumber);
                 f.complete(null);

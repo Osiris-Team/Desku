@@ -13,17 +13,16 @@ import com.osiris.desku.utils.GodIterator;
 import com.osiris.events.Event;
 import com.osiris.jlib.json.JsonFile;
 import com.osiris.jlib.logger.AL;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Element;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -67,10 +66,10 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Always null, unless {@link App#isInDepthDebugging} is enabled. <br>
      * Stacktrace to find where in your code this component was created. <br>
      */
-    public StackTraceElement[] createdAtStracktrace = null;
+    public Exception createdAtStackTrace = null;
     {
         if(App.isInDepthDebugging)
-            createdAtStracktrace = new Exception().getStackTrace();
+            createdAtStackTrace = new Exception();
     }
     /**
      * List of children. Normally it's read-only. <br>
@@ -478,14 +477,23 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public THIS executeJS(UI ui, String code, boolean force){
         if(!force && (ui == null || ui.isLoading())) return _this;
+
+        String js = "";
+        if(App.isInDepthDebugging){
+            var javaCompStackTrace = new StringWriter();
+            this.createdAtStackTrace.printStackTrace(new PrintWriter(javaCompStackTrace));
+            js = "var javaCompStackTrace = `"+Value.escapeForJavaScript(javaCompStackTrace.toString())+"`;\n\n\n";
+        }
+        js += "try{"+
+                ui.jsGetComp("comp", id) +
+                code+
+                "}catch(e){console.error(e)}";
+
         if(isAttached){
-            ui.executeJavaScriptSafely(
-                    "try{"+
-                            ui.jsGetComp("comp", id) +
-                            code+
-                            "}catch(e){console.error(e)}",
+            ui.executeJavaScriptSafely(js,
                     "internal", 0);
         } else{ // Execute code once attached
+            String finalJs = js;
             _onAttached.addAction((action, val) -> {
                 if(!val){
                     // Detach is not the event we want
@@ -493,11 +501,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 }
                 action.remove();
                 ui.executeJavaScriptSafely(
-                        "try{"+
-                                ui.jsGetComp("comp", id) +
-                                code+
-                                "}catch(e){console.error(e)}",
-                        "internal", 0);
+                        finalJs, "internal", 0);
             }, AL::warn);
         }
         return _this;
