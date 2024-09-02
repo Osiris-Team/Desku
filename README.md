@@ -18,7 +18,7 @@ import com.osiris.desku.App;
 import static com.osiris.desku.Statics;
 public class Main {
     public static void main(String[] args) throws Exception {
-        App.uis = new DesktopUIManager(); // Not needed when using the Desku-Gradle-Starter-App
+        App.uis = new DesktopUIManager(); // Not needed when using the Desku-Starter-App
         App.name = "My-App";
         App.init();
         App.uis.create(() -> {
@@ -39,7 +39,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         
         // Setup app details and init.
-        App.uis = new DesktopUIManager(); // Not needed when using the Desku-Gradle-Starter-App
+        App.uis = new DesktopUIManager(); // Not needed when using the Desku-Starter-App
         App.name = "My-App";
         App.init(); 
 
@@ -69,7 +69,7 @@ AppTest home page (24.08.2023), which includes all default components:
 </details>
 
 ## How to get started?
-#### Use the [Desku-Gradle-Starter-App](https://github.com/Osiris-Team/Desku-Gradle-Starter-App) as starting point since it also supports Android and iOS, everything is setup correctly and scripts for generating binaries + installers are included.
+#### Use the [Desku-Starter-App](https://github.com/Osiris-Team/Desku-Starter-App) as starting point since it also supports Android and iOS, everything is setup correctly and scripts for generating binaries + installers are included.
 #### Usage examples for all default components can be found [here](https://github.com/Osiris-Team/Desku/blob/main/src/test/java/com/osiris/desku/simple_app/home/Home.java) (CTRL + F to search by name).
 #### Install the [Desku-Intellij-Plugin](https://github.com/Osiris-Team/Desku-Intellij-Plugin) to make development even more hassle-free and generate the little boilerplate there is.
 
@@ -98,7 +98,7 @@ Android and iOS implementations are provided in the starter repo.
 A list of all available extensions can be found [here](https://github.com/topics/desku-extension?o=desc&s=updated).
 It can be a single component or a complete suite of multiple components, either
 way, its pretty easy to create a Desku-Extension:
-1. **Start with the [Desku-Gradle-Starter-Extension](https://github.com/Osiris-Team/Desku-Gradle-Starter-Extension) template.**
+1. **Start with the [Desku-Starter-Extension](https://github.com/Osiris-Team/Desku-Starter-Extension) template.**
 2. Publish your repo on GitHub with the #desku-extension tag/topic (also mention the Desku version your extension supports / was built with).
 3. Create a release and use JitPack or Maven to host the files.
 
