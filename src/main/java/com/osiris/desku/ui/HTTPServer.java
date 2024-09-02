@@ -4,7 +4,10 @@ package com.osiris.desku.ui;
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.jlib.logger.AL;
-import fi.iki.elonen.NanoHTTPD;
+import org.nanohttpd.core.http.IHTTPSession;
+import org.nanohttpd.core.http.NanoHTTPD;
+import org.nanohttpd.core.http.response.IStatus;
+import org.nanohttpd.core.http.response.Response;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -13,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Objects;
 
-import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
+import static org.nanohttpd.core.http.response.Response.newFixedLengthResponse;
 
 public class HTTPServer {
     public final int serverPort;
@@ -73,14 +76,14 @@ public class HTTPServer {
         this.serverDomain = serverDomain;
     }
 
-    private static NanoHTTPD.Response sendHTMLString(String s) {
-        NanoHTTPD.Response r = r = newFixedLengthResponse(s);
+    private static Response sendHTMLString(String s) {
+        Response r = r = newFixedLengthResponse(s);
         r.setMimeType("text/html");
         return r;
     }
 
-    private static NanoHTTPD.Response sendFile(File file) {
-        NanoHTTPD.Response r = null;
+    private static Response sendFile(File file) {
+        Response r = null;
         try {
             String mimeType = Files.probeContentType(file.toPath());
             if (mimeType.contains("text")) {
@@ -96,7 +99,7 @@ public class HTTPServer {
             } else {
                 byte[] bytes = Files.readAllBytes(file.toPath());
                 ByteArrayInputStream input = new ByteArrayInputStream(bytes);
-                r = newFixedLengthResponse(new NanoHTTPD.Response.IStatus() {
+                r = newFixedLengthResponse(new IStatus() {
                     @Override
                     public String getDescription() {
                         return null;

@@ -67,15 +67,15 @@ AUTO-GENERATED FILE, CHANGES SHOULD BE DONE IN ./JPM.java or ./src/main/java/com
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.nanohttpd</groupId>
+            <groupId>com.github.Osiris-Team.nanohttpd</groupId>
             <artifactId>nanohttpd</artifactId>
-            <version>2.3.1</version>
+            <version>3.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.nanohttpd</groupId>
+            <groupId>com.github.Osiris-Team.nanohttpd</groupId>
             <artifactId>nanohttpd-websocket</artifactId>
-            <version>2.3.1</version>
+            <version>3.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

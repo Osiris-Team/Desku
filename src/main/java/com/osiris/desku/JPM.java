@@ -26,7 +26,7 @@ public class JPM {
             // Override default configurations
             this.groupId = "com.osiris.desku";
             this.artifactId = "Desku";
-            this.version = "1.0.21";
+            this.version = "1.2.0";
             this.jarName = "Desku-"+version+".jar";
             this.javaVersionSource = "11";
             this.javaVersionTarget = "11";
@@ -43,8 +43,8 @@ public class JPM {
             implementation("com.github.Osiris-Team:jlib:18.4");
             implementation("com.github.Osiris-Team.webview_java:core:1.3.3");
             implementation("com.github.Osiris-Team.webview_java:bridge:1.3.3");
-            implementation("org.nanohttpd:nanohttpd:2.3.1");
-            implementation("org.nanohttpd:nanohttpd-websocket:2.3.1");
+            implementation("com.github.Osiris-Team.nanohttpd:nanohttpd:3.0.1");
+            implementation("com.github.Osiris-Team.nanohttpd:nanohttpd-websocket:3.0.1");
             implementation("org.java-websocket:Java-WebSocket:1.5.3");
             implementation("org.jetbrains:annotations:24.0.1");
             implementation("org.apache.commons:commons-lang3:3.16.0");
