@@ -103,8 +103,10 @@ way, its pretty easy to create a Desku-Extension:
 3. Create a release and use JitPack or Maven to host the files.
 
 ## State
-The base features are implemented, however the default UI component library
-still needs components, so feel free to contribute if you find something missing.
+
+💥 Do NOT use in production projects! We have a ton of features implemented but with very little testing.
+
+At this early state if you find something missing contribute directly instead of creating an extension.
 
 Todo:
 - Native notifications and in-app overlay notifications.
