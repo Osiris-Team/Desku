@@ -1,5 +1,5 @@
 # Desku [![](https://jitpack.io/v/Osiris-Team/Desku.svg)](https://jitpack.io/#Osiris-Team/Desku)
-Java UI Framework for developing low-code Web, Desktop and Mobile Applications in one codebase with Java. Using Web-Tech (JS/HTML/CSS) under the hood and a data centric API.
+Java UI Framework for developing low-code Web, Desktop and Mobile Applications in one codebase. Using Web-Tech (JS/HTML/CSS) under the hood and a data centric API.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
 ## Who is it for?
