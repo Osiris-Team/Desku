@@ -140,7 +140,7 @@ public class Table extends Component<Table, NoValue> {
         public Headers(Table table) {
             super(NoValue.GET, NoValue.class, "headers");
             this.t = table;
-            width("100%");
+            grow(1);
             Consumer<AddedChildEvent> superAdd = this._add;
             this._add = e -> {
                 if(e.isFirstAdd && e.childComp instanceof Row){
@@ -169,7 +169,7 @@ public class Table extends Component<Table, NoValue> {
             super(NoValue.GET, NoValue.class, "rows");
             childVertical();
             this.t = table;
-            width("100%"); // Children grow height of this layout
+            grow(1); // Children grow height of this layout
             Consumer<AddedChildEvent> superAdd = this._add;
             this._add = e -> {
                 if(e.isFirstAdd && e.childComp instanceof Row){

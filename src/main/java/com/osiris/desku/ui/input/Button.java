@@ -14,7 +14,7 @@ public class Button extends Component<Button, String> {
      * https://getbootstrap.com/docs/5.3/components/buttons/
      */
     public Button(String txt) {
-        super(txt, String.class, "button");
+        super(txt, String.class, "c");
         this.label = new Text(txt).sty("color", "var(--color-contrast)");
         add(label);
         childCenter();

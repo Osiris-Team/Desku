@@ -5,7 +5,7 @@ import com.osiris.desku.ui.utils.NoValue;
 
 public class Spinner extends Component<Spinner, NoValue> {
     public Spinner() {
-        super(NoValue.GET, NoValue.class);
+        super(NoValue.GET, NoValue.class, "spinner");
         typeBorder();
         primary();
     }

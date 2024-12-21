@@ -2,13 +2,13 @@
   flex-direction: column;
   font-family: Arial, Helvetica, sans-serif;
   border-collapse: collapse;
-  width: 100%;
+  flex-grow: 1;
 }
 
 .desku-table-row, .desku-table-header {
   border: 1px solid #ddd;
   padding: 4px;
-  width: 100%;
+  flex-grow: 1;
   align-items: center;
 }
 .desku-table-cell{

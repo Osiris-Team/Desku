@@ -53,7 +53,7 @@ public class FileAsRow extends Table.Row {
             add(txtLastModified = new Text(new Date(file.lastModified()).toString()));
 
         }
-        txtFileName.width("100%");
+        txtFileName.grow(1);
         if (file == null || file.isDirectory()) {
             txtFileName.onClick(e -> {
                 directoryView.setDir(file);

@@ -51,7 +51,7 @@ public class PageLayout extends Component<PageLayout, NoValue> {
             super(NoValue.GET, NoValue.class);
             this.content = content;
 
-            Button previous = new Button("Previous").secondary().width("100%").sizeS().childStart1()
+            Button previous = new Button("Previous").secondary().grow(1).sizeS().childStart1()
                     .sty("border-top-right-radius", "0px")
                     .sty("border-bottom-right-radius", "0px");
             AtomicBoolean loaded = new AtomicBoolean(true);
@@ -71,7 +71,7 @@ public class PageLayout extends Component<PageLayout, NoValue> {
                 }
             });
 
-            Button next = new Button("Next").secondary().width("100%").sizeS().childEnd1()
+            Button next = new Button("Next").secondary().grow(1).sizeS().childEnd1()
                     .sty("border-top-left-radius", "0px")
                     .sty("border-bottom-left-radius", "0px");
             next.onClick(e -> {

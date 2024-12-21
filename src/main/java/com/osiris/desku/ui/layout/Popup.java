@@ -48,6 +48,7 @@ public class Popup extends Overlay {
         dialog.padding(true);
         dialog.sty("background-color", "var(--bs-light)");
         dialog.sty("min-width", "300px");
+        dialog.sty("max-width", "50%");
         //dialog.s("border", "medium solid var(--bs-primary)");
         dialog.sty("border-radius", "var(--bs-border-radius)");
         if(title != null){

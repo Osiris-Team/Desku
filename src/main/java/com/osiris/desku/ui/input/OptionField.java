@@ -64,7 +64,8 @@ public class OptionField extends Component<OptionField, String> {
         addClass("input-group");
         this.label = label;
         this.button = new Button(defaultValue)
-                .width("100%")
+                .grow(1)
+                .width("unset") // Fix weird bootstrap styling
                 .childStart1().childGap("0.5vw").onClick(e -> {
                     items.visible(!items.isVisible());
                 });

@@ -45,8 +45,19 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
     static {
         try {
-            String styles = "#outlet * {\n" +
+            String styles = "#outlet c {\n" +
                     "  display: flex;\n" +  // All children of outlet will be flex
+
+                    // flex-start is needed to ensure a uniform logic
+                    // since otherwise, by default, if an item is alone in a row it gets stretched
+                    // this disables flex-grow wtf?, thus we use stretch together with flex-grow
+                    "  align-items: stretch;\n" +
+
+                    // thus we need flex-grow: 1, this gives us the default uniform stretching
+                    // logic that we want, for certain components like Text, Spinner and Image this is disabled
+                    // by simply changing the html tag name
+                    "  flex-grow: 1; \n"+
+
                     "}\n";
             App.appendToGlobalCSS(styles);
         } catch (Exception e) {
@@ -1045,7 +1056,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Negative numbers are invalid. <br>
      * Default: 0 <br>
      */
-    public THIS grow(int i) {
+    public THIS grow(double i) {
         sty("flex-grow", String.valueOf(i));
         return _this;
     }

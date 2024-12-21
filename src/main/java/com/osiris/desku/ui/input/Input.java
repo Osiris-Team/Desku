@@ -9,7 +9,8 @@ public class Input<VALUE> extends Component<Input<VALUE>, VALUE> {
         atr("slot", "input");
         atr("type", type);
         addClass("form-control");
-        width("100%");
+        grow(1);
+        width("unset"); // Fix weird bootstrap styling
     }
 
     public Input(String type, VALUE defaultValue, Class<VALUE> defaultValueClass, String tag) {
@@ -17,6 +18,7 @@ public class Input<VALUE> extends Component<Input<VALUE>, VALUE> {
         atr("slot", "input");
         atr("type", type);
         addClass("form-control");
-        width("100%");
+        grow(1);
+        width("unset"); // Fix weird bootstrap styling
     }
 }
