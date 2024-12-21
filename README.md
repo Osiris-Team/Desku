@@ -1,9 +1,9 @@
 # Desku [![](https://jitpack.io/v/Osiris-Team/Desku.svg)](https://jitpack.io/#Osiris-Team/Desku)
-Java Framework for developing low-code Desktop and Mobile Applications in one codebase with Java. Using Web-Tech (JS/HTML/CSS) under the hood.
+Java UI Framework for developing low-code, data centric Web, Desktop and Mobile Applications in one codebase. Using Web-Tech (JS/HTML/CSS) under the hood.
 [Click here for Maven/Gradle/Sbt/Leinigen instructions](https://jitpack.io/#Osiris-Team/Desku/LATEST) (Java 11 or higher required).
 
 ## Who is it for?
-Mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, fast and pain-less way.
+Mainly backend developers that want to code their frontend/GUI directly in Java in a low-code, data centric, compile safe, fast and pain-less way.
 In addition, it is also highly beginner-friendly, making it accessible to everyone that is new to coding due to its simplicity.
 
 ## What does it look like?
@@ -103,8 +103,10 @@ way, its pretty easy to create a Desku-Extension:
 3. Create a release and use JitPack or Maven to host the files.
 
 ## State
-The base features are implemented, however the default UI component library
-still needs components, so feel free to contribute if you find something missing.
+
+💥 Do NOT use in production projects! We have a ton of features implemented but with very little testing.
+
+At this early state if you find something missing contribute directly instead of creating an extension.
 
 Todo:
 - Native notifications and in-app overlay notifications.
