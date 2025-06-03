@@ -109,10 +109,12 @@ way, its pretty easy to create a Desku-Extension:
 At this early state if you find something missing contribute directly instead of creating an extension.
 
 Todo:
-- Native notifications and in-app overlay notifications.
 - Default components suit similar to https://vaadin.com/docs/latest/components.
 - Serializable UI, to restore state (on ice right now, since it seems
 to be more complicated than expected)
+- Unified API for System-Tray (Linux/Windows/Mac). What is the equivalent in mobile, maybe widgets is the closest thing?
+- Unified API for native notifications and in-app overlay notifications (Desktop and Mobile).
+- Unified API for native background tasks that are seperate from the app and cron jobs and system bootup/shutdown tasks. 
 
 ## Contributing
 Contributions are welcome! Especially HTML5 component integrations, aka
