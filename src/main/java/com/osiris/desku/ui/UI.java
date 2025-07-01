@@ -3,14 +3,14 @@ package com.osiris.desku.ui;
 import com.osiris.desku.App;
 import com.osiris.desku.Route;
 import com.osiris.desku.Value;
+import com.osiris.desku.WarnDoc;
+import com.osiris.desku.ui.layout.Popup;
+import com.osiris.desku.ui.utils.Event;
 import com.osiris.desku.ui.utils.Rectangle;
 import com.osiris.desku.ui.utils.UnsafePortChrome;
-import com.osiris.events.Event;
 import com.osiris.jlib.logger.AL;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -20,7 +20,6 @@ import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -36,14 +35,18 @@ public abstract class UI {
      * Relevant when wanting HTML load state, since we cant run JavaScript before the page is fully loaded.<br>
      * Boolean parameter isLoading, is true if still loading or false if finished loading.
      */
-    public final Event<Boolean> onLoadStateChanged = new Event<>();
+    public final com.osiris.events.Event<Boolean> onLoadStateChanged = new com.osiris.events.Event<>();
     /**
      * This allows the programmer to add components to a parent even if the parent is
      * not attached yet (out of order additions). However those additions will only be visible in Java
      * and later in the browser. <br>
      * Access using "synchronized (pendingAppends)" to ensure order.
+     * 01.07.2025: Pending appends are only pending frontend UI updates, on the backend a component add gets directly executed when it happens.
+     * Meaning the first send of the complete UI will attach everything in the right order.
+     * Component additions after this first send will always be done on an existing/attached component from the first send.
+     * Thus, this data structure is not needed.
      */
-    public final List<PendingAppend> pendingAppends = new ArrayList<>();
+    //public final List<PendingAppend> pendingAppends = new ArrayList<>();
     /**
      * Last loaded html.
      */
@@ -52,8 +55,8 @@ public abstract class UI {
     /**
      * Not thread safe, access inside synchronized block.
      */
-    public HashMap<String, List<Component<?, ?>>> listenersAndComps = new HashMap<>();
-    public WSServer webSocketServer = null;
+    public final HashMap<String, List<Component<?, ?>>> listenersAndComps = new HashMap<>();
+    public JSWebSocketServer webSocketServer = null;
     public HTTPServer httpServer;
 
     public UI(Route route) throws Exception {
@@ -153,44 +156,54 @@ public abstract class UI {
     /**
      * @see #executeJavaScriptSafely(String, String, int)
      */
-    public synchronized CompletableFuture<Void> executeJavaScriptSafely(String jsCode) {
+    public synchronized Event<JavaScriptResult> executeJavaScriptSafely(String jsCode) {
         return executeJavaScriptSafely(jsCode, "internal", 0);
     }
 
     /**
-     * Executes {@link #executeJavaScript(String, String, int)} only once the UI is loaded and after
-     * some internals JS dependencies are loaded. In an orderly fashion.
+     * Executes {@link JSWebSocketServer#executeJavaScript(UI, Event, String)} only once the UI is loaded and after
+     * some internals JS dependencies are loaded. In an orderly fashion. Might return data from JavaScript after fully executed. <br>
+     * <br>
+     * Note that internally a websocket connection between Java (server/this) and JavaScript (client/webview/browser) is used to pass over the JavaScript code, thus this method only works
+     * if the UI/page is also provided by this application.
+     * Meaning if this UI loaded an external / third-party site like google.com you must use {@link #executeJavaScript(String, String, int)} instead.
      *
      * @see #getSnapshot() internal JS dependencies are added here.
      */
-    public synchronized CompletableFuture<Void> executeJavaScriptSafely(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber) {
-        var f = new CompletableFuture<Void>();
+    public synchronized Event<JavaScriptResult> executeJavaScriptSafely(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber) {
+        Event<JavaScriptResult> event = new Event<>(true);
         if(App.isInDepthDebugging) {
             Exception e = new Exception();
             var javaStackTrace = new StringWriter();
             e.printStackTrace(new PrintWriter(javaStackTrace));
-            String finalJsCode = "var javaStackTrace = `"+Value.escapeForJavaScript(javaStackTrace.toString())+"`;\n\n\n" + jsCode;
+            String finalJsCode = "/* javaStackTrace\n"+Value.escapeForJavaScript(javaStackTrace.toString())+"*/\n\n\n" + jsCode;
             runIfReadyOrLater(() -> {
-                executeJavaScript(finalJsCode, jsCodeSourceName, jsCodeStartingLineNumber);
-                f.complete(null);
+                webSocketServer.executeJavaScript(this, event, finalJsCode);
             });
         } else{
             runIfReadyOrLater(() -> {
-                executeJavaScript(jsCode, jsCodeSourceName, jsCodeStartingLineNumber);
-                f.complete(null);
+                webSocketServer.executeJavaScript(this, event, jsCode);
             });
         }
-        return f;
+        return event;
     }
 
     /**
-     * Executes JavaScript code now. Method may wait until execution finishes, or not.
-     * However, it must ensure that the code is executed in an orderly, synchronous fashion.
-     * Meaning that the JavaScript code in the second call of this method, gets executed after the code in the first call.
+     * Executes JavaScript code now via some sort of native method to ensure its
+     * directly ran inside the native webview, without workarounds. <br>
+     * <br>
+     * Only use if you know what you are doing, in 99% of cases use {@link #executeJavaScriptSafely(String)} instead!<br>
+     * <br>
+     * - this method may wait until execution finishes, OR NOT. <br>
+     * - this method may execute after the HTML fully loaded, OR NOT. <br>
+     * - this method may execute the code in an orderly, synchronous fashion, OR NOT.<br>
+     * <br>
+     * If you loaded an external page you can execute the JS code returned by {@link JSWebSocketServer#jsStartWebSocketClient(String, int)} from {@link #webSocketServer}
+     * via this method to establish a connection which then lets you execute the safe version of this method which also supports returning data from JavaScript.
      *
      * @param jsCode                   JavaScript (JS) code.
-     * @param jsCodeSourceName         file name containing the JS code.
-     * @param jsCodeStartingLineNumber line number/position the JS code starts in.
+     * @param jsCodeSourceName         file name of the JS code or identifier, only relevant for debugging, can be empty string.
+     * @param jsCodeStartingLineNumber line number/position the JS code starts in, usually 1.
      */
     public abstract void executeJavaScript(String jsCode, String jsCodeSourceName, int jsCodeStartingLineNumber);
 
@@ -271,8 +284,7 @@ public abstract class UI {
     }
 
     /**
-     * Access this window synchronously now and executes any {@link #pendingAppends}
-     * after running the provided code.
+     * Access this window synchronously now.
      */
     public UI access(Runnable code) {
         UI ui = UI.get();
@@ -285,20 +297,6 @@ public abstract class UI {
         UI.set(this, Thread.currentThread());
         code.run();
         UI.remove(Thread.currentThread());
-
-        synchronized (pendingAppends) {
-            for (PendingAppend pendingAppend : pendingAppends) {
-                try {
-                    attachToParentSafely(pendingAppend);
-                } catch (InvalidParentException e){
-                    // Do nothing / remove pendingAppend from list
-                    // since its component probably was never added to a parent
-                } catch (Exception e) {
-                    AL.warn(e);
-                }
-            }
-            pendingAppends.clear();
-        }
         return this;
     }
 
@@ -381,29 +379,33 @@ public abstract class UI {
             content.updateAll();
             outlet.appendChild(content.element);
 
+            Element jsOnPageLoaded = new Element("script");
+            jsOnPageLoaded.html("function onPageLoaded(callback) {\n" +
+                    "  async function notifyOnPageLoad() {\n" +
+                    "    if (document.readyState === 'complete') {\n" +
+                    //"      console.log('Page finished loading.');\n" +
+                    "      callback();\n" +
+                    "    } else {\n" +
+                    "      setTimeout(notifyOnPageLoad, 100); // 100ms\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "\n" +
+                    //"  console.log('Waiting for page to finish loading...');\n" +
+                    "  notifyOnPageLoad(); // Perform the initial check immediately\n" +
+                    "}\n\n" +
+                    "window.onPageLoaded = onPageLoaded;\n");
+            html.getElementsByTag("body").get(0).appendChild(jsOnPageLoaded);
+
             // Execute global JS code to ensure dependencies are loaded
             Element elGlobalJSLink = new Element("script");
             elGlobalJSLink.attr("src", App.javascript.getName());
             html.getElementsByTag("body").get(0).appendChild(elGlobalJSLink);
 
-            // Execute JS at the end, after all HTML was loaded, which
-            // notify Java that we are ready to execute JavaScript
+            // Notify Java that we are ready to execute JavaScript
             Element elJSConnectToBackendWS = new Element("script");
-            elJSConnectToBackendWS.html(
-                    "function onPageLoaded(callback) {\n" +
-                            "  async function notifyOnPageLoad() {\n" +
-                            "    if (document.readyState === 'complete') {\n" +
-                            //"      console.log('Page finished loading.');\n" +
-                            "      callback();\n" +
-                            "    } else {\n" +
-                            "      setTimeout(notifyOnPageLoad, 100); // 100ms\n" +
-                            "    }\n" +
-                            "  }\n" +
-                            "\n" +
-                            //"  console.log('Waiting for page to finish loading...');\n" +
-                            "  notifyOnPageLoad(); // Perform the initial check immediately\n" +
-                            "}\n\n" +
-                            startWebSocketClient(webSocketServer.domain, webSocketServer.port));
+            elJSConnectToBackendWS.html("onPageLoaded(() => {\n"
+                                    +webSocketServer.jsStartWebSocketClient(webSocketServer.domain, webSocketServer.port)
+                                    +"\n});\n");
             html.getElementsByTag("body").get(0).appendChild(elJSConnectToBackendWS);
             return html;
         } else {
@@ -412,29 +414,6 @@ public abstract class UI {
             while ((html = html.parent()) != null) ;
             return (Document) html;
         }
-    }
-
-    public String startWebSocketClient(String serverDomain, int serverPort) {
-        String url = "ws://" + serverDomain + ":" + serverPort;
-        String jsCode = "try{    var webSocketServer = new WebSocket('" + url + "');\n" +
-                "window.webSocketServer = webSocketServer;\n" + // Make globally accessible
-                "console.log(\"Connecting to WebSocket server...\")\n" +
-                "\n" +
-                "    webSocketServer.addEventListener(\"open\", (event) => {\n" +
-                "      console.log('WebSocket connection established.');\n" +
-                "    });\n" +
-                "\n" +
-                "    webSocketServer.addEventListener(\"message\", (event) => {\n" +
-                "      // Receive a message from the server\n" +
-                "      var receivedMessage = event.data;\n" +
-                "      console.log('Received message from server:', receivedMessage);\n" +
-                "    });\n" +
-                "\n" +
-                "    webSocketServer.addEventListener(\"close\", (event) => {\n" +
-                "      console.log('WebSocket connection closed.');\n" +
-                "    });\n" +
-                "} catch (e) {console.error(e)}\n";
-        return jsCode;
     }
 
     /**
@@ -484,40 +463,6 @@ public abstract class UI {
     }
 
     /**
-     * Returns new JS (JavaScript) code, that when executed in client browser
-     * results in onJSFunctionExecuted being executed. <br><br>
-     * <p>
-     * It wraps around your jsCode and adds callback related stuff, as well as error handling. <br><br>
-     * <p>
-     * Its a permanent callback, because the returned JS code can be executed multiple times
-     * which results in onJSFunctionExecuted or onJSFuntionFailed to get executed multiple times too. <br><br>
-     * <p>
-     * Also appends a check to the JS code that sets message="" if it was null/undefined.<br><br>
-     *
-     * @param jsCode    modify the message variable in the provided JS (JavaScript) code to send information from JS to Java.
-     *                  Your JS code could look like this: <br>
-     *                  message = 'first second third etc...';
-     * @param onSuccess executed when the provided jsCode executes successfully. String contains the message variable that can be set in your jsCode.
-     * @param onError   executed when the provided jsCode threw an exception. String contains details about the exception/error.
-     */
-    public String jsAddPermanentCallback(String jsCode, Consumer<String> onSuccess, Consumer<String> onError) {
-        // 1. execute client JS
-        // 2. execute callback in java with params from client JS
-        // 3. return success to client JS and execute it
-        int id = webSocketServer.counter.getAndIncrement();
-        synchronized (webSocketServer.javaScriptCallbacks) {
-            PendingJavaScriptResult pendingJavaScriptResult = new PendingJavaScriptResult(id, onSuccess, onError, UI.get());
-            webSocketServer.javaScriptCallbacks.add(pendingJavaScriptResult);
-        }
-        return "var message = '';\n" + // Separated by space
-                "var error = null;\n" +
-                "try{" + jsCode + "\n" +
-                "if(message==null) message = '';\n" +
-                "} catch (e) { error = e; console.error(e);}\n" +
-                jsClientSendWebSocketMessage("(error == null ? ('" + id + " '+message) : ('!" + id + " '+error))");
-    }
-
-    /**
      * Note that this method is meant to be used internally. <br>
      * Use {@link #navigate(Class)} instead if you want to send the
      * user to another page.
@@ -547,25 +492,29 @@ public abstract class UI {
         UI.remove(Thread.currentThread());
     }
 
-    public UI registerDocJSListener(String eventName, String jsOnEvent, Consumer<String> onEvent,
-                                    boolean waitUntilLoaded) {
-        return registerJSListener(eventName, null, jsOnEvent, onEvent, waitUntilLoaded);
+    // JS LISTENER
+
+
+    /**
+     * @see #registerJSListener(String, Component, String, Consumer)
+     */
+    public UI registerDocJSListener(String eventName, String jsOnEvent, Consumer<String> onEvent) {
+        return registerJSListener(eventName, null, jsOnEvent, onEvent);
     }
 
     /**
-     * @see #registerJSListener(String, Component, String, Consumer, boolean)
+     * @see #registerJSListener(String, Component, String, Consumer)
      */
     public UI registerJSListener(String eventName, Component comp, Consumer<String> onEvent) {
-        return registerJSListener(eventName, comp, "", onEvent, true);
+        return registerJSListener(eventName, comp, "", onEvent);
     }
 
-    public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent) {
-        return registerJSListener(eventName, comp, jsOnEvent, onEvent, true);
-    }
 
     /**
      * Registers this listener directly only if the page was loaded,
-     * otherwise adds an action to {@link #onLoadStateChanged} to register the listener later.
+     * otherwise adds an action to {@link #onLoadStateChanged} to register the listener later.<br>
+     * <br>
+     * {@link WarnDoc#might_return_javascript_exception_message}
      *
      * @param eventName name of the JavaScript event to listen for.
      * @param comp      component to register the listener on. If null, document will be used as component.
@@ -575,8 +524,7 @@ public abstract class UI {
      *                  event: which is the event object. <br>
      * @param onEvent   executed when event happened. Has {@link #access(Runnable)}.
      */
-    public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent,
-                                 boolean waitUntilLoaded) {
+    public UI registerJSListener(String eventName, Component comp, String jsOnEvent, Consumer<String> onEvent) {
         synchronized (listenersAndComps) {
             List<Component<?, ?>> alreadyRegisteredComps = listenersAndComps.get(eventName);
             if (alreadyRegisteredComps == null) {
@@ -589,7 +537,7 @@ public abstract class UI {
         }
         String jsNow =
                 "comp.addEventListener(\"" + eventName + "\", (event) => {\n" +
-                        jsAddPermanentCallback("function getObjProps(obj) {\n" +
+                        webSocketServer.addPermanentCallback(this, "function getObjProps(obj) {\n" +
                                         "  var json = '{';\n" +
                                         "  for (const key in obj) {\n" +
                                         "    if (obj[key] !== obj && obj[key] !== null && obj[key] !== undefined) {\n" +
@@ -603,26 +551,20 @@ public abstract class UI {
                                         "}" +
                                         "message = getObjProps(event)\n" +
                                         jsOnEvent,
-                                (message) -> {
+                                (result) -> {
                                     App.executor.execute(() -> { // async
                                         access(() -> {
                                             try {
-                                                onEvent.accept(message); // Should execute all listeners
+                                                onEvent.accept(result.message); // Should execute all listeners
                                             } catch (Exception e) {
                                                 AL.warn(e);
                                             }
                                         });
                                     });
-                                },
-                                (error) -> {
-                                    throw new RuntimeException(error);
-                                }) + // JS code that triggers Java function gets executed on a click event for this component
+                                }).jsCode + // JS code that triggers Java function gets executed on a click event for this component
                         "});\n";
 
-        if (!waitUntilLoaded) {
-            if (comp == null) executeJavaScript("let comp = document\n" + jsNow, "internal", 0);
-            else comp.executeJS(this, jsNow);
-        } else if (!isLoading.get()) {
+        if (!isLoading.get()) {
             if (comp == null) executeJavaScriptSafely("let comp = document\n" + jsNow, "internal", 0);
             else comp.executeJS(this, jsNow);
         } else onLoadStateChanged.addAction((action, isLoading) -> {
@@ -631,6 +573,171 @@ public abstract class UI {
             if (comp == null) executeJavaScriptSafely("let comp = document\n" + jsNow, "internal", 0);
             else comp.executeJS(this, jsNow);
         }, AL::warn);
+        return this;
+    }
+
+
+    // JS OBSERVER
+
+
+    /**
+     * @see #registerJSObserver(JsObserverType, Component, String, String, Consumer)
+     */
+    public UI registerDocJSObserver(JsObserverType observerType, String config, String jsOnObserve,
+                                    Consumer<String> onObserve) {
+        return registerJSObserver(observerType, null, config, jsOnObserve, onObserve);
+    }
+
+    /**
+     * @see #registerJSObserver(JsObserverType, Component, String, String, Consumer)
+     */
+    public UI registerJSObserver(JsObserverType observerType, Component comp, String config,
+                                 Consumer<String> onObserve) {
+        return registerJSObserver(observerType, comp, config, "", onObserve);
+    }
+
+    public static enum JsObserverType{
+        MUTATION, RESIZE, INTERSECTION, PERFORMANCE
+    }
+
+    /**
+     * Registers a JavaScript observer of any supported type on a component.
+     * Supports MutationObserver, ResizeObserver, IntersectionObserver, and PerformanceObserver.<br>
+     * <br>
+     * {@link WarnDoc#might_return_javascript_exception_message}
+     *
+     * @param observerType  type of observer to create ("mutation", "resize", "intersection", "performance")
+     * @param comp         component to register the observer on. If null, document.body will be used (except for PerformanceObserver)
+     * @param config      observer configuration object as a JSON string. Format depends on observer type:
+     *                    - MutationObserver: {"attributes": true, "childList": true, ...}
+     *                    - ResizeObserver: {} (empty object, uses default config)
+     *                    - IntersectionObserver: {"threshold": [0, 0.5, 1], "rootMargin": "0px"}
+     *                    - PerformanceObserver: {"entryTypes": ["layout-shift", "largest-contentful-paint"]}
+     * @param jsOnObserve additional JavaScript code that runs when changes are detected
+     * @param onObserve   executed when changes are detected. Has {@link #access(Runnable)}.
+     */
+    public UI registerJSObserver(JsObserverType observerType, Component comp, String config, String jsOnObserve,
+                                 Consumer<String> onObserve) {
+        synchronized (listenersAndComps) {
+            String key = observerType + "-" + config;
+            List<Component<?, ?>> alreadyObservedComps = listenersAndComps.get(key);
+            if (alreadyObservedComps == null) {
+                alreadyObservedComps = new ArrayList<>();
+                listenersAndComps.put(key, alreadyObservedComps);
+            }
+            if (alreadyObservedComps.contains(comp))
+                return this; // Already registered
+            alreadyObservedComps.add(comp);
+        }
+
+        String observerCreation;
+        switch (observerType) {
+            case MUTATION:
+                observerCreation = "new MutationObserver";
+                break;
+            case RESIZE:
+                observerCreation = "new ResizeObserver";
+                break;
+            case INTERSECTION:
+                observerCreation = "new IntersectionObserver";
+                break;
+            case PERFORMANCE:
+                observerCreation = "new PerformanceObserver";
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported observer type: " + observerType);
+        }
+
+        String getPropsFunction = "function getObserverProps(entries) {\n" +
+                "    if (!Array.isArray(entries)) entries = [entries];\n" +
+                "    return entries.map(entry => {\n" +
+                "        var json = '{';\n" +
+                "        const props = {\n" +
+                "            // Common properties\n" +
+                "            type: entry.type,\n" +
+                "            timestamp: entry.timestamp,\n" +
+                "\n" +
+                "            // MutationObserver specific\n" +
+                "            target: entry.target?.tagName,\n" +
+                "            addedNodes: entry.addedNodes?.length,\n" +
+                "            removedNodes: entry.removedNodes?.length,\n" +
+                "            attributeName: entry.attributeName,\n" +
+                "            oldValue: entry.oldValue,\n" +
+                "\n" +
+                "            // ResizeObserver specific\n" +
+                "            contentRect: entry.contentRect ?\n" +
+                "                '' + entry.contentRect.width + 'x' + entry.contentRect.height : undefined,\n" +
+                "            borderBoxSize: entry.borderBoxSize?.[0] ?\n" +
+                "                '' + entry.borderBoxSize[0].inlineSize + 'x' + entry.borderBoxSize[0].blockSize : undefined,\n" +
+                "\n" +
+                "            // IntersectionObserver specific\n" +
+                "            intersectionRatio: entry.intersectionRatio,\n" +
+                "            isIntersecting: entry.isIntersecting,\n" +
+                "\n" +
+                "            // PerformanceObserver specific\n" +
+                "            entryType: entry.entryType,\n" +
+                "            name: entry.name,\n" +
+                "            startTime: entry.startTime,\n" +
+                "            duration: entry.duration\n" +
+                "        };\n" +
+                "\n" +
+                "        for (const key in props) {\n" +
+                "            if (props[key] !== null && props[key] !== undefined) {\n" +
+                "                json += (`\"${key}\": \"${props[key]}\",`);\n" +
+                "            }\n" +
+                "        }\n" +
+                "        if(json[json.length-1] == ',') json = json.slice(0, json.length-1);\n" +
+                "        json += '}';\n" +
+                "        return json;\n" +
+                "    });\n" +
+                "}\n";
+
+        String jsNow = observerCreation + "((entries, observer) => {\n" +
+                webSocketServer.addPermanentCallback(this,
+                        getPropsFunction +
+                                "message = getObserverProps(entries)\n" +
+                                jsOnObserve,
+                        (result) -> {
+                            App.executor.execute(() -> { // async
+                                access(() -> {
+                                    try {
+                                        onObserve.accept(result.message);
+                                    } catch (Exception e) {
+                                        AL.warn(e);
+                                    }
+                                });
+                            });
+                        }
+                ).jsCode + ");\n";
+
+        // Add observer-specific initialization
+        switch (observerType) {
+            case MUTATION: jsNow += "observer.observe(comp, " + config + ");\n"; break;
+            case RESIZE: jsNow += "observer.observe(comp);\n"; break;
+            case INTERSECTION: jsNow += "observer.observe(comp, " + config + ");\n"; break;
+            case PERFORMANCE: jsNow += "observer.observe(" + config + ");\n"; break;
+        }
+
+        if (!isLoading.get()) {
+            if (comp == null) {
+                if(observerType == JsObserverType.PERFORMANCE) throw new IllegalArgumentException("Observer cannot be of type performance if registering on document instead of a component!");
+                executeJavaScriptSafely("let comp = document.body\n" + jsNow, "internal", 0);
+            } else {
+                comp.executeJS(this, jsNow);
+            }
+        } else {
+            String finalJsNow = jsNow;
+            onLoadStateChanged.addAction((action, isLoading) -> {
+                if (isLoading) return;
+                action.remove();
+                if (comp == null) {
+                    if(observerType == JsObserverType.PERFORMANCE) throw new IllegalArgumentException("Observer cannot be of type performance if registering on document instead of a component!");
+                    executeJavaScriptSafely("let comp = document.body\n" + finalJsNow, "internal", 0);
+                } else {
+                    comp.executeJS(this, finalJsNow);
+                }
+            }, AL::warn);
+        }
         return this;
     }
 
@@ -676,7 +783,7 @@ public abstract class UI {
      * @return
      */
     public synchronized void startWebSocketServer(String serverDomain, int serverPort) throws Exception {
-        webSocketServer = new WSServer(serverDomain, serverPort) {
+        webSocketServer = new JSWebSocketServer(serverDomain, serverPort) {
             @Override
             public void onOpen(WebSocket conn, ClientHandshake handshake) {
                 super.onOpen(conn, handshake);
@@ -690,52 +797,12 @@ public abstract class UI {
         AL.debug(this.getClass(), "Started WebSocketServer " + serverDomain + ":" + serverPort + " for UI: " + this);
     }
 
-    public String jsClientSendWebSocketMessage(String message) {
-        return "if(webSocketServer.readyState != 1) {\n" +
-                "console.log(`Frontend and Backend are connected!`)\n" + // 1 == OPEN
-                "  webSocketServer.addEventListener(\"open\", (event) => {\n" +
-                "      webSocketServer.send(" + message + ");\n" +
-                "  });\n" +
-                "} else webSocketServer.send(" + message + ");\n";
-    }
-
     public boolean isOpen() {
         return httpServer != null && httpServer.server.isAlive();
     }
 
     public String jsGetComp(String varName, int id) {
         return "var " + varName + " = document.querySelector('[java-id=\"" + id + "\"]');\n";
-    }
-
-    /**
-     * Ensures all parents are attached before performing the pending append operation.
-     */
-    private CompletableFuture<Void> attachToParentSafely(PendingAppend pendingAppend) throws InvalidParentException {
-        if (pendingAppend.child.isAttached()) {
-            return CompletableFuture.completedFuture(null);
-        }
-
-        List<Component> parents = getParentChain(pendingAppend.parent);
-        if(App.isInDepthDebugging){
-            AL.info("Unattached parent chain ("+parents.size()+") child -> parent: ");
-            String s = "";
-            for (Component comp : parents) {
-                s += comp.toPrintString()+" isAttached="+comp.isAttached()+" ||| ";
-            }
-            AL.debug(this.getClass(), s);
-        }
-
-        if (parents.size() < 2) {
-            pendingAppend.child.updateAll();
-            return attachToParent(pendingAppend.parent, pendingAppend.child, pendingAppend.e);
-        }
-
-        Component rootParentParent = parents.get(parents.size() - 1); // attached
-        Component rootParent = parents.get(parents.size() - 2); // not attached yet
-
-        rootParent.updateAll();
-        return attachToParent(rootParentParent, rootParent,
-                new Component.AddedChildEvent(rootParent, null, false, false));
     }
 
     /**
@@ -769,47 +836,50 @@ public abstract class UI {
         }
     }
 
-    public List<PendingAppend> getPendingAppendsCopy(){
-        synchronized (pendingAppends){
-            return new ArrayList<>(pendingAppends);
+    public <T extends Component<?, ?>> Event<JavaScriptResult> attachToParent(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
+        if (child.isAttached()) {
+            AL.debug(getClass(), "Skipping attachToParent: child already attached: " + child.toPrintString());
+            var event = new Event<JavaScriptResult>(true);
+            //event.execute(new JavaScriptResult("", true)); // Do NOT re-execute the attached event
+            return event;
         }
-    }
 
-    public void attachWhenAccessEnds(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
-        synchronized (pendingAppends) {
-            pendingAppends.add(new PendingAppend(parent, child, e));
+
+        if(App.isInDepthDebugging) {
+            StringWriter s = new StringWriter();
+            new Exception().printStackTrace(new PrintWriter(s));
+            AL.debug(this.getClass(), "attachToParent() parent = "+parent.toPrintString()+" attached="+parent.isAttached()+" added child = "+
+                    child.toPrintString()+" child html = \n"+ child.element.outerHtml()+"\n "+s.toString());
         }
-    }
-
-    public <T extends Component<?, ?>> CompletableFuture<Void> attachToParent(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
-        if(App.isInDepthDebugging) AL.debug(this.getClass(), "attachToParent() parent = "+parent.toPrintString()+" attached="+parent.isAttached()+" added child = "+
-                child.toPrintString()+" child html = \n"+ child.element.outerHtml());
         if(!parent.isAttached())
             throw new RuntimeException("Attempting attach to parent even though parent '"+parent.toPrintString()+"' is not attached yet!");
 
         if (e.otherChildComp == null) { // add
-            return executeJavaScriptSafely(jsAttachToParent(parent, child),
-                    "internal", 0).thenAccept(__ -> {
+            var event = executeJavaScriptSafely(jsAttachToParent(parent, child),
+                    "internal", 0);
+            event.addAction(result -> {
                 child.setAttached(true);
                 child.forEachChildRecursive(child2 -> {
                     child2.setAttached(true);
                 });
             });
+            return event;
         } else { //if (e.isInsert || e.isReplace) { // for replace, remove() must be executed after this function returns
             // if replace: childComp is the new component to be added and otherChildComp is the one that gets removed/replaced
             // "beforebegin" = Before the element. Only valid if the element is in the DOM tree and has a parent element.
-            return executeJavaScriptSafely(
+            var event = executeJavaScriptSafely(
                     jsGetComp("otherChildComp", e.otherChildComp.id) +
                             "var child = `" + Value.escapeForJavaScript(Value.escapeForJSON(e.childComp.element.outerHtml())) + "`;\n" +
                             "otherChildComp.insertAdjacentHTML(\"beforebegin\", child);\n" +
                             (App.isInDepthDebugging ? "console.log('otherChildComp:', otherChildComp); console.log('➡️✅ inserted child:', child); \n" : ""),
-                    "internal", 0)
-                    .thenAccept(__ -> {
-                        e.childComp.setAttached(true);
-                        e.childComp.forEachChildRecursive(child2 -> {
-                            child2.setAttached(true);
-                        });
-                    });
+                    "internal", 0);
+            event.addAction(result -> {
+                e.childComp.setAttached(true);
+                e.childComp.forEachChildRecursive(child2 -> {
+                    child2.setAttached(true);
+                });
+            });
+            return event;
         }
     }
 
@@ -846,81 +916,6 @@ public abstract class UI {
     public boolean isLoading(){
         synchronized (isLoading){
             return isLoading.get();
-        }
-    }
-
-    public static class PendingAppend {
-        /**
-         * Also removes all children recursively.
-         */
-        public static boolean removeFromPendingAppends(UI ui, Component<?, ?> comp){
-            if(ui != null){ // && ui.isLoading()){ // Also remove from pending appends, these can also happen after loading
-                synchronized (ui.pendingAppends){
-                    List<UI.PendingAppend> toRemove = new ArrayList<>(0);
-                    for (UI.PendingAppend pendingAppend : ui.getPendingAppendsCopy()) {
-                        if(comp.equals(pendingAppend.child)){
-                            toRemove.add(pendingAppend);
-                            // Also remove any children
-                            for (Component child : comp.children) {
-                                removeFromPendingAppends(ui, child);
-                            }
-                        }
-                    }
-                    if(App.isInDepthDebugging){
-                        if(!toRemove.isEmpty()){
-                            AL.info("Removing "+toRemove.size()+" components from pending append:");
-                            for (PendingAppend pa : toRemove) {
-                                AL.info("toRemove = " + pa.child.toPrintString());
-                            }
-                        }
-                    }
-                    return ui.pendingAppends.removeAll(toRemove);
-                }
-            }
-            return false;
-        }
-
-        public Component<?, ?> parent;
-        public Component<?, ?> child;
-        public Component.AddedChildEvent e;
-
-        public PendingAppend(Component<?, ?> parent, Component<?, ?> child, Component.AddedChildEvent e) {
-            this.parent = parent;
-            this.child = child;
-            this.e = e;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            PendingAppend that = (PendingAppend) o;
-
-            if (!Objects.equals(parent, that.parent)) return false;
-            return Objects.equals(child, that.child);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = parent != null ? parent.hashCode() : 0;
-            result = 31 * result + (child != null ? child.hashCode() : 0);
-            return result;
-        }
-    }
-
-    public class PendingJavaScriptResult {
-        public final int id;
-        public final Consumer<String> onSuccess;
-        public final Consumer<String> onError;
-        public boolean isPermanent = true;
-        public @NotNull UI ui;
-
-        public PendingJavaScriptResult(int id, Consumer<String> onSuccess, Consumer<String> onError, UI ui) {
-            this.id = id;
-            this.onSuccess = onSuccess;
-            this.onError = onError;
-            this.ui = ui;
         }
     }
 }

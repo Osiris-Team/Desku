@@ -58,18 +58,18 @@ public class Popup extends Overlay {
         }
         if(btn2 != null){
             this.btn2 = btn2;
-            btn2.secondary().atr("data-bs-dismiss", "modal").grow(1);
+            btn2.secondary().grow(1);
             footer.add(btn2);
             btn2.onClick(e-> {if(isCloseOnBtnClick) visible(false);});
         }
         if(btn1 != null){
             this.btn1 = btn1;
-            btn1.primary().atr("data-bs-dismiss", "modal").grow(1);
+            btn1.primary().grow(1);
             footer.add(btn1);
             btn1.onClick(e-> {if(isCloseOnBtnClick) visible(false);});
         }
 
-        // Automatically add to body
+        // Directly add child elements to body
         _add = body._add;
 
         // Close on background click

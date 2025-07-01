@@ -3,14 +3,16 @@ package com.osiris.desku.ui;
 import com.google.gson.JsonObject;
 import com.osiris.desku.App;
 import com.osiris.desku.Value;
+import com.osiris.desku.WarnDoc;
 import com.osiris.desku.ui.css.CSS;
 import com.osiris.desku.ui.display.Text;
+import com.osiris.desku.ui.event.AnyValueChangeEvent;
 import com.osiris.desku.ui.event.ClickEvent;
 import com.osiris.desku.ui.event.ScrollEvent;
 import com.osiris.desku.ui.event.ValueChangeEvent;
 import com.osiris.desku.ui.layout.*;
+import com.osiris.desku.ui.utils.Event;
 import com.osiris.desku.utils.GodIterator;
-import com.osiris.events.Event;
 import com.osiris.jlib.json.JsonFile;
 import com.osiris.jlib.logger.AL;
 import org.jetbrains.annotations.NotNull;
@@ -123,6 +125,11 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     public final Event<ValueChangeEvent<THIS, VALUE>> readOnlyOnValueChange = new Event<>();
     /**
+     * Do not add actions via this variable because it needs additional UI-side JavaScript event registration,
+     * use {@link #onVisibilityChange(Consumer)}} instead.
+     */
+    public final Event<AnyValueChangeEvent<THIS, Boolean>> readOnlyOnVisibilityChange = new Event<>();
+    /**
      * Gets executed when this component <br>
      * was attached or detached from the UI.
      */
@@ -138,14 +145,22 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      */
     private boolean isAttached = false;
 
+    // thread-safe
     public THIS setAttached(boolean b){
-        isAttached = b;
-        _onAttached.execute(b);
-        return _this;
+        synchronized (this){
+            isAttached = b;
+            _onAttached.execute(b);
+            return _this;
+        }
     }
+
+    // thread-safe
     public boolean isAttached(){
-        return isAttached;
+        synchronized (this){
+            return isAttached;
+        }
     }
+
     /**
      * The instance of the extending class. <br>
      * Is returned in pretty much all methods, to allow method chaining by returning
@@ -178,7 +193,6 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             child.update();
 
         }
-        UI.PendingAppend.removeFromPendingAppends(ui, child);
 
         // Update UI always
         // Child might have already been removed in Java but not in JS
@@ -186,7 +200,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                 "comp.removeChild(childComp);\n" +
                 (App.isInDepthDebugging ? "console.log('parent comp:', comp); console.log('➡️❌ removed childComp:', childComp); \n" : ""));
 
-        child.isAttached = false;
+        child.setAttached(false);
         onChildRemove.execute(child);
     };
     public Consumer<Component> _removeSelf = self -> {
@@ -195,14 +209,13 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             self.element.remove();
         }
         self.update();
-        UI.PendingAppend.removeFromPendingAppends(ui, self);
 
         // Update UI
         executeJS(ui.jsGetComp("comp", self.id) +
                 "comp.parentNode.removeChild(comp);\n"+
                 (App.isInDepthDebugging ? "console.log('parent comp:', comp.parentNode); console.log('➡️❌ removed self:', comp); \n" : ""));
 
-        self.isAttached = false;
+        self.setAttached(false);
         //onChildRemove.execute(self);
     };
     public Consumer<AddedChildEvent> _add = (e) -> {
@@ -229,10 +242,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         // Perform actual UI update
         UI ui = UI.get();
         if (!ui.isLoading()){
-            if(!this.isAttached) {
+            if(!isAttached()) {
                 // Means that this (parent) was not attached yet,
-                // thus we postpone the addition of child to the end of UI.access()
-                ui.attachWhenAccessEnds(this, e.childComp, e);
+                // thus we expect the actual add to happen in a parent that is already attached
             } else{
                 ui.attachToParent(this, e.childComp, e);
             }
@@ -257,7 +269,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
-            if (isAttached && !ui.isLoading()){
+            if (isAttached() && !ui.isLoading()){
                 executeJS("comp.style." + CSS.getJSCompatibleCSSKey(key)
                         + " = ``;\n"); // Change UI representation
             }
@@ -271,7 +283,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             element.attr("style", style); // Change in-memory representation
 
             // Update UI
-            if (isAttached && !ui.isLoading()){
+            if (isAttached() && !ui.isLoading()){
                 value = Value.escapeForJavaScript(value);
                 executeJS("comp.style." + CSS.getJSCompatibleCSSKey(key)
                         + " = `" + value + "`;\n"); // Change UI representation
@@ -286,7 +298,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         if (e.isInsert) { // Add or change attribute
             element.attr(key, value); // Change in-memory representation
             //System.out.println(this.toPrintString()+" insert "+ key+" - "+value);
-            if (isAttached && !ui.isLoading()){
+            if (isAttached() && !ui.isLoading()){
                 key = Value.escapeForJavaScript(Value.escapeForJSON(key));
                 value = Value.escapeForJavaScript(Value.escapeForJSON(value));
                 executeJS("comp.setAttribute(`" + key
@@ -299,7 +311,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
 
         } else {// Remove attribute
             element.removeAttr(key); // Change in-memory representation
-            if (isAttached && !ui.isLoading()){
+            if (isAttached() && !ui.isLoading()){
                 key = Value.escapeForJavaScript(key);
                 executeJS("comp.removeAttribute(`" + key + "`);\n" +
                         "comp[`"+key+"`] = null"); // Change UI representation
@@ -367,14 +379,14 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     public THIS getValue(Consumer<@NotNull VALUE> v) {
 
         UI ui = UI.get();
-        if(!isAttached || ui == null || ui.isLoading()) { // Since never attached once, user didn't have a chance to change the value, thus return internal directly
+        if(!isAttached() || ui == null || ui.isLoading()) { // Since never attached once, user didn't have a chance to change the value, thus return internal directly
             v.accept(internalValue);
             if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getValue() returns internalValue = "+ internalValue);
         }
         else
             gatr("value", valueAsString -> {
                 if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getValue() returns from javascript value attribute = "+valueAsString);
-                VALUE value = Value.stringToVal(valueAsString, this);
+                VALUE value = (VALUE) Value.stringToVal(valueAsString, this);
                 v.accept(value);
             });
         return _this;
@@ -428,6 +440,37 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
         return _this;
     }
 
+    /**
+     * Adds a listener that gets executed when the value was changed either programmatically via {@link #setValue(Object)}
+     * or by the user (by listening to the input event).
+     *
+     * @see UI#registerJSListener(String, Component, String, Consumer)
+     * @see Value#valToString(Object, Component)
+     * @see Value#stringToVal(String, Component)
+     */
+    public THIS onVisibilityChange(Consumer<AnyValueChangeEvent<THIS, Boolean>> code) {
+        readOnlyOnVisibilityChange.addAction((event) -> code.accept(event));
+        UI.get().registerJSObserver(
+                UI.JsObserverType.INTERSECTION,
+                this,
+                "{\"root\": document.documentElement,}",
+                "" +
+                        "let isVisible = false\n" +
+                        "for(let entry of entries){\n" +
+                        "  if(entry.intersectionRatio > 0) { isVisible = true; break; }\n" +
+                        "}\n" +
+                        "message = `{\"newValue\": \"` + isVisible + `\", \"eventAsJson\":` + message + `}`;\n",
+                msg -> {
+                    AnyValueChangeEvent<THIS, Boolean> event = new AnyValueChangeEvent<>(msg, _this, false); // TODO internalValue);
+                    Boolean newValue = event.value; // msg contains the new data and is parsed above in the event constructor
+                    //TODO internalValue = newValue; // Change in memory value, without triggering another change event
+                    //atr("value", event.getValueAsString());
+                    readOnlyOnVisibilityChange.execute(event); // Executes all listeners
+                }
+        );
+        return _this;
+    }
+
     public boolean isDefaultValue(){
         return isValuesEqual(getValue(), this.internalDefaultValue);
     }
@@ -462,7 +505,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * this component via the "comp" variable in your provided JavaScript code.
      */
     public THIS executeJS(String code){
-        return executeJS(UI.get(), code, false);
+        return executeJS(UI.get(), code, null, false);
     }
 
     /**
@@ -473,36 +516,37 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * or {@link #later(Consumer)}. <br>
      */
     public THIS executeJSForced(String code){
-        return executeJS(UI.get(), code, true);
+        return executeJS(UI.get(), code, null, true);
     }
 
     /**
      * @see #executeJS(String)
      */
     public THIS executeJS(UI ui, String code){
-        return executeJS(ui, code, false);
+        return executeJS(ui, code, null, false);
     }
 
     /**
      * @see #executeJS(String)
      */
-    public THIS executeJS(UI ui, String code, boolean force){
+    public THIS executeJS(UI ui, String code, Consumer<JavaScriptResult> onFinished, boolean force){
         if(!force && (ui == null || ui.isLoading())) return _this;
 
         String js = "";
         if(App.isInDepthDebugging){
             var javaCompStackTrace = new StringWriter();
             this.createdAtStackTrace.printStackTrace(new PrintWriter(javaCompStackTrace));
-            js = "var javaCompStackTrace = `"+Value.escapeForJavaScript(javaCompStackTrace.toString())+"`;\n\n\n";
+            js = "/* javaCompStackTrace\n"+Value.escapeForJavaScript(javaCompStackTrace.toString())+"*/\n\n\n";
         }
         js += "try{"+
                 ui.jsGetComp("comp", id) +
                 code+
                 "}catch(e){console.error(e)}";
 
-        if(isAttached){
-            ui.executeJavaScriptSafely(js,
+        if(isAttached()){
+            var onFinishedEvent = ui.executeJavaScriptSafely(js,
                     "internal", 0);
+            if(onFinished != null) onFinishedEvent.addAction(onFinished::accept);
         } else{ // Execute code once attached
             String finalJs = js;
             _onAttached.addAction((action, val) -> {
@@ -511,8 +555,9 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
                     return;
                 }
                 action.remove();
-                ui.executeJavaScriptSafely(
+                var onFinishedEvent = ui.executeJavaScriptSafely(
                         finalJs, "internal", 0);
+                if(onFinished != null) onFinishedEvent.addAction(onFinished::accept);
             }, AL::warn);
         }
         return _this;
@@ -523,19 +568,17 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * Additional arguments make it possible to execute Java code, once your provided JavaScript code
      * finishes execution. Also enables you to pass over Strings from JavaScript to Java,
      * by setting the message variable in JavaScript code. <br>
-     * @see UI#jsAddPermanentCallback(String, Consumer, Consumer)
+     * @see JSWebSocketServer#addPermanentCallback(UI, String, Consumer)
      */
-    public THIS executeJS(String code, Consumer<String> onSuccess, Consumer<String> onError){
-        return executeJS(UI.get(), code, onSuccess, onError);
+    public THIS executeJS(String code, Consumer<JavaScriptResult> onFinished){
+        return executeJS(UI.get(), code, onFinished, false);
     }
 
     /**
-     * @see #executeJS(String, Consumer, Consumer)
+     * @see #executeJS(String, Consumer)
      */
-    public THIS executeJS(UI ui, String code, Consumer<String> onSuccess, Consumer<String> onError){
-        code = ui.jsAddPermanentCallback(code, onSuccess, onError);
-        executeJS(code);
-        return _this;
+    public THIS executeJS(UI ui, String code, Consumer<JavaScriptResult> onFinished){
+        return executeJS(ui, code, onFinished, false);
     }
 
     /**
@@ -558,8 +601,6 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
      * This also means that you will have to handle Thread-safety yourself
      * when doing things to the same component from multiple threads at the same time. <br>
      * <br>
-     * Also note that your code is not allowed to run forever/block, since
-     * sometimes added components get added (in the browser) only after your code was run, see {@link UI#pendingAppends} and {@link UI#access(Runnable)}.
      *
      * @param code the code to be executed asynchronously, contains this component as parameter.
      */
@@ -728,14 +769,16 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     /**
      * Short for get attribute value. <br>
      * Returns the value for the provided attribute key. <br>
-     * First tries to return its property value, then if that fails, tries to
+     * First tries to return its js property value, then if that fails, tries to
      * return the value for its attribute, and returns an empty String if no key found or when value is null/undefined. <br>
+     * <br>
+     * {@link WarnDoc#might_return_javascript_exception_message}
      * @param key unescaped key.
      * @param onValueReturned returns unescaped string attribute value for the provided key.
      */
     public void gatr(String key, Consumer<String> onValueReturned) {
         UI ui = UI.get();
-        if(!isAttached || ui == null || ui.isLoading()) { // Since never attached once, user didn't have a chance to change the atr, thus return internal directly
+        if(!isAttached() || ui == null || ui.isLoading()) { // Since never attached once, user didn't have a chance to change the atr, thus return internal directly
             String val = getUnescapedJsoupElementAttribute(key);
             if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getAttribute() returns from jsoup '"+key+"' = "+ val);
             onValueReturned.accept(val);
@@ -745,11 +788,10 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
             String finalKey = key;
             executeJS("try { message = comp[`" + key + "`]; } catch (e) { console.error(e); }\n" +
                     "if(message == null) try{ message = comp.getAttribute(`" + key + "`); } catch (e) { console.error(e); }\n",
-                    (val -> {
-                        if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getAttribute() returns from javascript '"+ finalKey +"' = "+val);
-                        onValueReturned.accept(val);
-                    }),
-                    AL::warn);
+                    (result -> {
+                        if(App.isInDepthDebugging) AL.debug(this.getClass(), this.toPrintString()+" getAttribute() returns from javascript '"+ finalKey +"' = "+result.message);
+                        onValueReturned.accept(result.message);
+                    }));
         }
 
     }
@@ -909,7 +951,7 @@ public class Component<THIS extends Component<THIS, VALUE>, VALUE> {
     }
 
     public boolean isVisible() {
-        return !style.containsKey("visibility");
+        return !style.containsKey("visibility"); // TODO ensure onVisibilityChange works together with this
     }
 
     public THIS visible(boolean b) {

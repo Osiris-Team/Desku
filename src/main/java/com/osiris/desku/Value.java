@@ -83,12 +83,12 @@ public class Value {
     /**
      * NOTE THAT UNESCAPING MUST BE PERFORMED BY YOU BEFORE EXECUTING THIS, IF ESCAPING WAS DONE.
      */
-    public static <T> T stringToVal(String s, Component<?,T> comp){
+    public static Object stringToVal(String s, Component<?, ?> comp){
         if(s == null || s.isEmpty()){
             return comp.internalDefaultValue;
         }
         if(Reflect.isPseudoPrimitiveType(comp.internalValueClass))
-            return (T) Reflect.pseudoPrimitivesAndParsers.get(comp.internalValueClass)
+            return Reflect.pseudoPrimitivesAndParsers.get(comp.internalValueClass)
                     .apply(s);
         else{
             return JsonFile.parser.fromJson(s, comp.internalValueClass);
@@ -98,7 +98,7 @@ public class Value {
     /**
      * NOTE THAT UNESCAPING MUST BE PERFORMED BY YOU BEFORE EXECUTING THIS, IF ESCAPING WAS DONE.
      */
-    public static <T> T jsonElToVal(JsonElement el, Component<?, T> comp){
+    public static Object jsonElToVal(JsonElement el, Component<?, ?> comp){
         if(el.isJsonPrimitive()){
             return stringToVal(el.getAsString(), comp);
         } else

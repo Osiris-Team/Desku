@@ -71,6 +71,7 @@ public class Home extends Route {
                     Thread.sleep(1000);
                     txt.setValue("Asynchronously update a component: Loading... " + i + "%");
                 }
+                txt.setValue("Loaded fully!");
             } catch (Exception e) {
                 AL.warn(e);
             }
@@ -202,9 +203,18 @@ public class Home extends Route {
                 button("Danger").danger(), button("Warning").warning(), button("Info").info(),
                 button("Light").light(), button("Dark").dark());
         // Fields
-        ly.add(textfield("Text field label", "Def").onValueChange(e -> {
+        var tf = textfield("Text field label", "Def").onValueChange(e -> {
             AL.info("Input of textfield changed: "+e.value+" before: "+e.valueBefore);
             AL.info("Or via getValue() = "+e.comp.getValue());
+        });
+
+        String utf8TestString = "Yearly / Jährlich / Árlega / Ročně / Évente / Yıllık / Ετησίως / Ежегодно / שנתי / سنويًا / 年間 / 연간 / 每年 / รายปี / वार्षिक / Hàng năm / წლიური / Տարեկան";
+        ly.horizontalCL().add(tf, button("Insert from Java").onClick(e -> {
+            tf.setValue(utf8TestString);
+            tf.getValue(val -> {
+               if(!val.equals(utf8TestString))
+                   AL.warn("UTF 8 TEST STRING RECEIVED FROM BROWSER IS NOT EQUAL TO STRING IN JAVA BACKEND!!!");
+            });
         }));
         ly.add(textarea("Text area label", "Def").onValueChange(e -> {
             AL.info("Input of textarea changed: "+e.value+" before: "+e.valueBefore);
@@ -383,6 +393,11 @@ public class Home extends Route {
                         .add(btnAddElements, btnClearElements),
                 lyElements
         );
+
+        ly.horizontalCL().width("100%")
+                .add(text("Start").sty("background", "red"))
+                .add(text("Grow").grow(1).sty("background", "blue"))
+                .add(text("End").sty("background", "red").selfEnd1());
 
         return ly;
     }
